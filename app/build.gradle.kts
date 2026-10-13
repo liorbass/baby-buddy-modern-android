@@ -63,7 +63,18 @@ android {
     compose = true
     buildConfig = true
   }
-  testOptions { unitTests { isIncludeAndroidResources = true } }
+  testOptions {
+    unitTests {
+      isIncludeAndroidResources = true
+      // Robolectric 4.17 on SDK 36 uses JDK internals ("Failed to interact with raw FileDescriptor internals")
+      all {
+        it.jvmArgs(
+          "--add-opens=java.base/java.io=ALL-UNNAMED",
+          "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED"
+        )
+      }
+    }
+  }
   dependenciesInfo {
     includeInApk = false
     includeInBundle = true
