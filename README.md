@@ -48,6 +48,7 @@ Built with Kotlin, Jetpack Compose and Material 3. Originally generated with Goo
 - **Growth**: weight, length and head circumference against the [WHO Child Growth Standards](https://www.who.int/tools/child-growth-standards).
 - **History & Trends**: editable week-by-week history and 24-hour rhythm charts.
 - **Offline-first** write queue, **night mode**, 12/24-hour clock, per-phone hidden items, **demo mode** with 90 days of sample data.
+- **Languages**: English, French, German, Dutch, Spanish and Hebrew; the phone's language by default, or pick one in Settings → Appearance. French was checked by a native speaker; the others are machine translations using the Baby Buddy server's own terms, so corrections are welcome (see [CONTRIBUTING.md](CONTRIBUTING.md#translations)).
 
 Details and screenshots: **[docs/FEATURES.md](docs/FEATURES.md)** (widgets, lock screen, tiles and shortcuts, reminders, rhythm models).
 
