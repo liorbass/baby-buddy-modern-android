@@ -10,6 +10,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import com.example.AppLanguage
 import com.example.data.model.LiveTimerState
 import com.example.data.repository.BabyBuddyRepository
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +35,11 @@ class TimerSyncService : Service() {
     private var foregroundId = 0
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        AppLanguage.apply(this)
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val current = currentNotification()

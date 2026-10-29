@@ -632,6 +632,8 @@
     <string name="settings_appearance_24h">%s · שעון 24 שעות</string>
     <string name="settings_appearance_12h">%s · שעון 12 שעות</string>
     <string name="settings_theme">עיצוב</string>
+    <string name="settings_language">שפה</string>
+    <string name="settings_language_phone">כמו בטלפון</string>
     <string name="settings_24h">שעון 24 שעות</string>
     <string name="settings_24h_on">השעות יוצגו כ־19:06</string>
     <string name="settings_24h_off">השעות יוצגו כ־7:06 אחה״צ</string>

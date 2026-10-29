@@ -44,7 +44,7 @@ cp tools/hooks/blocklist.example tools/hooks/blocklist.local   # names/addresses
 
 ## Translations
 
-All UI text lives in `app/src/main/res/values/strings.xml`; a translation is a `values-<lang>/strings.xml` with the same names (the language then shows up in the phone's per-app language setting, Android 13+).
+All UI text lives in `app/src/main/res/values/strings.xml`; a translation is a `values-<lang>/strings.xml` with the same names (Hebrew: `values-iw`), plus its tag in `AppLanguage.TAGS` so it shows in Settings → Appearance → Language (on Android 13+ also in the phone's per-app language setting).
 
 - In composables use `stringResource` / `pluralStringResource`. Elsewhere (view model, repository, widgets, notifications, enum labels) use `context.getString` when there is a `Context`, else `AppText.get` / `AppText.plural` (`data/model/AppText.kt`).
 - Anything written to the server stays English, so other clients can read it: the note segments in the [ICD](docs/ICD.md) (§5), tags, shared timer names and the stored diaper values (amount, consistency, color, cream). Show those through `diaperValueLabel`.

@@ -1,5 +1,8 @@
 package com.example.ui.screens
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -60,6 +63,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -68,6 +72,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.AppLanguage
 import com.example.BuildConfig
 import com.example.R
 import com.example.data.ml.RhythmTarget
@@ -144,6 +149,63 @@ private fun SwitchSetting(title: String, description: String, checked: Boolean, 
             colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = PrimaryColor)
         )
     }
+}
+
+/** Settings → Appearance → Language: the app's language, the phone's by default ([AppLanguage]). */
+@Composable
+private fun LanguageSetting() {
+    val context = LocalContext.current
+    val current = remember { AppLanguage.current(context) }
+    var picking by rememberSaveable { mutableStateOf(false) }
+    val phone = stringResource(R.string.settings_language_phone)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { picking = true }
+            .testTag("language_setting"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                if (current.isEmpty()) phone else AppLanguage.displayName(current),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+    if (picking) {
+        AlertDialog(
+            onDismissRequest = { picking = false },
+            title = { Text(stringResource(R.string.settings_language)) },
+            text = {
+                Column {
+                    (listOf("") + AppLanguage.TAGS).forEach { tag ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .selectable(selected = tag == current, onClick = {
+                                    picking = false
+                                    if (tag != current) context.findActivity()?.let { AppLanguage.set(it, tag) }
+                                })
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = tag == current, onClick = null, colors = RadioButtonDefaults.colors(selectedColor = PrimaryColor))
+                            Text(if (tag.isEmpty()) phone else AppLanguage.displayName(tag), modifier = Modifier.padding(start = 12.dp))
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { picking = false }) { Text(stringResource(R.string.cancel)) } }
+        )
+    }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
 
 private const val BABY_BUDDY_REPO = "https://github.com/babybuddy/babybuddy"
@@ -627,6 +689,7 @@ fun ConnectBackendScreen(
                     }
                 }
             }
+            LanguageSetting()
             SwitchSetting(
                 title = stringResource(R.string.settings_24h),
                 description = stringResource(if (use24h) R.string.settings_24h_on else R.string.settings_24h_off),

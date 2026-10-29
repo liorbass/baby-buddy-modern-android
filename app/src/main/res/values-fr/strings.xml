@@ -631,6 +631,8 @@
     <string name="settings_appearance_24h">%s · horloge 24 h</string>
     <string name="settings_appearance_12h">%s · horloge 12 h</string>
     <string name="settings_theme">Thème</string>
+    <string name="settings_language">Langue</string>
+    <string name="settings_language_phone">Comme le téléphone</string>
     <string name="settings_24h">Horloge 24 h</string>
     <string name="settings_24h_on">Les heures s\'affichent ainsi : 19:06</string>
     <string name="settings_24h_off">Les heures s\'affichent ainsi : 7:06 PM</string>

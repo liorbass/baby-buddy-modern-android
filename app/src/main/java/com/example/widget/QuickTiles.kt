@@ -10,6 +10,7 @@ import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.widget.Toast
+import com.example.AppLanguage
 import com.example.MainActivity
 import com.example.R
 import com.example.data.model.BreastSide
@@ -22,6 +23,11 @@ import com.example.data.repository.BabyBuddyRepository
  * [refreshAll] asks the system to redraw them when a timer changes.
  */
 abstract class QuickTile : TileService() {
+
+    override fun onCreate() {
+        super.onCreate()
+        AppLanguage.apply(this)
+    }
 
     override fun onStartListening() {
         super.onStartListening()

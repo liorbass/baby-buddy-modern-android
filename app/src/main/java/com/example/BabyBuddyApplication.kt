@@ -1,6 +1,7 @@
 package com.example
 
 import android.app.Application
+import android.content.res.Configuration
 import com.example.data.model.AppText
 import com.example.data.repository.BabyBuddyRepository
 import com.example.widget.AppShortcuts
@@ -29,6 +30,7 @@ class BabyBuddyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppLanguage.apply(this)
         AppText.resources = resources
         val repository = BabyBuddyRepository.instance
         repository.attach(this)
@@ -142,5 +144,11 @@ class BabyBuddyApplication : Application() {
                 WidgetManagerHelper.updateAllWidgets(this@BabyBuddyApplication)
             }
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Before Android 13 a system change (rotation, phone language) resets the app's own language
+        AppLanguage.apply(this)
     }
 }

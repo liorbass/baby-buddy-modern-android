@@ -74,6 +74,7 @@ class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AppLanguage.apply(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         // Only on a fresh launch; after rotation the ViewModel already has the right screen

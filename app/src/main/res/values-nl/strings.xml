@@ -622,6 +622,8 @@
     <string name="settings_appearance_24h">%s · 24-uursklok</string>
     <string name="settings_appearance_12h">%s · 12-uursklok</string>
     <string name="settings_theme">Thema</string>
+    <string name="settings_language">Taal</string>
+    <string name="settings_language_phone">Zelfde als telefoon</string>
     <string name="settings_24h">24-uursklok</string>
     <string name="settings_24h_on">Tijden worden getoond als 19:06</string>
     <string name="settings_24h_off">Tijden worden getoond als 7:06 PM</string>
