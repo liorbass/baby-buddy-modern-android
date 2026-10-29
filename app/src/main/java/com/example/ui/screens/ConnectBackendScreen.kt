@@ -58,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
@@ -147,7 +148,6 @@ private fun SwitchSetting(title: String, description: String, checked: Boolean, 
 
 private const val BABY_BUDDY_REPO = "https://github.com/babybuddy/babybuddy"
 private const val APP_REPO = "https://github.com/liorbass/baby-buddy-modern-android"
-
 
 @Composable
 fun ConnectBackendScreen(
@@ -432,11 +432,11 @@ fun ConnectBackendScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 // Up top as well as under the form, so it's seen before the server fields
-                TextButton(onClick = onEnterDemoMode, contentPadding = PaddingValues(0.dp), modifier = Modifier.testTag("demo_mode_link")) {
+                TextButton(onClick = onEnterDemoMode, contentPadding = PaddingValues(0.dp), shape = RectangleShape, modifier = Modifier.testTag("demo_mode_link")) {
                     Text(stringResource(R.string.login_no_server), color = PrimaryColor, fontWeight = FontWeight.Medium)
                 }
                 var showWhatIs by rememberSaveable { mutableStateOf(false) }
-                TextButton(onClick = { showWhatIs = !showWhatIs }, contentPadding = PaddingValues(0.dp), modifier = Modifier.testTag("what_is_baby_buddy_link")) {
+                TextButton(onClick = { showWhatIs = !showWhatIs }, contentPadding = PaddingValues(0.dp), shape = RectangleShape, modifier = Modifier.testTag("what_is_baby_buddy_link")) {
                     Text(stringResource(if (showWhatIs) R.string.login_what_is_open else R.string.login_what_is_closed), color = PrimaryColor, fontWeight = FontWeight.Medium)
                 }
                 AnimatedVisibility(visible = showWhatIs) {
@@ -450,7 +450,7 @@ fun ConnectBackendScreen(
                                 stringResource(R.string.login_what_is_companion),
                                 style = MaterialTheme.typography.bodyMedium
                             )
-                            TextButton(onClick = { openLink(BABY_BUDDY_REPO) }, contentPadding = PaddingValues(0.dp)) {
+                            TextButton(onClick = { openLink(BABY_BUDDY_REPO) }, contentPadding = PaddingValues(0.dp), shape = RectangleShape) {
                                 Text(stringResource(R.string.login_set_up_server), color = PrimaryColor, fontWeight = FontWeight.Medium)
                             }
                         }
@@ -810,10 +810,10 @@ fun ConnectBackendScreen(
                 }
             }
             Column {
-                TextButton(onClick = { openLink(APP_REPO) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.testTag("app_repo_link")) {
+                TextButton(onClick = { openLink(APP_REPO) }, contentPadding = PaddingValues(0.dp), shape = RectangleShape, modifier = Modifier.testTag("app_repo_link")) {
                     Text(stringResource(R.string.about_source), color = PrimaryColor, fontWeight = FontWeight.Medium)
                 }
-                TextButton(onClick = { openLink(BABY_BUDDY_REPO) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.testTag("baby_buddy_repo_link")) {
+                TextButton(onClick = { openLink(BABY_BUDDY_REPO) }, contentPadding = PaddingValues(0.dp), shape = RectangleShape, modifier = Modifier.testTag("baby_buddy_repo_link")) {
                     Text(stringResource(R.string.about_server), color = PrimaryColor, fontWeight = FontWeight.Medium)
                 }
             }
