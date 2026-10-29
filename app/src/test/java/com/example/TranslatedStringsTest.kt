@@ -37,7 +37,7 @@ class TranslatedStringsTest {
     @Config(qualifiers = "es")
     fun spanish() = assertLocale("2 h 05", "Tiempo boca abajo", "Ambos", "Suelta / Líquida", "Niño")
 
-    // values-he is packaged under Hebrew's legacy code iw, which is what Android's Locale reports on phones
+    // Hebrew is in values-iw: java.util.Locale turns "he" into the legacy "iw", so values-he would never be used
     @Test
     @Config(qualifiers = "iw")
     fun hebrew() = assertLocale("2 ש׳ 05 דק׳", "זמן בטן", "שניהם", "רך מאוד / נוזלי", "בן")
