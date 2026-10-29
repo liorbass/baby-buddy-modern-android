@@ -1,0 +1,2 @@
+- German, Dutch, Spanish and Hebrew translations (follow the phone's language, or pick one per app on Android 13+)
+- These are machine translations using the Baby Buddy server's own terms: corrections from native speakers are very welcome on GitHub
