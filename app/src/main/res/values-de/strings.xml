@@ -1,0 +1,856 @@
+<resources>
+    <string name="app_name">Baby Buddy Companion</string>
+    <string name="widget_quick_log_name">Baby Buddy Schnelleintrag</string>
+    <string name="widget_quick_log_desc">Mahlzeiten, Windeln und Bauchzeit mit einem Tippen erfassen.</string>
+    <string name="widget_timer_name">Baby Buddy Still-Timer</string>
+    <string name="widget_timer_desc">Der Still-Timer auf deinem Startbildschirm: Pause, Weiter und Seitenwechsel.</string>
+    <string name="widget_summary_name">Baby Buddy Tagesübersicht</string>
+    <string name="tile_feed_name">Stillen</string>
+    <string name="tile_sleep_name">Schlafen</string>
+    <string name="tile_diaper_name">Windel</string>
+    <string name="widget_summary_desc">Die Mahlzeiten und Windeln von heute auf einen Blick.</string>
+
+    <!-- Shared formats -->
+    <string name="duration_hours_minutes">%1$d h %2$02d min</string>
+    <string name="duration_minutes">%d min</string>
+    <string name="percentile_below">&lt;%s</string>
+    <string name="percentile_above">&gt;%s</string>
+    <string name="yesterday_at">Gestern %s</string>
+    <string name="date_at">%1$s, %2$s</string>
+
+    <!-- Tracked items (Settings) -->
+    <string name="item_breastfeeding">Stillen</string>
+    <string name="item_breastfeeding_desc">Timer links/rechts, letzte Seite, Still-Statistik</string>
+    <string name="item_bottle">Fläschchen</string>
+    <string name="item_bottle_desc">Fläschchen mit Säuglingsnahrung und Brustmilch</string>
+    <string name="item_diapers">Windeln</string>
+    <string name="item_diapers_desc">Wechsel, nasse/feste Windeln, Windelrhythmus</string>
+    <string name="item_sleep">Schlafen</string>
+    <string name="item_sleep_desc">Schlaf-Timer, Nickerchen, Wachzeit, Schlafrhythmus</string>
+    <string name="item_pumping">Abpumpen</string>
+    <string name="item_pumping_desc">Abpump-Einheiten und Mengen</string>
+    <string name="item_milk_stash">Milchvorrat</string>
+    <string name="item_milk_stash_desc">Gelagerte Brustmilch auf Heute</string>
+    <string name="item_tummy_time">Bauchzeit</string>
+    <string name="item_tummy_time_desc">Einheiten und die Karte mit dem Tagesziel</string>
+    <string name="item_quick_notes">Schnellnotizen</string>
+    <string name="item_quick_notes_desc">Notizen mit Tag per Tippen auf Heute</string>
+    <string name="item_bath">Baden</string>
+    <string name="item_bath_desc">Bade-Protokoll und Zeit seit dem letzten Bad</string>
+    <string name="item_growth">Wachstum</string>
+    <string name="item_growth_desc">Gewicht, Größe und Kopfumfang, mit WHO-Kurven in Trends</string>
+
+    <!-- Settings choices -->
+    <string name="start_side_opposite">Gegenüber der letzten Mahlzeit</string>
+    <string name="start_side_opposite_desc">Seiten abwechseln: auf der Seite beginnen, auf der die letzte Mahlzeit nicht endete</string>
+    <string name="start_side_same">Wie bei der letzten Mahlzeit</string>
+    <string name="start_side_same_desc">Auf der Seite beginnen, auf der die letzte Mahlzeit endete</string>
+    <string name="start_side_left">Immer links</string>
+    <string name="start_side_left_desc">Jede Mahlzeit links beginnen</string>
+    <string name="start_side_right">Immer rechts</string>
+    <string name="start_side_right_desc">Jede Mahlzeit rechts beginnen</string>
+    <string name="theme_by_time">Nach Tageszeit</string>
+    <string name="theme_by_time_desc">Dunkel von 20:00 bis 07:00</string>
+    <string name="theme_system">Wie das Handy</string>
+    <string name="theme_system_desc">Folgt dem dunklen Design des Handys</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_light_desc">Immer hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_dark_desc">Immer dunkel</string>
+    <string name="sex_boy">Junge</string>
+    <string name="sex_girl">Mädchen</string>
+
+    <!-- Today: quick actions, cards, tiles -->
+    <string name="action_feeding">Mahlzeit</string>
+    <string name="action_diaper">Windel</string>
+    <string name="action_pump">Abpumpen</string>
+    <string name="action_tummy_time">Bauchzeit</string>
+    <string name="action_sleep">Schlafen</string>
+    <string name="action_bath">Baden</string>
+    <string name="card_last_feed">Letzte Mahlzeit</string>
+    <string name="card_last_diaper">Letzte Windel</string>
+    <string name="card_wake_windows">Wachfenster</string>
+    <string name="card_tummy_time">Bauchzeit</string>
+    <string name="card_temperature">Temperatur</string>
+    <string name="card_notes">Notizen</string>
+    <string name="card_growth">Wachstum</string>
+    <string name="card_category_feeding">Mahlzeit</string>
+    <string name="card_category_diapers">Windeln</string>
+    <string name="card_category_sleep">Schlafen</string>
+    <string name="card_category_activity">Aktivität</string>
+    <string name="card_category_health">Gesundheit</string>
+    <string name="card_category_family">Familie</string>
+    <string name="tile_feeds">Mahlzeiten</string>
+    <string name="tile_diapers">Windeln</string>
+    <string name="tile_sleep">Schlafen</string>
+    <string name="tile_wake_window">Wachfenster</string>
+    <string name="tile_pumped">Abgepumpt</string>
+    <string name="tile_milk_stash">Milchvorrat</string>
+    <string name="tile_tummy_time">Bauchzeit</string>
+    <string name="tile_last_bath">Letztes Bad</string>
+    <string name="wake_part_awake_for">Wach seit</string>
+    <string name="wake_part_nap_due">Nickerchen fällig</string>
+    <string name="wake_part_today_stats">Schnitt heute</string>
+    <string name="wake_part_window_bars">Jedes Fenster</string>
+    <string name="growth_weight">Gewicht</string>
+    <string name="growth_length">Größe</string>
+    <string name="growth_head">Kopfumfang</string>
+    <string name="growth_head_short">Kopf</string>
+
+    <!-- History filters, Log entries, rhythm models -->
+    <string name="history_filter_all">Alle</string>
+    <string name="history_filter_feeds">Mahlzeiten</string>
+    <string name="history_filter_diapers">Windeln</string>
+    <string name="history_filter_pumping">Abpumpen</string>
+    <string name="history_filter_tummy">Bauchzeit</string>
+    <string name="history_filter_sleep">Schlafen</string>
+    <string name="history_filter_bath">Baden</string>
+    <string name="history_filter_growth">Wachstum</string>
+    <string name="history_filter_notes">Notizen</string>
+    <string name="log_breastfeeding">Stillen</string>
+    <string name="log_bottle">Fläschchen</string>
+    <string name="log_diaper">Windel</string>
+    <string name="log_sleep">Schlafen</string>
+    <string name="log_pumping">Abpumpen</string>
+    <string name="log_bath">Baden</string>
+    <string name="log_growth">Wachstum</string>
+    <string name="rhythm_feed_gap">Nächste Mahlzeit</string>
+    <string name="rhythm_feed_gap_desc">Minuten vom Beginn einer Mahlzeit bis zur nächsten</string>
+    <string name="rhythm_diaper_gap">Nächste Windel</string>
+    <string name="rhythm_diaper_gap_desc">Minuten von einem Wechsel zum nächsten</string>
+    <string name="rhythm_awake_window">Nächster Schlaf</string>
+    <string name="rhythm_awake_window_desc">Wache Minuten zwischen zwei Schlafphasen</string>
+    <string name="rhythm_sleep_length">Aufwachen</string>
+    <string name="rhythm_sleep_length_desc">Wie lange ein Schlaf dauert</string>
+
+    <!-- Common words -->
+    <string name="side_left">Links</string>
+    <string name="side_right">Rechts</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Weiter</string>
+
+    <!-- Launcher shortcuts and home-screen widgets -->
+    <string name="shortcut_feed_left">Links stillen</string>
+    <string name="shortcut_feed_left_desc">Links beginnen oder nach links wechseln</string>
+    <string name="shortcut_feed_right">Rechts stillen</string>
+    <string name="shortcut_feed_right_desc">Rechts beginnen oder nach rechts wechseln</string>
+    <string name="shortcut_diaper">Windel</string>
+    <string name="shortcut_diaper_desc">Windelwechsel erfassen</string>
+    <string name="shortcut_sleep">Jetzt schlafen</string>
+    <string name="shortcut_sleep_desc">Schlaf-Timer starten</string>
+    <string name="widget_last_fed">Letzte Mahlzeit %s</string>
+    <string name="widget_no_feeds_today">Heute noch keine Mahlzeit</string>
+    <string name="widget_wet_dirty">%1$d nass · %2$d fest</string>
+    <string name="next_up_feed">Mahlzeit</string>
+    <string name="next_up_diaper">Windel</string>
+    <string name="next_up_wake_up">Aufwachen</string>
+    <string name="next_up_nap">Nickerchen</string>
+    <string name="next_up_item">%1$s ~%2$s</string>
+    <string name="next_up_line">Als Nächstes: %s</string>
+    <string name="widget_last_side">Zuletzt: %s</string>
+    <string name="widget_paused_side">Pausiert · %s</string>
+    <string name="widget_on_side_started">%1$s · seit %2$s</string>
+    <string name="widget_last_ended_on">Zuletzt beendet: %1$s · %2$s</string>
+    <string name="widget_tap_start">Tippe auf Start zum Beginnen</string>
+    <string name="widget_start_side">Start %s</string>
+
+    <!-- Common words -->
+    <string name="end">Ende</string>
+    <string name="sleeping">Schläft</string>
+    <string name="since_time">Seit %s</string>
+    <string name="woke_up">Aufgewacht</string>
+    <string name="sleep_saved">Schlaf gespeichert</string>
+    <string name="feed_paused">Mahlzeit pausiert</string>
+
+    <!-- Notifications, Quick Settings tiles, reminders -->
+    <string name="channel_feed_timer">Still-Timer</string>
+    <string name="channel_next_up">Als Nächstes</string>
+    <string name="channel_sleep_timer">Schlaf-Timer</string>
+    <string name="channel_reminders">Erinnerungen</string>
+    <string name="feeding_left_side">Stillen · links</string>
+    <string name="feeding_right_side">Stillen · rechts</string>
+    <string name="pause_left">Links pausieren</string>
+    <string name="pause_right">Rechts pausieren</string>
+    <string name="feed_started_suffix">" · gestartet %s"</string>
+    <string name="left_short_time">L %s</string>
+    <string name="right_short_time">R %s</string>
+    <string name="feed_paused_text">Gesamt %1$s · L %2$s · R %3$s</string>
+    <string name="next_up_title_feed">Mahlzeit</string>
+    <string name="next_up_title_diaper">Windel</string>
+    <string name="next_up_title_wake_up">Aufwachen</string>
+    <string name="next_up_title_nap">Nickerchen</string>
+    <string name="reminder_feed_due_in">Mahlzeit in %s fällig</string>
+    <string name="reminder_feed_due">Mahlzeit fällig</string>
+    <string name="reminder_feed_text">Letzte Mahlzeit begann vor %1$s, um %2$s</string>
+    <string name="reminder_diaper_due_in">Windelwechsel in %s fällig</string>
+    <string name="reminder_diaper_due">Windelwechsel fällig</string>
+    <string name="reminder_diaper_text">Letzter Wechsel vor %1$s, um %2$s</string>
+    <string name="reminder_wake_up_in">Aufwachzeit in %s</string>
+    <string name="reminder_asleep_for">Schläft seit %s</string>
+    <string name="reminder_fell_asleep_at">Eingeschlafen um %s</string>
+    <string name="reminder_nap_in">Nickerchen in %s</string>
+    <string name="reminder_awake_for">Wach seit %s</string>
+    <string name="reminder_woke_up_at">Aufgewacht um %s</string>
+    <string name="reminder_woke_up_at_nap">Aufgewacht um %s. Zeit für ein Nickerchen?</string>
+    <string name="tile_open_app">App öffnen</string>
+    <string name="tile_tap_to_resume">Tippen zum Fortsetzen</string>
+    <string name="tile_feeding">Stillen</string>
+    <string name="tile_side_tap_to_pause">%s · tippen zum Pausieren</string>
+    <string name="tile_since_tap_when_awake">Seit %s · beim Aufwachen tippen</string>
+    <string name="tile_tap_when_asleep">Beim Einschlafen tippen</string>
+    <string name="tile_log_a_change">Wechsel erfassen</string>
+    <string name="timer_paused">Timer pausiert</string>
+    <string name="timer_running">Timer läuft</string>
+    <string name="switched_to_left">Zur linken Seite gewechselt</string>
+    <string name="switched_to_right">Zur rechten Seite gewechselt</string>
+    <string name="tummy_time_logged_5">Bauchzeit erfasst: 5 min</string>
+    <string name="widget_added">Widget hinzugefügt</string>
+
+    <!-- Home-screen widget layouts -->
+    <string name="widget_summary_today">Heute</string>
+    <string name="widget_summary_feeds">MAHLZEITEN</string>
+    <string name="widget_summary_diapers">WINDELN</string>
+    <string name="widget_quick_feed">Stillen</string>
+    <string name="widget_quick_diaper">Windel</string>
+    <string name="widget_quick_tummy">Bauch</string>
+    <string name="widget_quick_tummy_desc">Bauchzeit</string>
+    <string name="widget_timer_title">Stillen</string>
+    <string name="widget_switch_side">Seite wechseln</string>
+    <string name="widget_pause_play">Pause/Weiter</string>
+    <string name="saved_to_offline_queue">Eintrag in der lokalen Offline-Warteschlange gespeichert</string>
+
+    <!-- Toasts and status messages (view model) -->
+    <string name="error_load_history">Verlauf konnte nicht geladen werden</string>
+    <string name="error_load_trends">Trends konnten nicht geladen werden</string>
+    <string name="error_load_entries">Einträge konnten nicht geladen werden</string>
+    <plurals name="models_loading_days">
+        <item quantity="one">Lade Einträge von %d Tag</item>
+        <item quantity="other">Lade Einträge von %d Tagen</item>
+    </plurals>
+    <string name="models_fitting">Anpassen: %s</string>
+    <string name="models_now_estimated_by">%1$s: jetzt geschätzt von %2$s</string>
+    <string name="models_all_reset">Alle Rhythmen zurück auf die Standardschätzung</string>
+    <string name="models_reset">%s: zurück auf die Standardschätzung</string>
+    <string name="toast_bottle_logged_formula">Fläschchen erfasst: %d ml Säuglingsnahrung</string>
+    <string name="toast_bottle_logged_breast_milk">Fläschchen erfasst: %d ml Brustmilch</string>
+    <string name="toast_pumping_logged">Abpumpen erfasst: %d ml</string>
+    <string name="toast_pumping_updated">Abpumpen aktualisiert</string>
+    <string name="toast_pumping_deleted">Abpumpen gelöscht</string>
+    <string name="toast_feeding_updated">Mahlzeit aktualisiert</string>
+    <string name="toast_feeding_deleted">Mahlzeit gelöscht</string>
+    <string name="toast_diaper_updated">Windelwechsel aktualisiert</string>
+    <string name="toast_tummy_updated">Bauchzeit aktualisiert</string>
+    <string name="toast_tummy_deleted">Bauchzeit gelöscht</string>
+    <string name="toast_diaper_deleted">Windelwechsel gelöscht</string>
+    <string name="toast_undone">Rückgängig gemacht</string>
+    <string name="toast_left_side_set">Linke Seite auf %1$02d:%2$02d gesetzt</string>
+    <string name="toast_right_side_set">Rechte Seite auf %1$02d:%2$02d gesetzt</string>
+    <string name="toast_feed_start_set">Beginn der Mahlzeit auf %s gesetzt</string>
+    <string name="toast_sleep_started">Schlaf gestartet</string>
+    <string name="toast_nap_saved">Nickerchen gespeichert: %s</string>
+    <string name="toast_sleep_saved">Schlaf gespeichert: %s</string>
+    <string name="toast_sleep_discarded">Schlaf-Timer verworfen</string>
+    <string name="toast_nap_logged">Nickerchen erfasst: %s</string>
+    <string name="toast_sleep_logged">Schlaf erfasst: %s</string>
+    <string name="toast_sleep_updated">Schlaf aktualisiert</string>
+    <string name="toast_sleep_deleted">Schlaf gelöscht</string>
+    <string name="toast_feed_ended">Mahlzeit beendet</string>
+    <string name="toast_chime_on">Sanfter Ton: an</string>
+    <string name="toast_chime_muted">Sanfter Ton: stumm</string>
+    <string name="toast_feeding_saved">Mahlzeit gespeichert</string>
+    <string name="toast_diaper_saved_start_timer">Windel gespeichert! Still-Timer startet...</string>
+    <string name="toast_diaper_saved">Windel gespeichert</string>
+    <string name="toast_bottle_logged">Fläschchen erfasst</string>
+    <string name="toast_quick_pee">Pipi-Windel erfasst</string>
+    <string name="toast_quick_wet">Nasse Windel erfasst</string>
+    <string name="toast_quick_poop">Kacka-Windel erfasst</string>
+    <string name="toast_quick_dirty">Feste Windel erfasst</string>
+    <string name="toast_quick_both">Nasse und feste Windel erfasst</string>
+    <string name="toast_connecting">Verbinde mit Baby Buddy...</string>
+    <string name="toast_connected">Erfolgreich verbunden!</string>
+    <string name="toast_connection_failed">Verbindung fehlgeschlagen: %s</string>
+    <string name="toast_logged_out">Abgemeldet</string>
+    <string name="toast_demo_mode">Demomodus mit Beispieldaten aktiv</string>
+    <string name="toast_simulating_disconnected">Getrennte Verbindung wird simuliert</string>
+    <string name="toast_server_connected">Server verbunden</string>
+    <string name="toast_card_added">%s zu Heute hinzugefügt</string>
+    <string name="toast_card_removed">%s von Heute entfernt</string>
+    <string name="toast_card_removed_short">%s entfernt</string>
+    <string name="toast_tummy_logged">Bauchzeit erfasst: %d min</string>
+    <string name="toast_temperature_logged">Temperatur erfasst: %.1f°</string>
+    <string name="toast_growth_logged">Wachstum erfasst: %s</string>
+    <string name="toast_growth_updated">%s aktualisiert</string>
+    <string name="toast_growth_deleted">%s gelöscht</string>
+    <string name="toast_bath_logged">Bad erfasst</string>
+    <string name="toast_bath_updated">Bad aktualisiert</string>
+    <string name="toast_note_updated">Notiz aktualisiert</string>
+    <string name="toast_bath_deleted">Bad gelöscht</string>
+    <string name="toast_note_deleted">Notiz gelöscht</string>
+    <string name="toast_note_added">Notiz hinzugefügt</string>
+    <string name="toast_tagged_note_logged">%s erfasst</string>
+    <string name="toast_milk_stash_set">Milchvorrat auf %d ml gesetzt</string>
+    <string name="toast_requesting_widget">Widget wird zum Startbildschirm hinzugefügt...</string>
+    <string name="toast_widget_added_hint">Widget hinzugefügt! Du kannst auch lange auf den Startbildschirm drücken, um Widgets hinzuzufügen.</string>
+
+    <!-- Connection, sync and repository messages -->
+    <string name="connected_as">Verbunden als %s</string>
+    <string name="error_blocked_by_cloudflare">HTTP %d: von Cloudflare blockiert. Füge ein Cloudflare-Access-Service-Token hinzu.</string>
+    <string name="error_check_token">HTTP %d: prüfe das API-Token</string>
+    <string name="error_check_token_and_cloudflare">HTTP %d: prüfe das API-Token und das Cloudflare-Access-Token</string>
+    <string name="error_web_page_not_api">Der Server hat eine Webseite statt der API gesendet. Wenn er hinter Cloudflare Access liegt, füge ein Service-Token hinzu.</string>
+    <string name="error_certificate_not_trusted">Dem Zertifikat des Servers wird nicht vertraut. Wenn es selbstsigniert ist, aktiviere „Selbstsignierte Zertifikate erlauben“.</string>
+    <string name="error_connect_for_history">Verbinde dich mit deinem Baby-Buddy-Server, um den Verlauf zu sehen</string>
+    <string name="error_connect_for_trends">Verbinde dich mit deinem Baby-Buddy-Server, um Trends zu sehen</string>
+    <string name="error_not_connected">Nicht verbunden</string>
+    <string name="profile_my_baby">Mein Baby</string>
+    <string name="profile_baby">Baby</string>
+    <string name="profile_newborn">Neugeborenes</string>
+    <plurals name="sync_discarded">
+        <item quantity="one">%d Eintrag verworfen, der noch nicht auf dem Server gespeichert war</item>
+        <item quantity="other">%d Einträge verworfen, die noch nicht auf dem Server gespeichert waren</item>
+    </plurals>
+    <string name="sync_proxy_rejected">Ein Proxy vor dem Server hat %s abgelehnt, neuer Versuch folgt</string>
+    <string name="sync_unreachable">Server nicht erreichbar, es wird weiter versucht</string>
+    <plurals name="sync_token_rejected">
+        <item quantity="one">Der Server hat das API-Token abgelehnt. Verbinde dich in den Einstellungen neu, um %d ungespeicherten Eintrag zu senden</item>
+        <item quantity="other">Der Server hat das API-Token abgelehnt. Verbinde dich in den Einstellungen neu, um %d ungespeicherte Einträge zu senden</item>
+    </plurals>
+    <string name="sync_could_not_save">%1$s konnte nicht gespeichert werden: %2$s</string>
+    <string name="sync_server_rejected">Server hat %1$s abgelehnt (HTTP %2$d) %3$s</string>
+    <string name="write_feeding">Mahlzeit</string>
+    <string name="write_diaper_change">Windelwechsel</string>
+    <string name="write_pumping">Abpumpen</string>
+    <string name="write_temperature">Temperatur</string>
+    <string name="write_note">Notiz</string>
+    <string name="write_sleep">Schlaf</string>
+    <string name="write_tummy_time">Bauchzeit</string>
+    <string name="write_edit">%s (Änderung)</string>
+    <string name="write_delete">%s (Löschen)</string>
+    <string name="age_days">%d T.</string>
+    <string name="age_months_days">%1$d Mon. %2$d T.</string>
+    <string name="demo_mode">Demomodus</string>
+    <string name="synced_just_now">Gerade synchronisiert</string>
+    <string name="synced_at">Synchronisiert um %s</string>
+    <string name="connecting">Verbinde…</string>
+    <string name="card_last_feed_desc">Zeit seitdem, Seite</string>
+    <string name="card_last_diaper_desc">Zeit seitdem, Art</string>
+    <string name="card_wake_windows_desc">Wach seit, heutige Wachfenster</string>
+    <string name="card_tummy_time_desc">Tagesziel</string>
+    <string name="card_temperature_desc">Messungen</string>
+    <string name="card_notes_desc">Geteilte Notizen</string>
+    <string name="card_growth_desc">Gewicht, Größe, Kopf</string>
+
+    <!-- Common words -->
+    <string name="undo">Rückgängig</string>
+    <string name="dismiss">Schließen</string>
+    <string name="back">Zurück</string>
+    <string name="started">Gestartet</string>
+    <string name="today">Heute</string>
+    <string name="yesterday">Gestern</string>
+    <string name="tomorrow">Morgen</string>
+
+    <!-- Top bar, navigation, feed controls, pickers -->
+    <string name="status_offline">Offline</string>
+    <string name="status_demo">Demo</string>
+    <string name="status_unsent">%d nicht gesendet</string>
+    <string name="status_synced">Synchronisiert</string>
+    <string name="nav_today">Heute</string>
+    <string name="nav_trends">Trends</string>
+    <string name="nav_log">Eintragen</string>
+    <string name="nav_log_desc">Schnell eintragen</string>
+    <string name="nav_history">Verlauf</string>
+    <string name="nav_settings">Einstellungen</string>
+    <string name="nav_login">Login</string>
+    <string name="feed_tap_side_to_start">Tippe auf eine Seite zum Starten</string>
+    <string name="feed_paused_tap_side">Pausiert · tippe auf eine Seite zum Fortsetzen</string>
+    <string name="feed_feeding_on">Stillen · %s</string>
+    <string name="feed_since_previous">%1$s seit der vorherigen Mahlzeit (%2$s)</string>
+    <string name="feed_start_note">Hinzugefügte oder abgezogene Zeit zählt zur Startseite.</string>
+    <string name="edit_side">%s bearbeiten</string>
+    <string name="end_feed">Mahlzeit beenden</string>
+    <string name="last_side">Letzte Seite</string>
+    <string name="type_instead">Lieber tippen</string>
+    <string name="use_wheel">Rad verwenden</string>
+    <string name="earlier_today">Heute früher</string>
+    <string name="feed_left_right_minutes">L %1$d min · R %2$d min</string>
+
+    <!-- Common words -->
+    <string name="notes">Notizen</string>
+    <string name="fell_asleep">Eingeschlafen</string>
+    <string name="tap_again_to_discard">Nochmal tippen zum Verwerfen</string>
+
+    <!-- Sleep screen -->
+    <string name="sleep_duration_nap">%s · Nickerchen</string>
+    <string name="sleep_duration_night">%s · Nacht</string>
+    <string name="sleep_start_timer">Schlaf-Timer starten</string>
+    <string name="sleep_asleep_since">Schläft seit %s</string>
+    <string name="sleep_woke_up_save">Aufgewacht · speichern</string>
+    <string name="sleep_discard_timer">Timer verwerfen</string>
+    <string name="sleep_log_past">Vergangenen Schlaf erfassen</string>
+    <string name="sleep_slept">%s geschlafen</string>
+    <string name="sleep_save">Schlaf speichern</string>
+
+    <!-- Common words -->
+    <string name="close">Schließen</string>
+    <string name="open">Öffnen</string>
+    <string name="note_optional">Notiz (optional)</string>
+
+    <!-- Log screen -->
+    <string name="log_nothing">Hier gibt es nichts zu erfassen. Aktiviere Einträge wieder unter Einstellungen → Erfasste Bereiche.</string>
+    <string name="log_feed_paused">Pausiert · %s</string>
+    <string name="log_feed_running">Läuft · %s</string>
+    <string name="log_feed_subtitle">Timer links / rechts</string>
+    <string name="log_bottle_subtitle">Brustmilch oder Säuglingsnahrung</string>
+    <string name="log_diaper_subtitle">Nass, fest, beides oder trocken</string>
+    <string name="log_sleep_subtitle">Timer oder vergangener Schlaf</string>
+    <string name="log_pumping_subtitle">Menge und Dauer</string>
+    <string name="log_bath_subtitle">Zeit und Notiz</string>
+    <string name="log_last_weight">Letztes Gewicht: %s</string>
+
+    <!-- Diaper values (stored in English, shown translated) -->
+    <string name="diaper_amount_light">Wenig</string>
+    <string name="diaper_amount_medium">Mittel</string>
+    <string name="diaper_amount_heavy">Viel</string>
+    <string name="diaper_consistency_loose_long">Dünn / flüssig</string>
+    <string name="diaper_consistency_seedy_long">Körnig / senfartig</string>
+    <string name="diaper_consistency_paste_long">Breiig / normal</string>
+    <string name="diaper_consistency_hard_long">Hart / trocken</string>
+    <string name="diaper_consistency_loose">Dünn</string>
+    <string name="diaper_consistency_seedy">Körnig</string>
+    <string name="diaper_consistency_paste">Breiig</string>
+    <string name="diaper_consistency_hard">Hart</string>
+    <string name="diaper_consistency_soft">Weich</string>
+    <string name="diaper_color_mustard">Senfgelb</string>
+    <string name="diaper_color_brown">Hellbraun/Braun</string>
+    <string name="diaper_color_greenish">Grünlich</string>
+    <string name="diaper_color_dark">Dunkel</string>
+    <string name="diaper_cream_barrier_long">Aquaphor / Wundschutz</string>
+    <string name="diaper_cream_zinc_long">Zinksalbe</string>
+    <string name="diaper_cream_powder_long">Babypuder</string>
+    <string name="diaper_cream_barrier">Wundschutz</string>
+    <string name="diaper_cream_zinc">Zink</string>
+    <string name="diaper_cream_powder">Puder</string>
+
+    <!-- Common words -->
+    <string name="save">Speichern</string>
+    <string name="time">Zeit</string>
+    <string name="now_at">Jetzt · %s</string>
+    <string name="more_details">Mehr Details</string>
+    <string name="hide_details">Details ausblenden</string>
+    <string name="show_details">Details anzeigen</string>
+
+    <!-- Diaper form -->
+    <string name="diaper_change">Windelwechsel</string>
+    <string name="diaper_wet">Nass</string>
+    <string name="diaper_dirty">Fest</string>
+    <string name="diaper_both">Beides</string>
+    <string name="diaper_dry">Trocken</string>
+    <string name="diaper_amount">Menge</string>
+    <string name="diaper_consistency_optional">Konsistenz (optional)</string>
+    <string name="diaper_color">Farbe</string>
+    <string name="diaper_rash">Ausschlag</string>
+    <string name="diaper_cream">Creme</string>
+    <string name="diaper_save_start_feed">Speichern &amp; stillen</string>
+
+    <!-- Common words -->
+    <string name="ok">OK</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="reset">Zurücksetzen</string>
+    <string name="reset_all">Alle zurücksetzen</string>
+    <string name="in_duration">In %s</string>
+    <string name="duration_ago">vor %s</string>
+    <plurals name="days_count">
+        <item quantity="one">%d Tag</item>
+        <item quantity="other">%d Tage</item>
+    </plurals>
+
+    <!-- Trends: rhythm models tab -->
+    <string name="models_intro">Jeder Rhythmus bekommt sein eigenes Modell, automatisch ausgewählt: Lineare Regression, Boosted Trees, ein kleines neuronales Netz, nächste Nachbarn und der aktuelle Median nach Tageszeit werden jeweils mit mehreren Einstellungen ausprobiert und daran gemessen, wie gut sie deine letzten Einträge vorhergesagt haben – neben der Standardschätzung der App. Speichere eines, damit es Erinnerungen, Heute und das Widget schätzt; ist eine Zeit vorbei, schätzt Heute sie neu, je nachdem, wie spät das Modell bisher lag. Alles läuft auf diesem Handy.</string>
+    <string name="models_train_on">Trainieren mit</string>
+    <string name="models_custom_range">Eigener…</string>
+    <string name="models_fit_again">Neu anpassen</string>
+    <string name="models_fit">Modelle anpassen</string>
+    <string name="models_pick_history">Wähle, aus wie viel Verlauf gelernt werden soll, und tippe auf „Modelle anpassen“. Das dauert ein paar Sekunden.</string>
+    <string name="models_fitted_on">Angepasst mit Daten %1$s – %2$s um %3$s</string>
+    <string name="models_in_use_title">Verwendete Schätzungen</string>
+    <string name="models_default_estimate">Standardschätzung</string>
+    <string name="models_saved_summary">%1$s (%2$s) · ±%3$s · angepasst %4$s</string>
+    <plurals name="models_examples">
+        <item quantity="one">%d Beispiel</item>
+        <item quantity="other">%d Beispiele</item>
+    </plurals>
+    <string name="models_not_enough">Noch nicht genug Einträge: %1$d von %2$d benötigten. Versuch einen längeren Zeitraum.</string>
+    <string name="models_best">Am besten: %1$s (%2$s), liegt meist %3$s daneben.</string>
+    <string name="models_default_off_better">Die Standardschätzung (%1$s) liegt %2$s daneben: %3$d %% besser.</string>
+    <string name="models_default_off_same">Die Standardschätzung (%1$s) liegt %2$s daneben, ist hier also genauso gut.</string>
+    <string name="models_tried">Getestete Modelle (typischer Fehler)</string>
+    <string name="models_in_use_now">Aktuell verwendet: %1$s, ±%2$s (angepasst %3$s). Diese Anpassung, %4$s: ±%5$s.</string>
+    <string name="models_in_use">In Verwendung</string>
+    <string name="models_save_version">Diese Version speichern</string>
+    <string name="models_use">%s verwenden</string>
+    <string name="models_reset_default">Auf Standard zurücksetzen</string>
+    <string name="models_what_matters">Was am meisten zählt (%s)</string>
+    <string name="models_importance_note">Wie viel schlechter die Vorhersagen werden, wenn diese Eingabe vermischt wird.</string>
+    <string name="models_actual_vs_predicted">Letzte Einträge: tatsächlich vs. vorhergesagt</string>
+    <string name="models_actual">Tatsächlich</string>
+    <string name="models_predicted">Vorhergesagt</string>
+    <string name="models_next_feed_around">Nächste Mahlzeit gegen %s</string>
+    <string name="models_next_change_around">Nächster Wechsel gegen %s</string>
+    <string name="models_wake_up_around">Aufwachen gegen %s</string>
+    <string name="models_ready_to_sleep_around">Müde gegen %s</string>
+
+    <!-- Common words -->
+    <string name="nap">Nickerchen</string>
+    <string name="note">Notiz</string>
+    <string name="amount_ml">%d ml</string>
+    <string name="amount_minutes">%d min</string>
+    <string name="previous_week">Vorherige Woche</string>
+    <string name="next_week">Nächste Woche</string>
+    <string name="last_7_days">Letzte 7 Tage</string>
+    <plurals name="feeds_count">
+        <item quantity="one">%d Mahlzeit</item>
+        <item quantity="other">%d Mahlzeiten</item>
+    </plurals>
+    <plurals name="diapers_count">
+        <item quantity="one">%d Windel</item>
+        <item quantity="other">%d Windeln</item>
+    </plurals>
+    <plurals name="baths_count">
+        <item quantity="one">%d Bad</item>
+        <item quantity="other">%d Bäder</item>
+    </plurals>
+    <plurals name="measurements_count">
+        <item quantity="one">%d Messung</item>
+        <item quantity="other">%d Messungen</item>
+    </plurals>
+    <plurals name="notes_count">
+        <item quantity="one">%d Notiz</item>
+        <item quantity="other">%d Notizen</item>
+    </plurals>
+
+    <!-- History list -->
+    <string name="history_amount">Menge: %s</string>
+    <string name="history_ml_formula">%d ml Säuglingsnahrung</string>
+    <string name="history_ml_breast_milk">%d ml Brustmilch</string>
+    <string name="history_minutes_sides">%1$d min · %2$s</string>
+    <string name="history_ml_minutes">%1$d ml · %2$d min</string>
+    <string name="history_sleep_until">%1$s · bis %2$s</string>
+    <string name="history_min_nursing">%d min gestillt</string>
+    <string name="history_ml_bottle">%d ml Fläschchen</string>
+    <string name="history_asleep">%s geschlafen</string>
+    <string name="history_empty_all">In diesen 7 Tagen nichts erfasst.</string>
+    <string name="history_empty_growth">Noch keine Wachstumsmessungen.</string>
+    <string name="history_empty_filter">Keine Einträge „%s“ in diesen 7 Tagen.</string>
+
+    <!-- Common words -->
+    <string name="add">Hinzufügen</string>
+
+    <!-- Today cards -->
+    <string name="cards_remove">Karte entfernen</string>
+    <string name="cards_tummy_progress">%1$d von %2$d min</string>
+    <string name="cards_plus_minutes">+%d min</string>
+    <string name="cards_no_readings">Heute keine Messungen</string>
+    <string name="cards_no_measurements">Noch keine Messungen</string>
+    <string name="cards_percentile">%s Perzentile</string>
+    <string name="cards_choose_sex">Wähle Junge oder Mädchen unter Einstellungen → Du, um die WHO-Perzentilen zu sehen.</string>
+    <string name="cards_log_growth">Wachstum erfassen</string>
+    <string name="cards_no_notes">Noch keine Notizen</string>
+    <string name="cards_add_note">Notiz hinzufügen</string>
+    <string name="cards_asleep_for">Schläft seit</string>
+    <string name="cards_since_awake_before">seit %1$s · davor %2$s wach</string>
+    <string name="cards_since">seit %s</string>
+    <string name="cards_no_sleep">Noch kein Schlaf erfasst</string>
+    <string name="cards_nap_due_in">Nickerchen ~%1$s · in %2$s</string>
+    <string name="cards_nap_due_over">Nickerchen ~%1$s · %2$s drüber</string>
+    <string name="cards_wake_today_stats">Heute: %1$d · Ø %2$s · längstes %3$s</string>
+
+    <!-- Common words -->
+    <string name="off">Aus</string>
+
+    <!-- Login and certificate -->
+    <string name="cert_changed_title">Serverzertifikat geändert</string>
+    <string name="cert_trust_title">Diesem Zertifikat vertrauen?</string>
+    <string name="cert_changed_text">Das Zertifikat des Servers ist nicht das, dem du vorher vertraut hast. Das ist normal, wenn du es erneuert hast; andernfalls fängt vielleicht jemand die Verbindung ab.</string>
+    <string name="cert_unknown_text">Das Zertifikat des Servers ist nicht von einer bekannten Stelle signiert. Prüfe, ob dieser SHA-256-Fingerabdruck zum Zertifikat deines Servers passt, bevor du ihm vertraust.</string>
+    <string name="cert_trust">Vertrauen</string>
+    <string name="login_server_url">Server-URL</string>
+    <string name="login_api_token">API-Token</string>
+    <string name="login_hide_token">Token verbergen</string>
+    <string name="login_show_token">Token anzeigen</string>
+    <string name="login_token_hint">Du findest es in Baby Buddy unter deinen Benutzereinstellungen → API-Key.</string>
+    <string name="login_self_signed">Selbstsignierte Zertifikate erlauben</string>
+    <string name="login_self_signed_desc">Du bestätigst das Zertifikat des Servers einmal; nur diesem wird vertraut</string>
+    <string name="login_cloudflare">Hinter Cloudflare Access</string>
+    <string name="login_cloudflare_desc">Sendet ein Service-Token, damit die App den Cloudflare-Login überspringt</string>
+    <string name="login_hide_secret">Secret verbergen</string>
+    <string name="login_show_secret">Secret anzeigen</string>
+    <string name="login_cloudflare_hint">Erstelle eines unter Cloudflare Zero Trust → Access → Service Auth und füge der App eine Service-Auth-Richtlinie hinzu.</string>
+    <string name="login_enter_url_token">Gib eine Server-URL und ein API-Token ein</string>
+    <string name="login_enter_cloudflare">Gib die Cloudflare-Client-ID und das Secret ein</string>
+    <string name="login_reconnect">Neu verbinden</string>
+    <string name="login_connect">Verbinden</string>
+    <string name="login_try_demo">Demomodus mit Beispieldaten testen</string>
+    <string name="login_intro">Verbinde dich zum Start mit deinem Baby-Buddy-Server.</string>
+    <string name="login_no_server">Noch kein Server? Teste die Demo mit Beispieldaten →</string>
+    <string name="login_what_is_open">Was ist Baby Buddy? ▴</string>
+    <string name="login_what_is_closed">Was ist Baby Buddy? ▾</string>
+    <string name="login_what_is_text">Baby Buddy ist eine kostenlose Open-Source-Web-App, um Mahlzeiten, Schlaf, Windeln und Wachstum eines Babys festzuhalten. Du hostest sie selbst (auf einem Heimserver, NAS oder in der Cloud), deine Daten bleiben also bei dir.</string>
+    <string name="login_what_is_companion">Diese App ist eine inoffizielle Handy-Begleit-App dazu: Sie verbindet sich mit deinem Baby-Buddy-Server und speichert alles dort, sodass die ganze Familie dasselbe Protokoll teilt.</string>
+    <string name="login_set_up_server">Server einrichten: Baby Buddy auf GitHub →</string>
+
+    <!-- Settings -->
+    <string name="settings_open_section">%s öffnen</string>
+    <string name="settings_no_browser">Kein Browser zum Öffnen von %s</string>
+    <string name="settings_connection">Serververbindung</string>
+    <string name="settings_you">Du</string>
+    <string name="settings_tracked">Erfasste Bereiche</string>
+    <string name="settings_appearance">Darstellung</string>
+    <string name="settings_notifications">Benachrichtigungen</string>
+    <string name="settings_about">Über</string>
+    <string name="settings_connected_to">Verbunden · %s</string>
+    <string name="settings_disconnect">Trennen</string>
+    <string name="settings_add_your_name">Deinen Namen hinzufügen</string>
+    <string name="settings_your_name">Dein Name</string>
+    <string name="settings_your_name_desc">Wird jedem Eintrag hinzugefügt, damit andere sehen, wer ihn erfasst hat</string>
+    <string name="settings_growth_charts">Wachstumskurven</string>
+    <string name="settings_growth_charts_desc">Die WHO veröffentlicht getrennte Kurven für Jungen und Mädchen. Wird nur für die Wachstumsperzentilen auf diesem Handy verwendet.</string>
+    <string name="settings_start_side">Startseite beim Stillen</string>
+    <string name="settings_start_side_desc">Auf welcher Seite das Timer-Widget und die Schnelleinstellungs-Kachel starten. In der App wählst du die Seite selbst.</string>
+    <string name="settings_tracking_everything">Alles wird erfasst</string>
+    <string name="settings_hidden">Ausgeblendet: %s</string>
+    <string name="settings_tracked_desc">Schalte aus, was du nicht erfasst. Es wird auf diesem Handy in Heute, Schnellaktionen, Verlauf, Trends und Erinnerungen ausgeblendet; vom Server wird nichts gelöscht.</string>
+    <string name="settings_appearance_24h">%s · 24-Stunden-Format</string>
+    <string name="settings_appearance_12h">%s · 12-Stunden-Format</string>
+    <string name="settings_theme">Design</string>
+    <string name="settings_24h">24-Stunden-Format</string>
+    <string name="settings_24h_on">Zeiten erscheinen als 19:06</string>
+    <string name="settings_24h_off">Zeiten erscheinen als 7:06 PM</string>
+    <string name="settings_models_tab">Modelle-Tab in Trends</string>
+    <string name="settings_models_tab_desc">Passt auf diesem Handy für jeden Rhythmus ein Modell an und sagt die nächste Mahlzeit, den nächsten Wechsel, das nächste Nickerchen und das Aufwachen vorher</string>
+    <string name="settings_summary_lock_screen">Sperrbildschirm-Timer</string>
+    <string name="settings_summary_next_up">als Nächstes</string>
+    <string name="settings_summary_feed">Mahlzeit-Erinnerung</string>
+    <string name="settings_summary_awake">Wach-Erinnerung</string>
+    <string name="settings_summary_sleep">Schlaf-Erinnerung</string>
+    <string name="settings_summary_diaper">Windel-Erinnerung</string>
+    <string name="settings_lock_screen_timers">Timer auf dem Sperrbildschirm</string>
+    <string name="settings_lock_screen_timers_desc">Tasten Links/Rechts/Ende fürs Stillen und der Schlaf-Timer, solange sie laufen</string>
+    <string name="settings_next_up">Als Nächstes auf dem Sperrbildschirm</string>
+    <string name="settings_next_up_desc">Eine stille Benachrichtigung mit der nächsten Mahlzeit, dem nächsten Windelwechsel und Nickerchen (aus den Erinnerungen oder einem gespeicherten Modell), solange kein Timer läuft</string>
+    <string name="settings_model_timed">Wenn das unter Trends → Modelle gespeicherte Modell es erwartet; die Zeit unten ist der Ersatzwert</string>
+    <string name="settings_remind_after">Erinnern nach</string>
+    <string name="settings_feed_reminder">Mahlzeit-Erinnerung</string>
+    <string name="settings_feed_reminder_on">Wenn seit Beginn der letzten Mahlzeit %s vergangen sind</string>
+    <string name="settings_feed_reminder_off">Benachrichtigen, wenn die nächste Mahlzeit fällig ist</string>
+    <string name="settings_feed_reminder_note">Zeit seit Beginn der letzten Mahlzeit (hh:mm)</string>
+    <string name="settings_awake_reminder">Wach-Erinnerung</string>
+    <string name="settings_awake_reminder_on">Wenn das Baby %s wach ist</string>
+    <string name="settings_awake_reminder_off">Benachrichtigen, wenn der letzte Schlaf eine Weile her ist</string>
+    <string name="settings_awake_reminder_note">Wache Zeit seit Ende des letzten Schlafs (hh:mm)</string>
+    <string name="settings_sleep_reminder">Schlaf-Erinnerung</string>
+    <string name="settings_sleep_reminder_on">Wenn ein gestoppter Schlaf %s gedauert hat</string>
+    <string name="settings_sleep_reminder_off">Benachrichtigen, wenn das Baby lange schläft</string>
+    <string name="settings_sleep_reminder_note">Schlafzeit ab dem Start des Schlaf-Timers (hh:mm)</string>
+    <string name="settings_diaper_reminder">Windel-Erinnerung</string>
+    <string name="settings_diaper_reminder_on">Wenn seit dem letzten Wechsel %s vergangen sind</string>
+    <string name="settings_diaper_reminder_off">Benachrichtigen, wenn der nächste Windelwechsel fällig ist</string>
+    <string name="settings_diaper_reminder_note">Zeit seit dem letzten Windelwechsel (hh:mm)</string>
+    <string name="settings_heads_up">Vorwarnung</string>
+    <string name="settings_heads_up_on">Zusätzlich %s vor jeder Erinnerung benachrichtigen</string>
+    <string name="settings_heads_up_off">Nur wenn eine Erinnerung fällig ist</string>
+    <string name="settings_reminders_note">Erinnerungen fragen zuerst den Server ab, daher zählt auch eine Mahlzeit, ein Wechsel oder Schlaf, der auf einem anderen Handy erfasst wurde.</string>
+    <string name="about_summary">Version %1$s · erstellt %2$s</string>
+    <string name="about_version">Version</string>
+    <string name="about_build">Build</string>
+    <string name="about_git">Git-Tag / Commit</string>
+    <string name="about_build_date">Build-Datum</string>
+    <string name="about_app_id">App-ID</string>
+    <string name="about_source">Quellcode, Issues und Releases auf GitHub →</string>
+    <string name="about_server">Baby Buddy, der Server, mit dem diese App arbeitet →</string>
+
+    <!-- Customize Today -->
+    <string name="customize_title">Heute anpassen</string>
+    <string name="customize_subtitle">Karten und Startbildschirm-Widgets</string>
+    <string name="customize_tab_cards">Dashboard-Karten</string>
+    <string name="customize_active">%d aktiv</string>
+    <string name="customize_tab_home">Startbildschirm</string>
+    <string name="customize_cards_hint">Schalte Karten für deine Heute-Ansicht ein oder aus.</string>
+    <string name="customize_summary_tiles">Übersichtskacheln</string>
+    <string name="customize_summary_tiles_desc">Das „Heute“-Raster mit den Summen. Bereiche, die du nicht erfasst, bleiben ausgeblendet.</string>
+    <string name="customize_show">Anzeigen</string>
+    <string name="customize_added">Hinzugefügt</string>
+    <string name="customize_home_title">📱 Android-Startbildschirm-Widgets</string>
+    <string name="customize_home_desc">Füge diese Widgets direkt zum Startbildschirm deines Handys hinzu, um mit einem Tippen zu erfassen und den Timer zu steuern, ohne die App zu öffnen.</string>
+    <string name="customize_quick_title">Schnelleintrag-Widget</string>
+    <string name="customize_quick_size">4 × 1 Standard</string>
+    <string name="customize_quick_desc">Tasten für Stillen, Windel und Bauchzeit.</string>
+    <string name="customize_preview_baby">Baby Leo • 3 Mon. 12 T.</string>
+    <string name="customize_preview_last_fed">Letzte Mahlzeit vor 45 min</string>
+    <string name="customize_timer_title">Live-Still-Timer-Widget</string>
+    <string name="customize_timer_size">4 × 2 Volle Steuerung</string>
+    <string name="customize_timer_desc">Echtzeit-Stoppuhr mit Aufteilung links/rechts und Tasten für Pause/Wechsel.</string>
+    <string name="customize_preview_timer">🤱 LIVE-STILL-TIMER</string>
+    <string name="customize_preview_right_active">Rechte Seite aktiv</string>
+    <string name="customize_summary_title">Tagesübersicht-Widget</string>
+    <string name="customize_tip_title">💡 Tipp zur manuellen Installation</string>
+    <string name="customize_tip_text">Wenn dein Launcher kein Anheften per Tippen unterstützt, halte eine freie Stelle auf dem Startbildschirm gedrückt, tippe auf „Widgets“, scrolle zu „Baby Buddy“ und zieh es an seinen Platz.</string>
+    <string name="customize_add_to_home">Zum Startbildschirm hinzufügen</string>
+    <string name="card_last_feed_long">Wann die letzte Mahlzeit begann, wie lange das her ist und die letzte Seite.</string>
+    <string name="card_last_diaper_long">Wann der letzte Windelwechsel war, wie lange das her ist und die Art.</string>
+    <string name="card_wake_windows_long">Wie lange das Baby schon wach ist, wann das nächste Nickerchen fällig ist und die heutigen Wachfenster.</string>
+    <string name="card_tummy_time_long">Bauchzeit für ein Tagesziel erfassen.</string>
+    <string name="card_temperature_long">Temperaturmessungen erfassen und ansehen.</string>
+    <string name="card_notes_long">Geteilte Notizen wie Baden und Routinen.</string>
+    <string name="card_growth_long">Aktuelles Gewicht, Größe und Kopfumfang mit WHO-Perzentilen.</string>
+
+    <!-- History calendar -->
+    <string name="retry">Erneut versuchen</string>
+    <string name="history_show_list">Liste anzeigen</string>
+    <string name="history_show_calendar">Kalender anzeigen</string>
+    <string name="history_legend_nursing">Stillen</string>
+
+    <!-- Common words -->
+    <string name="date">Datum</string>
+    <string name="duration">Dauer</string>
+    <string name="delete">Löschen</string>
+    <string name="tap_again_to_delete">Nochmal tippen zum Löschen</string>
+
+    <!-- Entry dialogs -->
+    <string name="dialog_growth_last">Zuletzt: %1$s am %2$s</string>
+    <string name="dialog_edit_named">%s bearbeiten</string>
+    <string name="dialog_logged_by">Erfasst von %s</string>
+    <string name="dialog_edit_bath">Bad bearbeiten</string>
+    <string name="dialog_edit_note">Notiz bearbeiten</string>
+    <string name="dialog_side_title">Seite: %s</string>
+    <string name="dialog_side_note">Lege fest, wie lange auf dieser Seite gestillt wurde. Der Timer zählt von hier aus weiter.</string>
+    <string name="dialog_milk_stash_note">Wie viel abgepumpte Milch ist gerade gelagert? Abpumpen erhöht den Vorrat, Fläschchen mit Brustmilch verringern ihn. Wird mit allen Handys geteilt.</string>
+    <string name="dialog_stored_milk">Gelagerte Milch</string>
+    <string name="dialog_note_placeholder">z. B. Vitamin D, Baden, unruhiger Abend</string>
+    <string name="dialog_tags">Tags</string>
+    <string name="dialog_night_sleep">Nachtschlaf</string>
+    <string name="dialog_edit_sleep">Schlaf bearbeiten</string>
+    <string name="dialog_minutes">Minuten</string>
+    <string name="dialog_quick_actions">Schnellaktionen</string>
+    <string name="dialog_quick_actions_note">Wähle die Tasten oben auf Heute und ihre Reihenfolge.</string>
+    <string name="dialog_move_up">%s nach oben</string>
+    <string name="dialog_move_down">%s nach unten</string>
+    <string name="dialog_edit_feeding">Mahlzeit bearbeiten</string>
+    <string name="dialog_edit_diaper">Windel bearbeiten</string>
+    <string name="dialog_skin_care">Hautpflege</string>
+    <string name="dialog_edit_tummy">Bauchzeit bearbeiten</string>
+    <string name="dialog_edit_pumping">Abpumpen bearbeiten</string>
+    <string name="dialog_breast_milk">Brustmilch</string>
+    <string name="dialog_formula">Säuglingsnahrung</string>
+    <string name="dialog_change_label">%s ändern</string>
+
+    <!-- Shared formats -->
+    <string name="duration_hours">%d h</string>
+    <string name="duration_hours_minutes_short">%1$d h %2$02d</string>
+
+    <!-- Trends charts -->
+    <string name="trends_charts">Diagramme</string>
+    <string name="trends_models">Modelle</string>
+    <string name="trends_no_data">Keine Daten für diesen Zeitraum.</string>
+    <string name="trends_server_settings">Server-Einstellungen</string>
+    <string name="trends_feeding_rhythm">Mahlzeiten-Rhythmus</string>
+    <string name="trends_no_feeds">In diesem Zeitraum keine Mahlzeiten erfasst.</string>
+    <string name="trends_longest_gap">Längste Pause</string>
+    <string name="trends_longest_week">Längste Pause: im Schnitt %s diese Woche</string>
+    <string name="trends_longest_month">Längste Pause: im Schnitt %s diesen Monat</string>
+    <string name="trends_up_week">, %s mehr als zu Wochenbeginn</string>
+    <string name="trends_up_month">, %s mehr als zu Monatsbeginn</string>
+    <string name="trends_down_week">, %s weniger als zu Wochenbeginn</string>
+    <string name="trends_down_month">, %s weniger als zu Monatsbeginn</string>
+    <string name="trends_sleep_rhythm">Schlafrhythmus</string>
+    <string name="trends_sleep_week">Schlaf: im Schnitt %s pro Tag diese Woche</string>
+    <string name="trends_sleep_month">Schlaf: im Schnitt %s pro Tag diesen Monat</string>
+    <string name="trends_sleep_longest">, längste Phase %s</string>
+    <string name="trends_diaper_rhythm">Windelrhythmus</string>
+    <string name="trends_metric_feeds">Mahlzeiten</string>
+    <string name="trends_metric_wet">Nasse Windeln</string>
+    <string name="trends_metric_dirty">Feste Windeln</string>
+    <string name="trends_metric_naps">Nickerchen</string>
+    <string name="trends_unit_per_day">pro Tag</string>
+    <string name="trends_unit_min_day">min/Tag</string>
+    <string name="trends_unit_ml_day">ml/Tag</string>
+    <string name="trends_unit_h_day">h/Tag</string>
+    <string name="trends_daily_numbers">Tageswerte</string>
+    <string name="trends_left_right">Links und rechts</string>
+    <string name="trends_left_pct">Links %d %%</string>
+    <string name="trends_right_pct">Rechts %d %%</string>
+    <string name="trends_pick_sex">Die WHO hat getrennte Kurven für Jungen und Mädchen. Wähle eine zum Vergleich.</string>
+    <string name="trends_need_birth_date">Trage das Geburtsdatum auf dem Server ein, um mit den WHO-Kurven zu vergleichen.</string>
+    <string name="trends_growth_none">Noch keine Messungen (%s). Erfasse sie im Eintragen-Bildschirm (Wachstum).</string>
+    <string name="trends_growth_latest_no_percentile">Zuletzt: %1$s am %2$s. Die WHO-Kurven hier reichen von der Geburt bis 2 Jahre.</string>
+    <string name="trends_growth_previous">" (%1$s am %2$s)"</string>
+    <string name="trends_growth_latest">Zuletzt: %1$s am %2$s, %3$s Perzentile%4$s. Tippe auf einen Punkt, um ihn zu bearbeiten.</string>
+    <string name="trends_who_median">Mittlere Linie: WHO-Median (%s Perzentile)</string>
+    <string name="trends_birth">Geburt</string>
+    <string name="trends_months_short">%d M</string>
+
+    <!-- Common words -->
+    <string name="none_yet">Noch keine</string>
+    <string name="just_now">Gerade eben</string>
+    <string name="ago_minutes">vor %d min</string>
+    <string name="ago_hours_minutes">vor %1$d h %2$02d min</string>
+    <string name="ago_days_hours">vor %1$d T. %2$d h</string>
+    <plurals name="days_ago">
+        <item quantity="one">vor %d Tag</item>
+        <item quantity="other">vor %d Tagen</item>
+    </plurals>
+    <plurals name="naps_count">
+        <item quantity="one">%d Nickerchen</item>
+        <item quantity="other">%d Nickerchen</item>
+    </plurals>
+    <plurals name="sessions_count">
+        <item quantity="one">%d Einheit</item>
+        <item quantity="other">%d Einheiten</item>
+    </plurals>
+
+    <!-- Today screen -->
+    <string name="today_formula">Säuglingsnahrung</string>
+    <string name="today_breast_milk">Brustmilch</string>
+    <string name="today_solid_food">Feste Nahrung</string>
+    <string name="today_handoff_wet">nass</string>
+    <string name="today_handoff_dirty">fest</string>
+    <string name="today_handoff_both">nass + fest</string>
+    <string name="today_handoff_dry">trocken</string>
+    <string name="today_handoff_diaper">Windel · %s</string>
+    <string name="today_handoff_nap">Nickerchen · %s</string>
+    <string name="today_handoff_sleep">Schlaf · %s</string>
+    <string name="today_handoff_title">Während du weg warst</string>
+    <string name="today_handoff_more">+%d weitere im Verlauf</string>
+    <string name="today_last_bottle_formula">Fläschchen · %d ml Säuglingsnahrung</string>
+    <string name="today_last_bottle_breast_milk">Fläschchen · %d ml Brustmilch</string>
+    <string name="today_last_breastfeed">Gestillt · %d min</string>
+    <string name="today_last_breast">Brust · %s</string>
+    <string name="today_side_minutes">%1$s %2$d min</string>
+    <string name="today_add_quick_actions">Schnellaktionen hinzufügen</string>
+    <string name="today_edit_quick_actions">Schnellaktionen bearbeiten</string>
+    <string name="today_nursing_and_bottle">%1$d min · %2$d ml</string>
+    <string name="today_sleeping_now">Schläft gerade</string>
+    <string name="today_asleep">Schläft</string>
+    <string name="today_none_ended">Heute keins beendet</string>
+    <string name="today_wake_avg">Ø %1$s · %2$d heute</string>
+    <string name="today_set">Festlegen</string>
+    <string name="today_tap_to_enter">Tippen, um die Menge einzugeben</string>
+    <string name="today_tap_to_correct">Tippen zum Korrigieren</string>
+    <string name="today_tap_to_log_bath">Tippen, um ein Bad zu erfassen</string>
+    <string name="today_in">in %s</string>
+    <string name="today_due_ago">seit %s fällig</string>
+    <string name="today_logged_today">Heute erfasst</string>
+    <string name="today_last_pump">Zuletzt abgepumpt</string>
+    <string name="today_none_today">Heute keins</string>
+    <string name="today_time_between_feeds">Zeit zwischen Mahlzeiten</string>
+    <string name="today_same_as_last_week">Etwa wie letzte Woche</string>
+    <string name="today_longer_than_last_week">%s länger als letzte Woche</string>
+    <string name="today_shorter_than_last_week">%s kürzer als letzte Woche</string>
+
+    <!-- Today side chips -->
+    <string name="side_left_short">L</string>
+    <string name="side_right_short">R</string>
+    <string name="side_chip_last">zuletzt</string>
+
+    <!-- Trends charts (row label) -->
+    <string name="trends_today_chart">Heute</string>
+</resources>

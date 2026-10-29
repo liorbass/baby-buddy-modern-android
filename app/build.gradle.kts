@@ -101,6 +101,8 @@ android {
           "--add-opens=java.base/java.io=ALL-UNNAMED",
           "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED"
         )
+        // Show expected/actual of a failed assertion in the log (CI keeps no test reports)
+        it.testLogging { exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
       }
     }
   }

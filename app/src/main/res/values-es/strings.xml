@@ -1,0 +1,869 @@
+<resources>
+    <string name="app_name">Baby Buddy Companion</string>
+    <string name="widget_quick_log_name">Registro rápido Baby Buddy</string>
+    <string name="widget_quick_log_desc">Registra tomas, pañales y tiempo boca abajo con un toque.</string>
+    <string name="widget_timer_name">Temporizador Baby Buddy</string>
+    <string name="widget_timer_desc">El temporizador de lactancia en tu pantalla de inicio: pausa, reanudación y cambio de pecho.</string>
+    <string name="widget_summary_name">Resumen del día Baby Buddy</string>
+    <string name="tile_feed_name">Lactancia</string>
+    <string name="tile_sleep_name">Sueño</string>
+    <string name="tile_diaper_name">Pañal</string>
+    <string name="widget_summary_desc">Las tomas y los pañales de hoy de un vistazo.</string>
+
+    <!-- Shared formats -->
+    <string name="duration_hours_minutes">%1$d h %2$02d</string>
+    <string name="duration_minutes">%d min</string>
+    <string name="percentile_below">&lt;%s</string>
+    <string name="percentile_above">&gt;%s</string>
+    <string name="yesterday_at">Ayer %s</string>
+    <string name="date_at">%1$s, %2$s</string>
+
+    <!-- Tracked items (Settings) -->
+    <string name="item_breastfeeding">Lactancia</string>
+    <string name="item_breastfeeding_desc">Temporizador izquierdo/derecho, último pecho, estadísticas de lactancia</string>
+    <string name="item_bottle">Biberones</string>
+    <string name="item_bottle_desc">Biberones de fórmula y de leche de pecho</string>
+    <string name="item_diapers">Pañales</string>
+    <string name="item_diapers_desc">Cambios, mojados/sucios, ritmo de pañales</string>
+    <string name="item_sleep">Sueño</string>
+    <string name="item_sleep_desc">Temporizador de sueño, siestas, tiempo despierto, ritmo de sueño</string>
+    <string name="item_pumping">Extracciones</string>
+    <string name="item_pumping_desc">Sesiones de extracción y cantidades</string>
+    <string name="item_milk_stash">Reserva de leche</string>
+    <string name="item_milk_stash_desc">La leche de pecho almacenada, en Hoy</string>
+    <string name="item_tummy_time">Tiempo boca abajo</string>
+    <string name="item_tummy_time_desc">Sesiones y la tarjeta del objetivo diario</string>
+    <string name="item_quick_notes">Notas rápidas</string>
+    <string name="item_quick_notes_desc">Notas con etiqueta de un toque, en Hoy</string>
+    <string name="item_bath">Baños</string>
+    <string name="item_bath_desc">Registro de baños y tiempo desde el último baño</string>
+    <string name="item_growth">Crecimiento</string>
+    <string name="item_growth_desc">Peso, longitud y perímetro craneal, con las curvas de la OMS en Tendencias</string>
+
+    <!-- Settings choices -->
+    <string name="start_side_opposite">El contrario a la última toma</string>
+    <string name="start_side_opposite_desc">Alternar: empezar por el lado en que no terminó la última toma</string>
+    <string name="start_side_same">El mismo que la última toma</string>
+    <string name="start_side_same_desc">Empezar por el lado en que terminó la última toma</string>
+    <string name="start_side_left">Siempre izquierdo</string>
+    <string name="start_side_left_desc">Empezar cada toma por el izquierdo</string>
+    <string name="start_side_right">Siempre derecho</string>
+    <string name="start_side_right_desc">Empezar cada toma por el derecho</string>
+    <string name="theme_by_time">Según la hora</string>
+    <string name="theme_by_time_desc">Oscuro de 20:00 a 07:00</string>
+    <string name="theme_system">Como el teléfono</string>
+    <string name="theme_system_desc">Sigue el tema oscuro del teléfono</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_light_desc">Siempre claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_dark_desc">Siempre oscuro</string>
+    <string name="sex_boy">Niño</string>
+    <string name="sex_girl">Niña</string>
+
+    <!-- Today: quick actions, cards, tiles -->
+    <string name="action_feeding">Toma</string>
+    <string name="action_diaper">Pañal</string>
+    <string name="action_pump">Extracción</string>
+    <string name="action_tummy_time">Boca abajo</string>
+    <string name="action_sleep">Sueño</string>
+    <string name="action_bath">Baño</string>
+    <string name="card_last_feed">Última toma</string>
+    <string name="card_last_diaper">Último pañal</string>
+    <string name="card_wake_windows">Ventanas de vigilia</string>
+    <string name="card_tummy_time">Tiempo boca abajo</string>
+    <string name="card_temperature">Temperatura</string>
+    <string name="card_notes">Notas</string>
+    <string name="card_growth">Crecimiento</string>
+    <string name="card_category_feeding">Alimentación</string>
+    <string name="card_category_diapers">Pañales</string>
+    <string name="card_category_sleep">Sueño</string>
+    <string name="card_category_activity">Actividad</string>
+    <string name="card_category_health">Salud</string>
+    <string name="card_category_family">Familia</string>
+    <string name="tile_feeds">Tomas</string>
+    <string name="tile_diapers">Pañales</string>
+    <string name="tile_sleep">Sueño</string>
+    <string name="tile_wake_window">Vigilia</string>
+    <string name="tile_pumped">Extraído</string>
+    <string name="tile_milk_stash">Reserva de leche</string>
+    <string name="tile_tummy_time">Boca abajo</string>
+    <string name="tile_last_bath">Último baño</string>
+    <string name="wake_part_awake_for">Despierto desde hace</string>
+    <string name="wake_part_nap_due">Siesta prevista</string>
+    <string name="wake_part_today_stats">Media de hoy</string>
+    <string name="wake_part_window_bars">Cada ventana</string>
+    <string name="growth_weight">Peso</string>
+    <string name="growth_length">Longitud</string>
+    <string name="growth_head">Perímetro craneal</string>
+    <string name="growth_head_short">Cabeza</string>
+
+    <!-- History filters, Log entries, rhythm models -->
+    <string name="history_filter_all">Todo</string>
+    <string name="history_filter_feeds">Tomas</string>
+    <string name="history_filter_diapers">Pañales</string>
+    <string name="history_filter_pumping">Extracciones</string>
+    <string name="history_filter_tummy">Boca abajo</string>
+    <string name="history_filter_sleep">Sueño</string>
+    <string name="history_filter_bath">Baños</string>
+    <string name="history_filter_growth">Crecimiento</string>
+    <string name="history_filter_notes">Notas</string>
+    <string name="log_breastfeeding">Lactancia</string>
+    <string name="log_bottle">Biberón</string>
+    <string name="log_diaper">Pañal</string>
+    <string name="log_sleep">Sueño</string>
+    <string name="log_pumping">Extracción</string>
+    <string name="log_bath">Baño</string>
+    <string name="log_growth">Crecimiento</string>
+    <string name="rhythm_feed_gap">Próxima toma</string>
+    <string name="rhythm_feed_gap_desc">Minutos entre el inicio de una toma y la siguiente</string>
+    <string name="rhythm_diaper_gap">Próximo pañal</string>
+    <string name="rhythm_diaper_gap_desc">Minutos entre un cambio y el siguiente</string>
+    <string name="rhythm_awake_window">Próximo sueño</string>
+    <string name="rhythm_awake_window_desc">Minutos despierto entre sueños</string>
+    <string name="rhythm_sleep_length">Despertar</string>
+    <string name="rhythm_sleep_length_desc">Cuánto dura un sueño</string>
+
+    <!-- Common words -->
+    <string name="side_left">Izquierdo</string>
+    <string name="side_right">Derecho</string>
+    <string name="pause">Pausa</string>
+    <string name="resume">Reanudar</string>
+
+    <!-- Launcher shortcuts and home-screen widgets -->
+    <string name="shortcut_feed_left">Toma izquierdo</string>
+    <string name="shortcut_feed_left_desc">Empezar o cambiar al pecho izquierdo</string>
+    <string name="shortcut_feed_right">Toma derecho</string>
+    <string name="shortcut_feed_right_desc">Empezar o cambiar al pecho derecho</string>
+    <string name="shortcut_diaper">Pañal</string>
+    <string name="shortcut_diaper_desc">Registrar un cambio de pañal</string>
+    <string name="shortcut_sleep">Dormir ahora</string>
+    <string name="shortcut_sleep_desc">Iniciar el temporizador de sueño</string>
+    <string name="widget_last_fed">Última toma %s</string>
+    <string name="widget_no_feeds_today">Aún no hay tomas hoy</string>
+    <string name="widget_wet_dirty">%1$d mojados · %2$d sucios</string>
+    <string name="next_up_feed">toma</string>
+    <string name="next_up_diaper">pañal</string>
+    <string name="next_up_wake_up">despertar</string>
+    <string name="next_up_nap">siesta</string>
+    <string name="next_up_item">%1$s ~%2$s</string>
+    <string name="next_up_line">Siguiente: %s</string>
+    <string name="widget_last_side">Último: %s</string>
+    <string name="widget_paused_side">En pausa · %s</string>
+    <string name="widget_on_side_started">%1$s · empezó %2$s</string>
+    <string name="widget_last_ended_on">Terminó en %1$s · %2$s</string>
+    <string name="widget_tap_start">Toca Empezar para comenzar</string>
+    <string name="widget_start_side">Empezar · %s</string>
+
+    <!-- Common words -->
+    <string name="end">Fin</string>
+    <string name="sleeping">Durmiendo</string>
+    <string name="since_time">Desde %s</string>
+    <string name="woke_up">Despertó</string>
+    <string name="sleep_saved">Sueño guardado</string>
+    <string name="feed_paused">Toma en pausa</string>
+
+    <!-- Notifications, Quick Settings tiles, reminders -->
+    <string name="channel_feed_timer">Temporizador de lactancia</string>
+    <string name="channel_next_up">Lo siguiente</string>
+    <string name="channel_sleep_timer">Temporizador de sueño</string>
+    <string name="channel_reminders">Recordatorios</string>
+    <string name="feeding_left_side">Toma · pecho izquierdo</string>
+    <string name="feeding_right_side">Toma · pecho derecho</string>
+    <string name="pause_left">Pausar izquierdo</string>
+    <string name="pause_right">Pausar derecho</string>
+    <string name="feed_started_suffix">" · empezó %s"</string>
+    <string name="left_short_time">I %s</string>
+    <string name="right_short_time">D %s</string>
+    <string name="feed_paused_text">Total %1$s · I %2$s · D %3$s</string>
+    <string name="next_up_title_feed">Toma</string>
+    <string name="next_up_title_diaper">Pañal</string>
+    <string name="next_up_title_wake_up">Despertar</string>
+    <string name="next_up_title_nap">Siesta</string>
+    <string name="reminder_feed_due_in">Toma en %s</string>
+    <string name="reminder_feed_due">Hora de la toma</string>
+    <string name="reminder_feed_text">La última toma empezó hace %1$s, a las %2$s</string>
+    <string name="reminder_diaper_due_in">Cambio de pañal en %s</string>
+    <string name="reminder_diaper_due">Hora del cambio de pañal</string>
+    <string name="reminder_diaper_text">Último cambio hace %1$s, a las %2$s</string>
+    <string name="reminder_wake_up_in">Despertar en %s</string>
+    <string name="reminder_asleep_for">Dormido desde hace %s</string>
+    <string name="reminder_fell_asleep_at">Se durmió a las %s</string>
+    <string name="reminder_nap_in">Siesta en %s</string>
+    <string name="reminder_awake_for">Despierto desde hace %s</string>
+    <string name="reminder_woke_up_at">Se despertó a las %s</string>
+    <string name="reminder_woke_up_at_nap">Se despertó a las %s. ¿Hora de la siesta?</string>
+    <string name="tile_open_app">Abrir la app</string>
+    <string name="tile_tap_to_resume">Toca para reanudar</string>
+    <string name="tile_feeding">Toma</string>
+    <string name="tile_side_tap_to_pause">%s · toca para pausar</string>
+    <string name="tile_since_tap_when_awake">Desde %s · toca al despertar</string>
+    <string name="tile_tap_when_asleep">Toca cuando se duerma</string>
+    <string name="tile_log_a_change">Registrar un cambio</string>
+    <string name="timer_paused">Temporizador en pausa</string>
+    <string name="timer_running">Temporizador en marcha</string>
+    <string name="switched_to_left">Cambio al pecho izquierdo</string>
+    <string name="switched_to_right">Cambio al pecho derecho</string>
+    <string name="tummy_time_logged_5">Tiempo boca abajo registrado: 5 min</string>
+    <string name="widget_added">Widget añadido</string>
+
+    <!-- Home-screen widget layouts -->
+    <string name="widget_summary_today">Hoy</string>
+    <string name="widget_summary_feeds">TOMAS</string>
+    <string name="widget_summary_diapers">PAÑALES</string>
+    <string name="widget_quick_feed">Toma</string>
+    <string name="widget_quick_diaper">Pañal</string>
+    <string name="widget_quick_tummy">Boca abajo</string>
+    <string name="widget_quick_tummy_desc">Tiempo boca abajo</string>
+    <string name="widget_timer_title">Lactancia</string>
+    <string name="widget_switch_side">Cambiar de pecho</string>
+    <string name="widget_pause_play">Pausa/Reanudar</string>
+    <string name="saved_to_offline_queue">Actividad guardada en la cola sin conexión</string>
+
+    <!-- Toasts and status messages (view model) -->
+    <string name="error_load_history">No se pudo cargar el historial</string>
+    <string name="error_load_trends">No se pudieron cargar las tendencias</string>
+    <string name="error_load_entries">No se pudieron cargar los registros</string>
+    <plurals name="models_loading_days">
+        <item quantity="one">Cargando %d día de registros</item>
+        <item quantity="many">Cargando %d días de registros</item>
+        <item quantity="other">Cargando %d días de registros</item>
+    </plurals>
+    <string name="models_fitting">Ajustando %s</string>
+    <string name="models_now_estimated_by">%1$s: ahora lo estima %2$s</string>
+    <string name="models_all_reset">Todos los ritmos vuelven a la estimación por defecto</string>
+    <string name="models_reset">%s: vuelve a la estimación por defecto</string>
+    <string name="toast_bottle_logged_formula">Biberón registrado: %d ml de fórmula</string>
+    <string name="toast_bottle_logged_breast_milk">Biberón registrado: %d ml de leche de pecho</string>
+    <string name="toast_pumping_logged">Extracción registrada: %d ml</string>
+    <string name="toast_pumping_updated">Extracción actualizada</string>
+    <string name="toast_pumping_deleted">Extracción eliminada</string>
+    <string name="toast_feeding_updated">Toma actualizada</string>
+    <string name="toast_feeding_deleted">Toma eliminada</string>
+    <string name="toast_diaper_updated">Cambio de pañal actualizado</string>
+    <string name="toast_tummy_updated">Tiempo boca abajo actualizado</string>
+    <string name="toast_tummy_deleted">Tiempo boca abajo eliminado</string>
+    <string name="toast_diaper_deleted">Cambio de pañal eliminado</string>
+    <string name="toast_undone">Deshecho</string>
+    <string name="toast_left_side_set">Pecho izquierdo fijado en %1$02d:%2$02d</string>
+    <string name="toast_right_side_set">Pecho derecho fijado en %1$02d:%2$02d</string>
+    <string name="toast_feed_start_set">Inicio de la toma fijado a las %s</string>
+    <string name="toast_sleep_started">Sueño iniciado</string>
+    <string name="toast_nap_saved">Siesta guardada: %s</string>
+    <string name="toast_sleep_saved">Sueño guardado: %s</string>
+    <string name="toast_sleep_discarded">Temporizador de sueño descartado</string>
+    <string name="toast_nap_logged">Siesta registrada: %s</string>
+    <string name="toast_sleep_logged">Sueño registrado: %s</string>
+    <string name="toast_sleep_updated">Sueño actualizado</string>
+    <string name="toast_sleep_deleted">Sueño eliminado</string>
+    <string name="toast_feed_ended">Toma terminada</string>
+    <string name="toast_chime_on">Sonido suave: activado</string>
+    <string name="toast_chime_muted">Sonido suave: silenciado</string>
+    <string name="toast_feeding_saved">Toma guardada</string>
+    <string name="toast_diaper_saved_start_timer">¡Pañal guardado! Iniciando el temporizador de lactancia...</string>
+    <string name="toast_diaper_saved">Pañal guardado</string>
+    <string name="toast_bottle_logged">Biberón registrado</string>
+    <string name="toast_quick_pee">Pañal de pis registrado</string>
+    <string name="toast_quick_wet">Pañal mojado registrado</string>
+    <string name="toast_quick_poop">Pañal de caca registrado</string>
+    <string name="toast_quick_dirty">Pañal sucio registrado</string>
+    <string name="toast_quick_both">Pañal de pis y caca registrado</string>
+    <string name="toast_connecting">Conectando con Baby Buddy...</string>
+    <string name="toast_connected">¡Conexión correcta!</string>
+    <string name="toast_connection_failed">Error de conexión: %s</string>
+    <string name="toast_logged_out">Sesión cerrada</string>
+    <string name="toast_demo_mode">Modo demo activo con datos de ejemplo</string>
+    <string name="toast_simulating_disconnected">Simulando desconexión</string>
+    <string name="toast_server_connected">Servidor conectado</string>
+    <string name="toast_card_added">%s añadido a Hoy</string>
+    <string name="toast_card_removed">%s quitado de Hoy</string>
+    <string name="toast_card_removed_short">%s quitado</string>
+    <string name="toast_tummy_logged">Tiempo boca abajo registrado: %d min</string>
+    <string name="toast_temperature_logged">Temperatura registrada: %.1f°</string>
+    <string name="toast_growth_logged">Crecimiento registrado: %s</string>
+    <string name="toast_growth_updated">%s actualizado</string>
+    <string name="toast_growth_deleted">%s eliminado</string>
+    <string name="toast_bath_logged">Baño registrado</string>
+    <string name="toast_bath_updated">Baño actualizado</string>
+    <string name="toast_note_updated">Nota actualizada</string>
+    <string name="toast_bath_deleted">Baño eliminado</string>
+    <string name="toast_note_deleted">Nota eliminada</string>
+    <string name="toast_note_added">Nota añadida</string>
+    <string name="toast_tagged_note_logged">%s registrado</string>
+    <string name="toast_milk_stash_set">Reserva de leche fijada en %d ml</string>
+    <string name="toast_requesting_widget">Solicitando añadir el widget a la pantalla de inicio...</string>
+    <string name="toast_widget_added_hint">¡Widget añadido! También puedes mantener pulsada la pantalla de inicio para añadirlo.</string>
+
+    <!-- Connection, sync and repository messages -->
+    <string name="connected_as">Conectado como %s</string>
+    <string name="error_blocked_by_cloudflare">HTTP %d: bloqueado por Cloudflare. Añade un token de servicio de Cloudflare Access.</string>
+    <string name="error_check_token">HTTP %d: revisa el token de la API</string>
+    <string name="error_check_token_and_cloudflare">HTTP %d: revisa el token de la API y el token de Cloudflare Access</string>
+    <string name="error_web_page_not_api">El servidor ha enviado una página web en lugar de la API. Si está detrás de Cloudflare Access, añade un token de servicio.</string>
+    <string name="error_certificate_not_trusted">El certificado del servidor no es de confianza. Si es autofirmado, activa Permitir certificados autofirmados.</string>
+    <string name="error_connect_for_history">Conéctate a tu servidor Baby Buddy para ver el historial</string>
+    <string name="error_connect_for_trends">Conéctate a tu servidor Baby Buddy para ver las tendencias</string>
+    <string name="error_not_connected">Sin conexión</string>
+    <string name="profile_my_baby">Mi bebé</string>
+    <string name="profile_baby">Bebé</string>
+    <string name="profile_newborn">Recién nacido</string>
+    <plurals name="sync_discarded">
+        <item quantity="one">Se descartó %d registro aún no guardado en el servidor</item>
+        <item quantity="many">Se descartaron %d registros aún no guardados en el servidor</item>
+        <item quantity="other">Se descartaron %d registros aún no guardados en el servidor</item>
+    </plurals>
+    <string name="sync_proxy_rejected">Un proxy delante del servidor rechazó %s; se volverá a intentar</string>
+    <string name="sync_unreachable">No se pudo contactar con el servidor; se seguirá intentando</string>
+    <plurals name="sync_token_rejected">
+        <item quantity="one">El servidor rechazó el token de la API. Vuelve a conectarte en Configuración para enviar %d registro pendiente</item>
+        <item quantity="many">El servidor rechazó el token de la API. Vuelve a conectarte en Configuración para enviar %d registros pendientes</item>
+        <item quantity="other">El servidor rechazó el token de la API. Vuelve a conectarte en Configuración para enviar %d registros pendientes</item>
+    </plurals>
+    <string name="sync_could_not_save">No se pudo guardar %1$s: %2$s</string>
+    <string name="sync_server_rejected">El servidor rechazó %1$s (HTTP %2$d) %3$s</string>
+    <string name="write_feeding">la toma</string>
+    <string name="write_diaper_change">el cambio de pañal</string>
+    <string name="write_pumping">la extracción</string>
+    <string name="write_temperature">la temperatura</string>
+    <string name="write_note">la nota</string>
+    <string name="write_sleep">el sueño</string>
+    <string name="write_tummy_time">el tiempo boca abajo</string>
+    <string name="write_edit">la edición de %s</string>
+    <string name="write_delete">el borrado de %s</string>
+    <string name="age_days">%d d</string>
+    <string name="age_months_days">%1$d m %2$d d</string>
+    <string name="demo_mode">Modo demo</string>
+    <string name="synced_just_now">Sincronizado ahora mismo</string>
+    <string name="synced_at">Sincronizado %s</string>
+    <string name="connecting">Conectando…</string>
+    <string name="card_last_feed_desc">Tiempo desde, pecho</string>
+    <string name="card_last_diaper_desc">Tiempo desde, tipo</string>
+    <string name="card_wake_windows_desc">Despierto desde hace, ventanas de hoy</string>
+    <string name="card_tummy_time_desc">Objetivo diario</string>
+    <string name="card_temperature_desc">Lecturas</string>
+    <string name="card_notes_desc">Notas compartidas</string>
+    <string name="card_growth_desc">Peso, longitud, cabeza</string>
+
+    <!-- Common words -->
+    <string name="undo">Deshacer</string>
+    <string name="dismiss">Descartar</string>
+    <string name="back">Atrás</string>
+    <string name="started">Inicio</string>
+    <string name="today">Hoy</string>
+    <string name="yesterday">Ayer</string>
+    <string name="tomorrow">Mañana</string>
+
+    <!-- Top bar, navigation, feed controls, pickers -->
+    <string name="status_offline">Sin conexión</string>
+    <string name="status_demo">Demo</string>
+    <string name="status_unsent">%d sin enviar</string>
+    <string name="status_synced">Sincronizado</string>
+    <string name="nav_today">Hoy</string>
+    <string name="nav_trends">Tendencias</string>
+    <string name="nav_log">Registrar</string>
+    <string name="nav_log_desc">Registro rápido</string>
+    <string name="nav_history">Historial</string>
+    <string name="nav_settings">Configuración</string>
+    <string name="nav_login">Iniciar sesión</string>
+    <string name="feed_tap_side_to_start">Toca un lado para empezar</string>
+    <string name="feed_paused_tap_side">En pausa · toca un lado para continuar</string>
+    <string name="feed_feeding_on">Tomando: %s</string>
+    <string name="feed_since_previous">%1$s desde la toma anterior (%2$s)</string>
+    <string name="feed_start_note">El tiempo añadido o quitado va al lado con el que empezaste.</string>
+    <string name="edit_side">Editar %s</string>
+    <string name="end_feed">Terminar toma</string>
+    <string name="last_side">Último lado</string>
+    <string name="type_instead">Escribir</string>
+    <string name="use_wheel">Usar rueda</string>
+    <string name="earlier_today">Hoy, antes</string>
+    <string name="feed_left_right_minutes">I %1$d min · D %2$d min</string>
+
+    <!-- Common words -->
+    <string name="notes">Notas</string>
+    <string name="fell_asleep">Se durmió</string>
+    <string name="tap_again_to_discard">Toca otra vez para descartar</string>
+
+    <!-- Sleep screen -->
+    <string name="sleep_duration_nap">%s · Siesta</string>
+    <string name="sleep_duration_night">%s · Noche</string>
+    <string name="sleep_start_timer">Iniciar temporizador de sueño</string>
+    <string name="sleep_asleep_since">Dormido desde las %s</string>
+    <string name="sleep_woke_up_save">Se despertó · guardar</string>
+    <string name="sleep_discard_timer">Descartar temporizador</string>
+    <string name="sleep_log_past">Registrar un sueño pasado</string>
+    <string name="sleep_slept">Durmió %s</string>
+    <string name="sleep_save">Guardar sueño</string>
+
+    <!-- Common words -->
+    <string name="close">Cerrar</string>
+    <string name="open">Abrir</string>
+    <string name="note_optional">Nota (opcional)</string>
+
+    <!-- Log screen -->
+    <string name="log_nothing">Nada que registrar aquí. Vuelve a activar elementos en Configuración → Elementos registrados.</string>
+    <string name="log_feed_paused">En pausa · %s</string>
+    <string name="log_feed_running">En curso · %s</string>
+    <string name="log_feed_subtitle">Temporizador izquierdo / derecho</string>
+    <string name="log_bottle_subtitle">Leche de pecho o fórmula</string>
+    <string name="log_diaper_subtitle">Mojado, sucio, ambos o seco</string>
+    <string name="log_sleep_subtitle">Temporizador o un sueño pasado</string>
+    <string name="log_pumping_subtitle">Cantidad y duración</string>
+    <string name="log_bath_subtitle">Hora y nota</string>
+    <string name="log_last_weight">Último peso: %s</string>
+
+    <!-- Diaper values (stored in English, shown translated) -->
+    <string name="diaper_amount_light">Poco</string>
+    <string name="diaper_amount_medium">Medio</string>
+    <string name="diaper_amount_heavy">Mucho</string>
+    <string name="diaper_consistency_loose_long">Suelta / Líquida</string>
+    <string name="diaper_consistency_seedy_long">Grumosa / Mostaza</string>
+    <string name="diaper_consistency_paste_long">Pastosa / Normal</string>
+    <string name="diaper_consistency_hard_long">Dura / Seca</string>
+    <string name="diaper_consistency_loose">Líquida</string>
+    <string name="diaper_consistency_seedy">Grumosa</string>
+    <string name="diaper_consistency_paste">Pastosa</string>
+    <string name="diaper_consistency_hard">Dura</string>
+    <string name="diaper_consistency_soft">Blanda</string>
+    <string name="diaper_color_mustard">Mostaza</string>
+    <string name="diaper_color_brown">Marrón claro</string>
+    <string name="diaper_color_greenish">Verdosa</string>
+    <string name="diaper_color_dark">Oscura</string>
+    <string name="diaper_cream_barrier_long">Aquaphor / Barrera</string>
+    <string name="diaper_cream_zinc_long">Crema de óxido de zinc</string>
+    <string name="diaper_cream_powder_long">Polvos de talco</string>
+    <string name="diaper_cream_barrier">Barrera</string>
+    <string name="diaper_cream_zinc">Zinc</string>
+    <string name="diaper_cream_powder">Talco</string>
+
+    <!-- Common words -->
+    <string name="save">Guardar</string>
+    <string name="time">Hora</string>
+    <string name="now_at">Ahora · %s</string>
+    <string name="more_details">Más detalles</string>
+    <string name="hide_details">Ocultar detalles</string>
+    <string name="show_details">Mostrar detalles</string>
+
+    <!-- Diaper form -->
+    <string name="diaper_change">Cambio de pañal</string>
+    <string name="diaper_wet">Mojado</string>
+    <string name="diaper_dirty">Sucio</string>
+    <string name="diaper_both">Ambos</string>
+    <string name="diaper_dry">Seco</string>
+    <string name="diaper_amount">Cantidad</string>
+    <string name="diaper_consistency_optional">Consistencia (opcional)</string>
+    <string name="diaper_color">Color</string>
+    <string name="diaper_rash">Irritación</string>
+    <string name="diaper_cream">Crema</string>
+    <string name="diaper_save_start_feed">Guardar y empezar toma</string>
+
+    <!-- Common words -->
+    <string name="ok">Aceptar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="reset">Restablecer</string>
+    <string name="reset_all">Restablecer todo</string>
+    <string name="in_duration">En %s</string>
+    <string name="duration_ago">Hace %s</string>
+    <plurals name="days_count">
+        <item quantity="one">%d día</item>
+        <item quantity="many">%d días</item>
+        <item quantity="other">%d días</item>
+    </plurals>
+
+    <!-- Trends: rhythm models tab -->
+    <string name="models_intro">Cada ritmo tiene su propio modelo, elegido automáticamente: regresión lineal, árboles potenciados, una pequeña red neuronal, vecinos más cercanos y la mediana reciente según la hora del día se prueban con varios ajustes y se puntúan, junto a la estimación por defecto de la app, según lo bien que predijeron tus últimos registros. Guarda uno para que estime los recordatorios, Hoy y el widget; cuando pasa una hora prevista, Hoy la vuelve a estimar según cuánto se ha retrasado el modelo antes. Todo se ejecuta en este teléfono.</string>
+    <string name="models_train_on">Entrenar con</string>
+    <string name="models_custom_range">Personalizado…</string>
+    <string name="models_fit_again">Volver a ajustar</string>
+    <string name="models_fit">Ajustar modelos</string>
+    <string name="models_pick_history">Elige cuánto historial usar para aprender y toca Ajustar modelos. Tarda unos segundos.</string>
+    <string name="models_fitted_on">Ajustado con %1$s – %2$s a las %3$s</string>
+    <string name="models_in_use_title">Estimaciones en uso</string>
+    <string name="models_default_estimate">Estimación por defecto</string>
+    <string name="models_saved_summary">%1$s (%2$s) · ±%3$s · ajustado %4$s</string>
+    <plurals name="models_examples">
+        <item quantity="one">%d ejemplo</item>
+        <item quantity="many">%d ejemplos</item>
+        <item quantity="other">%d ejemplos</item>
+    </plurals>
+    <string name="models_not_enough">Aún no hay suficientes registros: %1$d de los %2$d necesarios. Prueba un periodo más largo.</string>
+    <string name="models_best">Mejor: %1$s (%2$s), con un error típico de %3$s.</string>
+    <string name="models_default_off_better">La estimación por defecto (%1$s) se desvía %2$s: un %3$d%% mejor.</string>
+    <string name="models_default_off_same">La estimación por defecto (%1$s) se desvía %2$s, así que aquí es igual de buena.</string>
+    <string name="models_tried">Modelos probados (error típico)</string>
+    <string name="models_in_use_now">En uso: %1$s, ±%2$s (ajustado %3$s). Este ajuste, %4$s: ±%5$s.</string>
+    <string name="models_in_use">En uso</string>
+    <string name="models_save_version">Guardar esta versión</string>
+    <string name="models_use">Usar %s</string>
+    <string name="models_reset_default">Volver a la estimación por defecto</string>
+    <string name="models_what_matters">Lo que más influye (%s)</string>
+    <string name="models_importance_note">Cuánto empeoran las predicciones si se desordena ese dato.</string>
+    <string name="models_actual_vs_predicted">Últimos registros: real frente a previsto</string>
+    <string name="models_actual">Real</string>
+    <string name="models_predicted">Previsto</string>
+    <string name="models_next_feed_around">Próxima toma hacia las %s</string>
+    <string name="models_next_change_around">Próximo cambio hacia las %s</string>
+    <string name="models_wake_up_around">Despertar hacia las %s</string>
+    <string name="models_ready_to_sleep_around">Listo para dormir hacia las %s</string>
+
+    <!-- Common words -->
+    <string name="nap">Siesta</string>
+    <string name="note">Nota</string>
+    <string name="amount_ml">%d ml</string>
+    <string name="amount_minutes">%d min</string>
+    <string name="previous_week">Semana anterior</string>
+    <string name="next_week">Semana siguiente</string>
+    <string name="last_7_days">Últimos 7 días</string>
+    <plurals name="feeds_count">
+        <item quantity="one">%d toma</item>
+        <item quantity="many">%d tomas</item>
+        <item quantity="other">%d tomas</item>
+    </plurals>
+    <plurals name="diapers_count">
+        <item quantity="one">%d pañal</item>
+        <item quantity="many">%d pañales</item>
+        <item quantity="other">%d pañales</item>
+    </plurals>
+    <plurals name="baths_count">
+        <item quantity="one">%d baño</item>
+        <item quantity="many">%d baños</item>
+        <item quantity="other">%d baños</item>
+    </plurals>
+    <plurals name="measurements_count">
+        <item quantity="one">%d medición</item>
+        <item quantity="many">%d mediciones</item>
+        <item quantity="other">%d mediciones</item>
+    </plurals>
+    <plurals name="notes_count">
+        <item quantity="one">%d nota</item>
+        <item quantity="many">%d notas</item>
+        <item quantity="other">%d notas</item>
+    </plurals>
+
+    <!-- History list -->
+    <string name="history_amount">Cantidad: %s</string>
+    <string name="history_ml_formula">%d ml de fórmula</string>
+    <string name="history_ml_breast_milk">%d ml de leche de pecho</string>
+    <string name="history_minutes_sides">%1$d min · %2$s</string>
+    <string name="history_ml_minutes">%1$d ml · %2$d min</string>
+    <string name="history_sleep_until">%1$s · hasta las %2$s</string>
+    <string name="history_min_nursing">%d min de pecho</string>
+    <string name="history_ml_bottle">%d ml de biberón</string>
+    <string name="history_asleep">%s de sueño</string>
+    <string name="history_empty_all">Nada registrado en estos 7 días.</string>
+    <string name="history_empty_growth">Aún no hay mediciones de crecimiento.</string>
+    <string name="history_empty_filter">Sin registros de «%s» en estos 7 días.</string>
+
+    <!-- Common words -->
+    <string name="add">Añadir</string>
+
+    <!-- Today cards -->
+    <string name="cards_remove">Quitar tarjeta</string>
+    <string name="cards_tummy_progress">%1$d de %2$d min</string>
+    <string name="cards_plus_minutes">+%d min</string>
+    <string name="cards_no_readings">Sin lecturas hoy</string>
+    <string name="cards_no_measurements">Aún no hay mediciones</string>
+    <string name="cards_percentile">Percentil %s</string>
+    <string name="cards_choose_sex">Elige niño o niña en Configuración → Tú para ver los percentiles de la OMS.</string>
+    <string name="cards_log_growth">Registrar crecimiento</string>
+    <string name="cards_no_notes">Aún no hay notas</string>
+    <string name="cards_add_note">Añadir una nota</string>
+    <string name="cards_asleep_for">Dormido desde hace</string>
+    <string name="cards_since_awake_before">desde las %1$s · despierto %2$s antes</string>
+    <string name="cards_since">desde las %s</string>
+    <string name="cards_no_sleep">Aún no hay sueño registrado</string>
+    <string name="cards_nap_due_in">Siesta prevista ~%1$s · en %2$s</string>
+    <string name="cards_nap_due_over">Siesta prevista ~%1$s · %2$s de retraso</string>
+    <string name="cards_wake_today_stats">Hoy: %1$d · media %2$s · la más larga %3$s</string>
+
+    <!-- Common words -->
+    <string name="off">Desactivado</string>
+
+    <!-- Login and certificate -->
+    <string name="cert_changed_title">El certificado del servidor ha cambiado</string>
+    <string name="cert_trust_title">¿Confiar en este certificado?</string>
+    <string name="cert_changed_text">El certificado del servidor no es el que aprobaste antes. Es normal si lo has renovado; si no, alguien podría estar interceptando la conexión.</string>
+    <string name="cert_unknown_text">El certificado del servidor no está firmado por una autoridad conocida. Comprueba que esta huella SHA-256 coincide con el certificado de tu servidor antes de confiar en él.</string>
+    <string name="cert_trust">Confiar</string>
+    <string name="login_server_url">URL del servidor</string>
+    <string name="login_api_token">Token de la API</string>
+    <string name="login_hide_token">Ocultar token</string>
+    <string name="login_show_token">Mostrar token</string>
+    <string name="login_token_hint">Lo encontrarás en Baby Buddy, en tu configuración de usuario → Clave API.</string>
+    <string name="login_self_signed">Permitir certificados autofirmados</string>
+    <string name="login_self_signed_desc">Confirmas el certificado del servidor una vez; solo se confía en ese</string>
+    <string name="login_cloudflare">Detrás de Cloudflare Access</string>
+    <string name="login_cloudflare_desc">Envía un token de servicio para que la app se salte el inicio de sesión de Cloudflare</string>
+    <string name="login_hide_secret">Ocultar secreto</string>
+    <string name="login_show_secret">Mostrar secreto</string>
+    <string name="login_cloudflare_hint">Crea uno en Cloudflare Zero Trust → Access → Service Auth y añade una política Service Auth a la aplicación.</string>
+    <string name="login_enter_url_token">Introduce la URL del servidor y el token de la API</string>
+    <string name="login_enter_cloudflare">Introduce el ID de cliente y el secreto de Cloudflare</string>
+    <string name="login_reconnect">Volver a conectar</string>
+    <string name="login_connect">Conectar</string>
+    <string name="login_try_demo">Probar el modo demo con datos de ejemplo</string>
+    <string name="login_intro">Conéctate a tu servidor Baby Buddy para empezar.</string>
+    <string name="login_no_server">¿Aún no tienes servidor? Prueba la demo con datos de ejemplo →</string>
+    <string name="login_what_is_open">¿Qué es Baby Buddy? ▴</string>
+    <string name="login_what_is_closed">¿Qué es Baby Buddy? ▾</string>
+    <string name="login_what_is_text">Baby Buddy es una aplicación web libre y gratuita para registrar las tomas, el sueño, los pañales y el crecimiento de un bebé. La alojas tú mismo (en un servidor doméstico, un NAS o una máquina en la nube), así que tus datos se quedan contigo.</string>
+    <string name="login_what_is_companion">Esta app es un complemento no oficial para el teléfono: se conecta a tu servidor Baby Buddy y lo guarda todo allí, para que toda la familia comparta el mismo registro.</string>
+    <string name="login_set_up_server">Instalar un servidor: Baby Buddy en GitHub →</string>
+
+    <!-- Settings -->
+    <string name="settings_open_section">Abrir %s</string>
+    <string name="settings_no_browser">No hay navegador para abrir %s</string>
+    <string name="settings_connection">Conexión al servidor</string>
+    <string name="settings_you">Tú</string>
+    <string name="settings_tracked">Elementos registrados</string>
+    <string name="settings_appearance">Apariencia</string>
+    <string name="settings_notifications">Notificaciones</string>
+    <string name="settings_about">Acerca de</string>
+    <string name="settings_connected_to">Conectado · %s</string>
+    <string name="settings_disconnect">Desconectar</string>
+    <string name="settings_add_your_name">Añade tu nombre</string>
+    <string name="settings_your_name">Tu nombre</string>
+    <string name="settings_your_name_desc">Se añade a todo lo que registras, para que los demás vean quién lo registró</string>
+    <string name="settings_growth_charts">Curvas de crecimiento</string>
+    <string name="settings_growth_charts_desc">La OMS publica curvas distintas para niños y niñas. Solo se usa para los percentiles de crecimiento en este teléfono.</string>
+    <string name="settings_start_side">Lado inicial de la toma</string>
+    <string name="settings_start_side_desc">Por qué lado empiezan el widget del temporizador y el icono de Ajustes rápidos. En la app eliges tú el lado.</string>
+    <string name="settings_tracking_everything">Se registra todo</string>
+    <string name="settings_hidden">Ocultos: %s</string>
+    <string name="settings_tracked_desc">Desactiva lo que no registres. Se oculta de Hoy, las acciones rápidas, el Historial, las Tendencias y los recordatorios en este teléfono; no se elimina nada del servidor.</string>
+    <string name="settings_appearance_24h">%s · reloj de 24 horas</string>
+    <string name="settings_appearance_12h">%s · reloj de 12 horas</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_24h">Reloj de 24 horas</string>
+    <string name="settings_24h_on">Las horas se muestran como 19:06</string>
+    <string name="settings_24h_off">Las horas se muestran como 7:06 p. m.</string>
+    <string name="settings_models_tab">Pestaña Modelos en Tendencias</string>
+    <string name="settings_models_tab_desc">Ajusta un modelo a cada ritmo en este teléfono y predice la próxima toma, el próximo cambio, la siesta y el despertar</string>
+    <string name="settings_summary_lock_screen">Temporizadores en pantalla de bloqueo</string>
+    <string name="settings_summary_next_up">lo siguiente</string>
+    <string name="settings_summary_feed">recordatorio de toma</string>
+    <string name="settings_summary_awake">recordatorio de vigilia</string>
+    <string name="settings_summary_sleep">recordatorio de sueño</string>
+    <string name="settings_summary_diaper">recordatorio de pañal</string>
+    <string name="settings_lock_screen_timers">Temporizadores en la pantalla de bloqueo</string>
+    <string name="settings_lock_screen_timers_desc">Botones Izquierdo/Derecho/Fin de la toma y el temporizador de sueño mientras están en marcha</string>
+    <string name="settings_next_up">Lo siguiente en la pantalla de bloqueo</string>
+    <string name="settings_next_up_desc">Una notificación silenciosa con la próxima toma, el próximo cambio de pañal y la siesta (según los recordatorios o un modelo guardado) mientras no hay ningún temporizador en marcha</string>
+    <string name="settings_model_timed">Cuando lo prevea el modelo guardado en Tendencias → Modelos; el tiempo de abajo es la alternativa</string>
+    <string name="settings_remind_after">Recordar tras</string>
+    <string name="settings_feed_reminder">Recordatorio de toma</string>
+    <string name="settings_feed_reminder_on">Cuando hayan pasado %s desde el inicio de la última toma</string>
+    <string name="settings_feed_reminder_off">Avisar cuando toque la próxima toma</string>
+    <string name="settings_feed_reminder_note">Tiempo desde el inicio de la última toma (hh:mm)</string>
+    <string name="settings_awake_reminder">Recordatorio de vigilia</string>
+    <string name="settings_awake_reminder_on">Cuando el bebé lleve despierto %s</string>
+    <string name="settings_awake_reminder_off">Avisar cuando haya pasado un rato desde el último sueño</string>
+    <string name="settings_awake_reminder_note">Tiempo despierto desde el final del último sueño (hh:mm)</string>
+    <string name="settings_sleep_reminder">Recordatorio de sueño</string>
+    <string name="settings_sleep_reminder_on">Cuando un sueño cronometrado dure %s</string>
+    <string name="settings_sleep_reminder_off">Avisar cuando el bebé lleve mucho tiempo dormido</string>
+    <string name="settings_sleep_reminder_note">Tiempo dormido, contado desde el inicio del temporizador de sueño (hh:mm)</string>
+    <string name="settings_diaper_reminder">Recordatorio de pañal</string>
+    <string name="settings_diaper_reminder_on">Cuando hayan pasado %s desde el último cambio</string>
+    <string name="settings_diaper_reminder_off">Avisar cuando toque el próximo cambio de pañal</string>
+    <string name="settings_diaper_reminder_note">Tiempo desde el último cambio de pañal (hh:mm)</string>
+    <string name="settings_heads_up">Aviso previo</string>
+    <string name="settings_heads_up_on">Avisar también %s antes de cada recordatorio</string>
+    <string name="settings_heads_up_off">Solo cuando toca el recordatorio</string>
+    <string name="settings_reminders_note">Los recordatorios consultan primero el servidor, así que también cuenta una toma, un cambio o un sueño registrado en otro teléfono.</string>
+    <string name="about_summary">Versión %1$s · compilada el %2$s</string>
+    <string name="about_version">Versión</string>
+    <string name="about_build">Compilación</string>
+    <string name="about_git">Etiqueta / commit de Git</string>
+    <string name="about_build_date">Fecha de compilación</string>
+    <string name="about_app_id">ID de la app</string>
+    <string name="about_source">Código fuente, incidencias y versiones en GitHub →</string>
+    <string name="about_server">Baby Buddy, el servidor con el que funciona esta app →</string>
+
+    <!-- Customize Today -->
+    <string name="customize_title">Personalizar Hoy</string>
+    <string name="customize_subtitle">Tarjetas y widgets de la pantalla de inicio</string>
+    <string name="customize_tab_cards">Tarjetas del panel</string>
+    <string name="customize_active">%d activas</string>
+    <string name="customize_tab_home">Pantalla de inicio</string>
+    <string name="customize_cards_hint">Activa o desactiva las tarjetas de tu vista Hoy.</string>
+    <string name="customize_summary_tiles">Casillas de resumen</string>
+    <string name="customize_summary_tiles_desc">La cuadrícula de totales de «Hoy». Los elementos que no registras siguen ocultos.</string>
+    <string name="customize_show">Mostrar</string>
+    <string name="customize_added">Añadido</string>
+    <string name="customize_home_title">📱 Widgets de la pantalla de inicio de Android</string>
+    <string name="customize_home_desc">Añade estos widgets a la pantalla de inicio de tu teléfono para registrar con un toque y controlar el temporizador sin abrir la app.</string>
+    <string name="customize_quick_title">Widget de registro con un toque</string>
+    <string name="customize_quick_size">4 × 1 estándar</string>
+    <string name="customize_quick_desc">Botones de Toma, Pañal y Tiempo boca abajo.</string>
+    <string name="customize_preview_baby">Bebé Leo • 3 m 12 d</string>
+    <string name="customize_preview_last_fed">Última toma hace 45 min</string>
+    <string name="customize_timer_title">Widget del temporizador de lactancia</string>
+    <string name="customize_timer_size">4 × 2 controles completos</string>
+    <string name="customize_timer_desc">Cronómetro en tiempo real con desglose izquierdo/derecho y botones Pausa/Cambiar.</string>
+    <string name="customize_preview_timer">🤱 TEMPORIZADOR DE LACTANCIA</string>
+    <string name="customize_preview_right_active">Pecho derecho en curso</string>
+    <string name="customize_summary_title">Widget de resumen del día</string>
+    <string name="customize_tip_title">💡 Consejo de instalación manual</string>
+    <string name="customize_tip_text">Si tu launcher no permite añadirlo con un toque, mantén pulsado un espacio vacío de la pantalla de inicio de Android, toca «Widgets», desplázate hasta «Baby Buddy» y arrástralo a su sitio.</string>
+    <string name="customize_add_to_home">Añadir a la pantalla de inicio</string>
+    <string name="card_last_feed_long">Cuándo empezó la última toma, hace cuánto y el último pecho.</string>
+    <string name="card_last_diaper_long">Cuándo fue el último cambio de pañal, hace cuánto y de qué tipo.</string>
+    <string name="card_wake_windows_long">Cuánto lleva despierto el bebé, cuándo toca la próxima siesta y las ventanas de vigilia de hoy.</string>
+    <string name="card_tummy_time_long">Registra el tiempo boca abajo hacia un objetivo diario.</string>
+    <string name="card_temperature_long">Registra y consulta las lecturas de temperatura.</string>
+    <string name="card_notes_long">Notas compartidas, como baños y rutinas.</string>
+    <string name="card_growth_long">Último peso, longitud y perímetro craneal con los percentiles de la OMS.</string>
+
+    <!-- History calendar -->
+    <string name="retry">Reintentar</string>
+    <string name="history_show_list">Mostrar lista</string>
+    <string name="history_show_calendar">Mostrar calendario</string>
+    <string name="history_legend_nursing">Pecho</string>
+
+    <!-- Common words -->
+    <string name="date">Fecha</string>
+    <string name="duration">Duración</string>
+    <string name="delete">Eliminar</string>
+    <string name="tap_again_to_delete">Toca otra vez para eliminar</string>
+
+    <!-- Entry dialogs -->
+    <string name="dialog_growth_last">Último: %1$s el %2$s</string>
+    <string name="dialog_edit_named">Editar: %s</string>
+    <string name="dialog_logged_by">Registrado por %s</string>
+    <string name="dialog_edit_bath">Editar baño</string>
+    <string name="dialog_edit_note">Editar nota</string>
+    <string name="dialog_side_title">Lado: %s</string>
+    <string name="dialog_side_note">Ajusta cuánto tiempo ha tomado de este lado. El temporizador sigue contando desde aquí.</string>
+    <string name="dialog_milk_stash_note">¿Cuánta leche extraída hay almacenada ahora? Las extracciones la aumentan y los biberones de leche de pecho la reducen. Se comparte con todos los teléfonos.</string>
+    <string name="dialog_stored_milk">Leche almacenada</string>
+    <string name="dialog_note_placeholder">p. ej. vitamina D, baño, tarde inquieta</string>
+    <string name="dialog_tags">Etiquetas</string>
+    <string name="dialog_night_sleep">Sueño nocturno</string>
+    <string name="dialog_edit_sleep">Editar sueño</string>
+    <string name="dialog_minutes">Minutos</string>
+    <string name="dialog_quick_actions">Acciones rápidas</string>
+    <string name="dialog_quick_actions_note">Elige los botones de la parte superior de Hoy y su orden.</string>
+    <string name="dialog_move_up">Subir %s</string>
+    <string name="dialog_move_down">Bajar %s</string>
+    <string name="dialog_edit_feeding">Editar toma</string>
+    <string name="dialog_edit_diaper">Editar pañal</string>
+    <string name="dialog_skin_care">Cuidado de la piel</string>
+    <string name="dialog_edit_tummy">Editar tiempo boca abajo</string>
+    <string name="dialog_edit_pumping">Editar extracción</string>
+    <string name="dialog_breast_milk">Leche de pecho</string>
+    <string name="dialog_formula">Fórmula</string>
+    <string name="dialog_change_label">Cambiar: %s</string>
+
+    <!-- Shared formats -->
+    <string name="duration_hours">%d h</string>
+    <string name="duration_hours_minutes_short">%1$d h %2$02d</string>
+
+    <!-- Trends charts -->
+    <string name="trends_charts">Gráficos</string>
+    <string name="trends_models">Modelos</string>
+    <string name="trends_no_data">No hay datos para este periodo.</string>
+    <string name="trends_server_settings">Ajustes del servidor</string>
+    <string name="trends_feeding_rhythm">Ritmo de tomas</string>
+    <string name="trends_no_feeds">No hay tomas registradas en este periodo.</string>
+    <string name="trends_longest_gap">Intervalo más largo</string>
+    <string name="trends_longest_week">Intervalo más largo: %s de media esta semana</string>
+    <string name="trends_longest_month">Intervalo más largo: %s de media este mes</string>
+    <string name="trends_up_week">, %s más que al inicio de la semana</string>
+    <string name="trends_up_month">, %s más que al inicio del mes</string>
+    <string name="trends_down_week">, %s menos que al inicio de la semana</string>
+    <string name="trends_down_month">, %s menos que al inicio del mes</string>
+    <string name="trends_sleep_rhythm">Ritmo de sueño</string>
+    <string name="trends_sleep_week">Sueño: %s al día de media esta semana</string>
+    <string name="trends_sleep_month">Sueño: %s al día de media este mes</string>
+    <string name="trends_sleep_longest">, el periodo más largo %s</string>
+    <string name="trends_diaper_rhythm">Ritmo de pañales</string>
+    <string name="trends_metric_feeds">Tomas</string>
+    <string name="trends_metric_wet">Pañales mojados</string>
+    <string name="trends_metric_dirty">Pañales sucios</string>
+    <string name="trends_metric_naps">Siestas</string>
+    <string name="trends_unit_per_day">al día</string>
+    <string name="trends_unit_min_day">min/día</string>
+    <string name="trends_unit_ml_day">ml/día</string>
+    <string name="trends_unit_h_day">h/día</string>
+    <string name="trends_daily_numbers">Cifras diarias</string>
+    <string name="trends_left_right">Izquierdo y derecho</string>
+    <string name="trends_left_pct">Izquierdo %d%%</string>
+    <string name="trends_right_pct">Derecho %d%%</string>
+    <string name="trends_pick_sex">La OMS tiene curvas distintas para niños y niñas. Elige una para comparar.</string>
+    <string name="trends_need_birth_date">Añade la fecha de nacimiento en el servidor para comparar con las curvas de la OMS.</string>
+    <string name="trends_growth_none">Aún no hay mediciones de %s. Regístralas desde la pantalla Registrar (Crecimiento).</string>
+    <string name="trends_growth_latest_no_percentile">Último: %1$s el %2$s. Las curvas de la OMS cubren aquí desde el nacimiento hasta los 2 años.</string>
+    <string name="trends_growth_previous">" (%1$s el %2$s)"</string>
+    <string name="trends_growth_latest">Último: %1$s el %2$s, percentil %3$s%4$s. Toca un punto para editarlo.</string>
+    <string name="trends_who_median">Línea central: mediana de la OMS (percentil %s)</string>
+    <string name="trends_birth">Nacimiento</string>
+    <string name="trends_months_short">%d m</string>
+
+    <!-- Common words -->
+    <string name="none_yet">Aún nada</string>
+    <string name="just_now">Ahora mismo</string>
+    <string name="ago_minutes">hace %d min</string>
+    <string name="ago_hours_minutes">hace %1$d h %2$02d</string>
+    <string name="ago_days_hours">hace %1$d d %2$d h</string>
+    <plurals name="days_ago">
+        <item quantity="one">hace %d día</item>
+        <item quantity="many">hace %d días</item>
+        <item quantity="other">hace %d días</item>
+    </plurals>
+    <plurals name="naps_count">
+        <item quantity="one">%d siesta</item>
+        <item quantity="many">%d siestas</item>
+        <item quantity="other">%d siestas</item>
+    </plurals>
+    <plurals name="sessions_count">
+        <item quantity="one">%d sesión</item>
+        <item quantity="many">%d sesiones</item>
+        <item quantity="other">%d sesiones</item>
+    </plurals>
+
+    <!-- Today screen -->
+    <string name="today_formula">fórmula</string>
+    <string name="today_breast_milk">leche de pecho</string>
+    <string name="today_solid_food">Comida sólida</string>
+    <string name="today_handoff_wet">mojado</string>
+    <string name="today_handoff_dirty">sucio</string>
+    <string name="today_handoff_both">mojado + sucio</string>
+    <string name="today_handoff_dry">seco</string>
+    <string name="today_handoff_diaper">Pañal · %s</string>
+    <string name="today_handoff_nap">Siesta · %s</string>
+    <string name="today_handoff_sleep">Sueño · %s</string>
+    <string name="today_handoff_title">Mientras no estabas</string>
+    <string name="today_handoff_more">+%d más en el Historial</string>
+    <string name="today_last_bottle_formula">Biberón · %d ml de fórmula</string>
+    <string name="today_last_bottle_breast_milk">Biberón · %d ml de leche de pecho</string>
+    <string name="today_last_breastfeed">Pecho · %d min</string>
+    <string name="today_last_breast">Pecho · %s</string>
+    <string name="today_side_minutes">%1$s %2$d min</string>
+    <string name="today_add_quick_actions">Añadir acciones rápidas</string>
+    <string name="today_edit_quick_actions">Editar acciones rápidas</string>
+    <string name="today_nursing_and_bottle">%1$d min · %2$d ml</string>
+    <string name="today_sleeping_now">Durmiendo ahora</string>
+    <string name="today_asleep">Dormido</string>
+    <string name="today_none_ended">Ninguna terminada hoy</string>
+    <string name="today_wake_avg">Media %1$s · %2$d hoy</string>
+    <string name="today_set">Fijar</string>
+    <string name="today_tap_to_enter">Toca para introducir la cantidad</string>
+    <string name="today_tap_to_correct">Toca para corregir</string>
+    <string name="today_tap_to_log_bath">Toca para registrar un baño</string>
+    <string name="today_in">en %s</string>
+    <string name="today_due_ago">tocaba hace %s</string>
+    <string name="today_logged_today">Registrado hoy</string>
+    <string name="today_last_pump">Última extracción</string>
+    <string name="today_none_today">Ninguna hoy</string>
+    <string name="today_time_between_feeds">Tiempo entre tomas</string>
+    <string name="today_same_as_last_week">Más o menos como la semana pasada</string>
+    <string name="today_longer_than_last_week">%s más que la semana pasada</string>
+    <string name="today_shorter_than_last_week">%s menos que la semana pasada</string>
+
+    <!-- Today side chips -->
+    <string name="side_left_short">I</string>
+    <string name="side_right_short">D</string>
+    <string name="side_chip_last">último</string>
+
+    <!-- Trends charts (row label) -->
+    <string name="trends_today_chart">Hoy</string>
+</resources>
