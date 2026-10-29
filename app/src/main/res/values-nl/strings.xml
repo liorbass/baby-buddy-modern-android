@@ -1,0 +1,856 @@
+<resources>
+    <string name="app_name">Baby Buddy Companion</string>
+    <string name="widget_quick_log_name">Baby Buddy Snel invoeren</string>
+    <string name="widget_quick_log_desc">Voedingen, luiers en buikliggen met één tik vastleggen.</string>
+    <string name="widget_timer_name">Baby Buddy Actieve timer</string>
+    <string name="widget_timer_desc">De borstvoedingstimer op je startscherm: pauzeren, hervatten en van borst wisselen.</string>
+    <string name="widget_summary_name">Baby Buddy Overzicht vandaag</string>
+    <string name="tile_feed_name">Borstvoeding</string>
+    <string name="tile_sleep_name">Slaap</string>
+    <string name="tile_diaper_name">Luier</string>
+    <string name="widget_summary_desc">Voedingen en luiers van vandaag in één oogopslag.</string>
+
+    <!-- Shared formats -->
+    <string name="duration_hours_minutes">%1$d u %2$02d</string>
+    <string name="duration_minutes">%d min</string>
+    <string name="percentile_below">&lt;%s</string>
+    <string name="percentile_above">&gt;%s</string>
+    <string name="yesterday_at">Gisteren %s</string>
+    <string name="date_at">%1$s, %2$s</string>
+
+    <!-- Tracked items (Settings) -->
+    <string name="item_breastfeeding">Borstvoeding</string>
+    <string name="item_breastfeeding_desc">Links/rechts-timer, laatste kant, borstvoedingsstatistieken</string>
+    <string name="item_bottle">Flesvoedingen</string>
+    <string name="item_bottle_desc">Flessen kunstvoeding en moedermelk</string>
+    <string name="item_diapers">Luiers</string>
+    <string name="item_diapers_desc">Verschoningen, natte/poepluiers, luierritme</string>
+    <string name="item_sleep">Slaap</string>
+    <string name="item_sleep_desc">Slaaptimer, dutjes, wakkertijd, slaapritme</string>
+    <string name="item_pumping">Afkolven</string>
+    <string name="item_pumping_desc">Kolfsessies en hoeveelheden</string>
+    <string name="item_milk_stash">Melkvoorraad</string>
+    <string name="item_milk_stash_desc">Bewaarde moedermelk op Vandaag</string>
+    <string name="item_tummy_time">Buikliggen</string>
+    <string name="item_tummy_time_desc">Sessies en de kaart met het dagdoel</string>
+    <string name="item_quick_notes">Snelle notities</string>
+    <string name="item_quick_notes_desc">Notities met tag met één tik op Vandaag</string>
+    <string name="item_bath">Badjes</string>
+    <string name="item_bath_desc">Badlogboek en tijd sinds het laatste badje</string>
+    <string name="item_growth">Groei</string>
+    <string name="item_growth_desc">Gewicht, lengte en hoofdomtrek, met WHO-curves in Trends</string>
+
+    <!-- Settings choices -->
+    <string name="start_side_opposite">Andere kant dan vorige voeding</string>
+    <string name="start_side_opposite_desc">Afwisselen: begin aan de kant waar de vorige voeding niet eindigde</string>
+    <string name="start_side_same">Zelfde als vorige voeding</string>
+    <string name="start_side_same_desc">Begin aan de kant waar de vorige voeding eindigde</string>
+    <string name="start_side_left">Altijd links</string>
+    <string name="start_side_left_desc">Begin elke voeding links</string>
+    <string name="start_side_right">Altijd rechts</string>
+    <string name="start_side_right_desc">Begin elke voeding rechts</string>
+    <string name="theme_by_time">Op tijdstip</string>
+    <string name="theme_by_time_desc">Donker van 20:00 tot 07:00</string>
+    <string name="theme_system">Zelfde als telefoon</string>
+    <string name="theme_system_desc">Volgt het donkere thema van de telefoon</string>
+    <string name="theme_light">Licht</string>
+    <string name="theme_light_desc">Altijd licht</string>
+    <string name="theme_dark">Donker</string>
+    <string name="theme_dark_desc">Altijd donker</string>
+    <string name="sex_boy">Jongen</string>
+    <string name="sex_girl">Meisje</string>
+
+    <!-- Today: quick actions, cards, tiles -->
+    <string name="action_feeding">Voeding</string>
+    <string name="action_diaper">Luier</string>
+    <string name="action_pump">Kolven</string>
+    <string name="action_tummy_time">Buikliggen</string>
+    <string name="action_sleep">Slaap</string>
+    <string name="action_bath">Badje</string>
+    <string name="card_last_feed">Laatste voeding</string>
+    <string name="card_last_diaper">Laatste luier</string>
+    <string name="card_wake_windows">Wakkertijden</string>
+    <string name="card_tummy_time">Buikliggen</string>
+    <string name="card_temperature">Temperatuur</string>
+    <string name="card_notes">Notities</string>
+    <string name="card_growth">Groei</string>
+    <string name="card_category_feeding">Voeding</string>
+    <string name="card_category_diapers">Luiers</string>
+    <string name="card_category_sleep">Slaap</string>
+    <string name="card_category_activity">Activiteit</string>
+    <string name="card_category_health">Gezondheid</string>
+    <string name="card_category_family">Gezin</string>
+    <string name="tile_feeds">Voedingen</string>
+    <string name="tile_diapers">Luiers</string>
+    <string name="tile_sleep">Slaap</string>
+    <string name="tile_wake_window">Wakkertijd</string>
+    <string name="tile_pumped">Gekolfd</string>
+    <string name="tile_milk_stash">Melkvoorraad</string>
+    <string name="tile_tummy_time">Buikliggen</string>
+    <string name="tile_last_bath">Laatste badje</string>
+    <string name="wake_part_awake_for">Wakker sinds</string>
+    <string name="wake_part_nap_due">Dutje gepland</string>
+    <string name="wake_part_today_stats">Gemiddelde vandaag</string>
+    <string name="wake_part_window_bars">Elke wakkertijd</string>
+    <string name="growth_weight">Gewicht</string>
+    <string name="growth_length">Lengte</string>
+    <string name="growth_head">Hoofdomtrek</string>
+    <string name="growth_head_short">Hoofd</string>
+
+    <!-- History filters, Log entries, rhythm models -->
+    <string name="history_filter_all">Alles</string>
+    <string name="history_filter_feeds">Voedingen</string>
+    <string name="history_filter_diapers">Luiers</string>
+    <string name="history_filter_pumping">Afkolven</string>
+    <string name="history_filter_tummy">Buikliggen</string>
+    <string name="history_filter_sleep">Slaap</string>
+    <string name="history_filter_bath">Badjes</string>
+    <string name="history_filter_growth">Groei</string>
+    <string name="history_filter_notes">Notities</string>
+    <string name="log_breastfeeding">Borstvoeding</string>
+    <string name="log_bottle">Fles</string>
+    <string name="log_diaper">Luier</string>
+    <string name="log_sleep">Slaap</string>
+    <string name="log_pumping">Afkolven</string>
+    <string name="log_bath">Badje</string>
+    <string name="log_growth">Groei</string>
+    <string name="rhythm_feed_gap">Volgende voeding</string>
+    <string name="rhythm_feed_gap_desc">Minuten van het begin van een voeding tot de volgende</string>
+    <string name="rhythm_diaper_gap">Volgende luier</string>
+    <string name="rhythm_diaper_gap_desc">Minuten van de ene verschoning tot de volgende</string>
+    <string name="rhythm_awake_window">Volgende slaap</string>
+    <string name="rhythm_awake_window_desc">Minuten wakker tussen slaapjes</string>
+    <string name="rhythm_sleep_length">Wakker worden</string>
+    <string name="rhythm_sleep_length_desc">Hoe lang een slaapje duurt</string>
+
+    <!-- Common words -->
+    <string name="side_left">Links</string>
+    <string name="side_right">Rechts</string>
+    <string name="pause">Pauze</string>
+    <string name="resume">Hervatten</string>
+
+    <!-- Launcher shortcuts and home-screen widgets -->
+    <string name="shortcut_feed_left">Voeden links</string>
+    <string name="shortcut_feed_left_desc">Links beginnen of naar links wisselen</string>
+    <string name="shortcut_feed_right">Voeden rechts</string>
+    <string name="shortcut_feed_right_desc">Rechts beginnen of naar rechts wisselen</string>
+    <string name="shortcut_diaper">Luier</string>
+    <string name="shortcut_diaper_desc">Luierverschoning vastleggen</string>
+    <string name="shortcut_sleep">Nu slapen</string>
+    <string name="shortcut_sleep_desc">De slaaptimer starten</string>
+    <string name="widget_last_fed">Laatst gevoed %s</string>
+    <string name="widget_no_feeds_today">Nog geen voedingen vandaag</string>
+    <string name="widget_wet_dirty">%1$d nat · %2$d poep</string>
+    <string name="next_up_feed">voeding</string>
+    <string name="next_up_diaper">luier</string>
+    <string name="next_up_wake_up">wakker</string>
+    <string name="next_up_nap">dutje</string>
+    <string name="next_up_item">%1$s ~%2$s</string>
+    <string name="next_up_line">Volgende: %s</string>
+    <string name="widget_last_side">Laatst: %s</string>
+    <string name="widget_paused_side">Gepauzeerd · %s</string>
+    <string name="widget_on_side_started">%1$s · gestart %2$s</string>
+    <string name="widget_last_ended_on">Laatst geëindigd %1$s · %2$s</string>
+    <string name="widget_tap_start">Tik op Start om te beginnen</string>
+    <string name="widget_start_side">Start %s</string>
+
+    <!-- Common words -->
+    <string name="end">Einde</string>
+    <string name="sleeping">Slaapt</string>
+    <string name="since_time">Sinds %s</string>
+    <string name="woke_up">Wakker geworden</string>
+    <string name="sleep_saved">Slaap opgeslagen</string>
+    <string name="feed_paused">Voeding gepauzeerd</string>
+
+    <!-- Notifications, Quick Settings tiles, reminders -->
+    <string name="channel_feed_timer">Borstvoedingstimer</string>
+    <string name="channel_next_up">Wat komt er</string>
+    <string name="channel_sleep_timer">Slaaptimer</string>
+    <string name="channel_reminders">Herinneringen</string>
+    <string name="feeding_left_side">Voeding · Links</string>
+    <string name="feeding_right_side">Voeding · Rechts</string>
+    <string name="pause_left">Pauze links</string>
+    <string name="pause_right">Pauze rechts</string>
+    <string name="feed_started_suffix">" · gestart %s"</string>
+    <string name="left_short_time">L %s</string>
+    <string name="right_short_time">R %s</string>
+    <string name="feed_paused_text">Totaal %1$s · L %2$s · R %3$s</string>
+    <string name="next_up_title_feed">Voeding</string>
+    <string name="next_up_title_diaper">Luier</string>
+    <string name="next_up_title_wake_up">Wakker worden</string>
+    <string name="next_up_title_nap">Dutje</string>
+    <string name="reminder_feed_due_in">Voeding over %s</string>
+    <string name="reminder_feed_due">Tijd voor een voeding</string>
+    <string name="reminder_feed_text">Laatste voeding begon %1$s geleden, om %2$s</string>
+    <string name="reminder_diaper_due_in">Verschoning over %s</string>
+    <string name="reminder_diaper_due">Tijd voor een verschoning</string>
+    <string name="reminder_diaper_text">Laatste verschoning %1$s geleden, om %2$s</string>
+    <string name="reminder_wake_up_in">Wakker worden over %s</string>
+    <string name="reminder_asleep_for">Slaapt al %s</string>
+    <string name="reminder_fell_asleep_at">In slaap gevallen om %s</string>
+    <string name="reminder_nap_in">Dutje over %s</string>
+    <string name="reminder_awake_for">Al %s wakker</string>
+    <string name="reminder_woke_up_at">Wakker geworden om %s</string>
+    <string name="reminder_woke_up_at_nap">Wakker geworden om %s. Tijd voor een dutje?</string>
+    <string name="tile_open_app">Open de app</string>
+    <string name="tile_tap_to_resume">Tik om te hervatten</string>
+    <string name="tile_feeding">Voeding</string>
+    <string name="tile_side_tap_to_pause">%s · tik om te pauzeren</string>
+    <string name="tile_since_tap_when_awake">Sinds %s · tik bij wakker worden</string>
+    <string name="tile_tap_when_asleep">Tik bij in slaap vallen</string>
+    <string name="tile_log_a_change">Verschoning vastleggen</string>
+    <string name="timer_paused">Timer gepauzeerd</string>
+    <string name="timer_running">Timer loopt</string>
+    <string name="switched_to_left">Gewisseld naar links</string>
+    <string name="switched_to_right">Gewisseld naar rechts</string>
+    <string name="tummy_time_logged_5">Buikliggen genoteerd: 5 min</string>
+    <string name="widget_added">Widget toegevoegd</string>
+
+    <!-- Home-screen widget layouts -->
+    <string name="widget_summary_today">Vandaag</string>
+    <string name="widget_summary_feeds">VOEDINGEN</string>
+    <string name="widget_summary_diapers">LUIERS</string>
+    <string name="widget_quick_feed">Voeding</string>
+    <string name="widget_quick_diaper">Luier</string>
+    <string name="widget_quick_tummy">Buik</string>
+    <string name="widget_quick_tummy_desc">Buikliggen</string>
+    <string name="widget_timer_title">Borstvoeding</string>
+    <string name="widget_switch_side">Wissel kant</string>
+    <string name="widget_pause_play">Pauze/Start</string>
+    <string name="saved_to_offline_queue">Activiteit opgeslagen in de offline wachtrij</string>
+
+    <!-- Toasts and status messages (view model) -->
+    <string name="error_load_history">Kon geschiedenis niet laden</string>
+    <string name="error_load_trends">Kon trends niet laden</string>
+    <string name="error_load_entries">Kon registraties niet laden</string>
+    <plurals name="models_loading_days">
+        <item quantity="one">%d dag aan registraties laden</item>
+        <item quantity="other">%d dagen aan registraties laden</item>
+    </plurals>
+    <string name="models_fitting">%s trainen</string>
+    <string name="models_now_estimated_by">%1$s: nu geschat door %2$s</string>
+    <string name="models_all_reset">Alle ritmes terug naar de standaardschatting</string>
+    <string name="models_reset">%s: terug naar de standaardschatting</string>
+    <string name="toast_bottle_logged_formula">Fles genoteerd: %d ml kunstvoeding</string>
+    <string name="toast_bottle_logged_breast_milk">Fles genoteerd: %d ml moedermelk</string>
+    <string name="toast_pumping_logged">Afkolven genoteerd: %d ml</string>
+    <string name="toast_pumping_updated">Afkolfregistratie aangepast</string>
+    <string name="toast_pumping_deleted">Afkolfregistratie verwijderd</string>
+    <string name="toast_feeding_updated">Voeding aangepast</string>
+    <string name="toast_feeding_deleted">Voeding verwijderd</string>
+    <string name="toast_diaper_updated">Luierverschoning aangepast</string>
+    <string name="toast_tummy_updated">Buikligmoment aangepast</string>
+    <string name="toast_tummy_deleted">Buikligmoment verwijderd</string>
+    <string name="toast_diaper_deleted">Luierverschoning verwijderd</string>
+    <string name="toast_undone">Ongedaan gemaakt</string>
+    <string name="toast_left_side_set">Links ingesteld op %1$02d:%2$02d</string>
+    <string name="toast_right_side_set">Rechts ingesteld op %1$02d:%2$02d</string>
+    <string name="toast_feed_start_set">Begin voeding ingesteld op %s</string>
+    <string name="toast_sleep_started">Slaap gestart</string>
+    <string name="toast_nap_saved">Dutje opgeslagen: %s</string>
+    <string name="toast_sleep_saved">Slaap opgeslagen: %s</string>
+    <string name="toast_sleep_discarded">Slaaptimer verwijderd</string>
+    <string name="toast_nap_logged">Dutje genoteerd: %s</string>
+    <string name="toast_sleep_logged">Slaap genoteerd: %s</string>
+    <string name="toast_sleep_updated">Slaap aangepast</string>
+    <string name="toast_sleep_deleted">Slaap verwijderd</string>
+    <string name="toast_feed_ended">Voeding beëindigd</string>
+    <string name="toast_chime_on">Zacht belletje: aan</string>
+    <string name="toast_chime_muted">Zacht belletje: uit</string>
+    <string name="toast_feeding_saved">Voeding opgeslagen</string>
+    <string name="toast_diaper_saved_start_timer">Luier opgeslagen! Borstvoedingstimer start...</string>
+    <string name="toast_diaper_saved">Luier opgeslagen</string>
+    <string name="toast_bottle_logged">Fles genoteerd</string>
+    <string name="toast_quick_pee">Plasluier genoteerd</string>
+    <string name="toast_quick_wet">Natte luier genoteerd</string>
+    <string name="toast_quick_poop">Poepluier genoteerd</string>
+    <string name="toast_quick_dirty">Vieze luier genoteerd</string>
+    <string name="toast_quick_both">Natte en poepluier genoteerd</string>
+    <string name="toast_connecting">Verbinden met Baby Buddy...</string>
+    <string name="toast_connected">Verbonden!</string>
+    <string name="toast_connection_failed">Verbinding mislukt: %s</string>
+    <string name="toast_logged_out">Uitgelogd</string>
+    <string name="toast_demo_mode">Demomodus actief met voorbeeldgegevens</string>
+    <string name="toast_simulating_disconnected">Verbroken verbinding simuleren</string>
+    <string name="toast_server_connected">Server verbonden</string>
+    <string name="toast_card_added">%s toegevoegd aan Vandaag</string>
+    <string name="toast_card_removed">%s verwijderd van Vandaag</string>
+    <string name="toast_card_removed_short">%s verwijderd</string>
+    <string name="toast_tummy_logged">Buikliggen genoteerd: %d min</string>
+    <string name="toast_temperature_logged">Temperatuur genoteerd: %.1f°</string>
+    <string name="toast_growth_logged">Groei genoteerd: %s</string>
+    <string name="toast_growth_updated">%s aangepast</string>
+    <string name="toast_growth_deleted">%s verwijderd</string>
+    <string name="toast_bath_logged">Badje genoteerd</string>
+    <string name="toast_bath_updated">Badje aangepast</string>
+    <string name="toast_note_updated">Notitie aangepast</string>
+    <string name="toast_bath_deleted">Badje verwijderd</string>
+    <string name="toast_note_deleted">Notitie verwijderd</string>
+    <string name="toast_note_added">Notitie toegevoegd</string>
+    <string name="toast_tagged_note_logged">%s genoteerd</string>
+    <string name="toast_milk_stash_set">Melkvoorraad ingesteld op %d ml</string>
+    <string name="toast_requesting_widget">Widget toevoegen aan startscherm...</string>
+    <string name="toast_widget_added_hint">Widget toegevoegd! Je kunt ook lang op je startscherm drukken om er een toe te voegen.</string>
+
+    <!-- Connection, sync and repository messages -->
+    <string name="connected_as">Verbonden als %s</string>
+    <string name="error_blocked_by_cloudflare">HTTP %d: geblokkeerd door Cloudflare. Voeg een Cloudflare Access-servicetoken toe.</string>
+    <string name="error_check_token">HTTP %d: controleer de API-token</string>
+    <string name="error_check_token_and_cloudflare">HTTP %d: controleer de API-token en de Cloudflare Access-token</string>
+    <string name="error_web_page_not_api">De server stuurde een webpagina in plaats van de API. Staat hij achter Cloudflare Access, voeg dan een servicetoken toe.</string>
+    <string name="error_certificate_not_trusted">Het certificaat van de server wordt niet vertrouwd. Is het zelfondertekend, zet dan Zelfondertekende certificaten toestaan aan.</string>
+    <string name="error_connect_for_history">Verbind met je Baby Buddy-server om de geschiedenis te zien</string>
+    <string name="error_connect_for_trends">Verbind met je Baby Buddy-server om trends te zien</string>
+    <string name="error_not_connected">Niet verbonden</string>
+    <string name="profile_my_baby">Mijn baby</string>
+    <string name="profile_baby">Baby</string>
+    <string name="profile_newborn">Pasgeborene</string>
+    <plurals name="sync_discarded">
+        <item quantity="one">%d registratie die nog niet op de server stond is verwijderd</item>
+        <item quantity="other">%d registraties die nog niet op de server stonden zijn verwijderd</item>
+    </plurals>
+    <string name="sync_proxy_rejected">Een proxy voor de server weigerde %s, nieuwe poging volgt</string>
+    <string name="sync_unreachable">Server niet bereikbaar, blijft opnieuw proberen</string>
+    <plurals name="sync_token_rejected">
+        <item quantity="one">Server weigerde de API-token. Verbind opnieuw in Instellingen om %d niet-opgeslagen registratie te versturen</item>
+        <item quantity="other">Server weigerde de API-token. Verbind opnieuw in Instellingen om %d niet-opgeslagen registraties te versturen</item>
+    </plurals>
+    <string name="sync_could_not_save">Kon %1$s niet opslaan: %2$s</string>
+    <string name="sync_server_rejected">Server weigerde %1$s (HTTP %2$d) %3$s</string>
+    <string name="write_feeding">voeding</string>
+    <string name="write_diaper_change">luierverschoning</string>
+    <string name="write_pumping">afkolven</string>
+    <string name="write_temperature">temperatuur</string>
+    <string name="write_note">notitie</string>
+    <string name="write_sleep">slaap</string>
+    <string name="write_tummy_time">buikliggen</string>
+    <string name="write_edit">%s (wijziging)</string>
+    <string name="write_delete">%s (verwijdering)</string>
+    <string name="age_days">%d d</string>
+    <string name="age_months_days">%1$d mnd %2$d d</string>
+    <string name="demo_mode">Demomodus</string>
+    <string name="synced_just_now">Zojuist gesynchroniseerd</string>
+    <string name="synced_at">Gesynchroniseerd %s</string>
+    <string name="connecting">Verbinden…</string>
+    <string name="card_last_feed_desc">Tijd sinds, kant</string>
+    <string name="card_last_diaper_desc">Tijd sinds, type</string>
+    <string name="card_wake_windows_desc">Wakker sinds, wakkertijden van vandaag</string>
+    <string name="card_tummy_time_desc">Dagdoel</string>
+    <string name="card_temperature_desc">Metingen</string>
+    <string name="card_notes_desc">Gedeelde notities</string>
+    <string name="card_growth_desc">Gewicht, lengte, hoofd</string>
+
+    <!-- Common words -->
+    <string name="undo">Ongedaan maken</string>
+    <string name="dismiss">Sluiten</string>
+    <string name="back">Terug</string>
+    <string name="started">Gestart</string>
+    <string name="today">Vandaag</string>
+    <string name="yesterday">Gisteren</string>
+    <string name="tomorrow">Morgen</string>
+
+    <!-- Top bar, navigation, feed controls, pickers -->
+    <string name="status_offline">Offline</string>
+    <string name="status_demo">Demo</string>
+    <string name="status_unsent">%d niet verstuurd</string>
+    <string name="status_synced">Gesynchroniseerd</string>
+    <string name="nav_today">Vandaag</string>
+    <string name="nav_trends">Trends</string>
+    <string name="nav_log">Invoeren</string>
+    <string name="nav_log_desc">Snel invoeren</string>
+    <string name="nav_history">Geschiedenis</string>
+    <string name="nav_settings">Instellingen</string>
+    <string name="nav_login">Inloggen</string>
+    <string name="feed_tap_side_to_start">Tik op een kant om te beginnen</string>
+    <string name="feed_paused_tap_side">Gepauzeerd · tik op een kant om verder te gaan</string>
+    <string name="feed_feeding_on">Voeding %s</string>
+    <string name="feed_since_previous">%1$s sinds de vorige voeding (%2$s)</string>
+    <string name="feed_start_note">Toegevoegde of verwijderde tijd gaat naar de kant waarmee je begon.</string>
+    <string name="edit_side">%s bewerken</string>
+    <string name="end_feed">Voeding beëindigen</string>
+    <string name="last_side">Laatste kant</string>
+    <string name="type_instead">Liever typen</string>
+    <string name="use_wheel">Draaiwiel gebruiken</string>
+    <string name="earlier_today">Eerder vandaag</string>
+    <string name="feed_left_right_minutes">L %1$d min · R %2$d min</string>
+
+    <!-- Common words -->
+    <string name="notes">Notities</string>
+    <string name="fell_asleep">In slaap gevallen</string>
+    <string name="tap_again_to_discard">Tik nogmaals om te verwijderen</string>
+
+    <!-- Sleep screen -->
+    <string name="sleep_duration_nap">%s · Dutje</string>
+    <string name="sleep_duration_night">%s · Nacht</string>
+    <string name="sleep_start_timer">Slaaptimer starten</string>
+    <string name="sleep_asleep_since">Slaapt sinds %s</string>
+    <string name="sleep_woke_up_save">Wakker · opslaan</string>
+    <string name="sleep_discard_timer">Timer verwijderen</string>
+    <string name="sleep_log_past">Eerdere slaap invoeren</string>
+    <string name="sleep_slept">%s geslapen</string>
+    <string name="sleep_save">Slaap opslaan</string>
+
+    <!-- Common words -->
+    <string name="close">Sluiten</string>
+    <string name="open">Openen</string>
+    <string name="note_optional">Notitie (optioneel)</string>
+
+    <!-- Log screen -->
+    <string name="log_nothing">Niets in te voeren. Zet onderdelen weer aan in Instellingen → Bijgehouden onderdelen.</string>
+    <string name="log_feed_paused">Gepauzeerd · %s</string>
+    <string name="log_feed_running">Loopt · %s</string>
+    <string name="log_feed_subtitle">Links/rechts-timer</string>
+    <string name="log_bottle_subtitle">Moedermelk of kunstvoeding</string>
+    <string name="log_diaper_subtitle">Nat, poep, beide of droog</string>
+    <string name="log_sleep_subtitle">Timer of eerdere slaap</string>
+    <string name="log_pumping_subtitle">Hoeveelheid en duur</string>
+    <string name="log_bath_subtitle">Tijd en notitie</string>
+    <string name="log_last_weight">Laatste gewicht: %s</string>
+
+    <!-- Diaper values (stored in English, shown translated) -->
+    <string name="diaper_amount_light">Weinig</string>
+    <string name="diaper_amount_medium">Gemiddeld</string>
+    <string name="diaper_amount_heavy">Veel</string>
+    <string name="diaper_consistency_loose_long">Dun / vloeibaar</string>
+    <string name="diaper_consistency_seedy_long">Korrelig / mosterd</string>
+    <string name="diaper_consistency_paste_long">Pasta / normaal</string>
+    <string name="diaper_consistency_hard_long">Hard / droog</string>
+    <string name="diaper_consistency_loose">Dun</string>
+    <string name="diaper_consistency_seedy">Korrelig</string>
+    <string name="diaper_consistency_paste">Pasta</string>
+    <string name="diaper_consistency_hard">Hard</string>
+    <string name="diaper_consistency_soft">Zacht</string>
+    <string name="diaper_color_mustard">Mosterd</string>
+    <string name="diaper_color_brown">Lichtbruin/bruin</string>
+    <string name="diaper_color_greenish">Groenig</string>
+    <string name="diaper_color_dark">Donker</string>
+    <string name="diaper_cream_barrier_long">Aquaphor / beschermcrème</string>
+    <string name="diaper_cream_zinc_long">Zinkoxidecrème</string>
+    <string name="diaper_cream_powder_long">Babypoeder</string>
+    <string name="diaper_cream_barrier">Bescherm</string>
+    <string name="diaper_cream_zinc">Zink</string>
+    <string name="diaper_cream_powder">Poeder</string>
+
+    <!-- Common words -->
+    <string name="save">Opslaan</string>
+    <string name="time">Tijd</string>
+    <string name="now_at">Nu · %s</string>
+    <string name="more_details">Meer details</string>
+    <string name="hide_details">Details verbergen</string>
+    <string name="show_details">Details tonen</string>
+
+    <!-- Diaper form -->
+    <string name="diaper_change">Luierverschoning</string>
+    <string name="diaper_wet">Nat</string>
+    <string name="diaper_dirty">Poep</string>
+    <string name="diaper_both">Beide</string>
+    <string name="diaper_dry">Droog</string>
+    <string name="diaper_amount">Hoeveelheid</string>
+    <string name="diaper_consistency_optional">Consistentie (optioneel)</string>
+    <string name="diaper_color">Kleur</string>
+    <string name="diaper_rash">Uitslag</string>
+    <string name="diaper_cream">Crème</string>
+    <string name="diaper_save_start_feed">Opslaan &amp; voeding starten</string>
+
+    <!-- Common words -->
+    <string name="ok">OK</string>
+    <string name="cancel">Annuleren</string>
+    <string name="reset">Reset</string>
+    <string name="reset_all">Alles resetten</string>
+    <string name="in_duration">Over %s</string>
+    <string name="duration_ago">%s geleden</string>
+    <plurals name="days_count">
+        <item quantity="one">%d dag</item>
+        <item quantity="other">%d dagen</item>
+    </plurals>
+
+    <!-- Trends: rhythm models tab -->
+    <string name="models_intro">Elk ritme krijgt een eigen model, automatisch gekozen: lineaire regressie, boosted trees, een klein neuraal netwerk, nearest neighbours en de recente mediaan per tijdstip worden elk met verschillende instellingen geprobeerd en beoordeeld, naast de standaardschatting van de app, op hoe goed ze je laatste registraties voorspelden. Sla er een op om herinneringen, Vandaag en de widget te laten schatten; is een tijd voorbij, dan schat Vandaag hem opnieuw op basis van hoe laat het model eerder zat. Alles draait op deze telefoon.</string>
+    <string name="models_train_on">Trainen op</string>
+    <string name="models_custom_range">Aangepast…</string>
+    <string name="models_fit_again">Opnieuw trainen</string>
+    <string name="models_fit">Modellen trainen</string>
+    <string name="models_pick_history">Kies hoeveel geschiedenis gebruikt wordt en tik op Modellen trainen. Het duurt een paar seconden.</string>
+    <string name="models_fitted_on">Getraind op %1$s – %2$s om %3$s</string>
+    <string name="models_in_use_title">Gebruikte schattingen</string>
+    <string name="models_default_estimate">Standaardschatting</string>
+    <string name="models_saved_summary">%1$s (%2$s) · ±%3$s · getraind %4$s</string>
+    <plurals name="models_examples">
+        <item quantity="one">%d voorbeeld</item>
+        <item quantity="other">%d voorbeelden</item>
+    </plurals>
+    <string name="models_not_enough">Nog niet genoeg registraties: %1$d van de %2$d nodig. Probeer een langere periode.</string>
+    <string name="models_best">Beste: %1$s (%2$s), zit meestal %3$s ernaast.</string>
+    <string name="models_default_off_better">De standaardschatting (%1$s) zit %2$s ernaast: %3$d%% beter.</string>
+    <string name="models_default_off_same">De standaardschatting (%1$s) zit %2$s ernaast, dus de standaard is hier even goed.</string>
+    <string name="models_tried">Geprobeerde modellen (typische fout)</string>
+    <string name="models_in_use_now">Nu in gebruik: %1$s, ±%2$s (getraind %3$s). Deze training, %4$s: ±%5$s.</string>
+    <string name="models_in_use">In gebruik</string>
+    <string name="models_save_version">Deze versie opslaan</string>
+    <string name="models_use">%s gebruiken</string>
+    <string name="models_reset_default">Terug naar standaard</string>
+    <string name="models_what_matters">Wat het zwaarst weegt (%s)</string>
+    <string name="models_importance_note">Hoeveel slechter de voorspellingen worden als die invoer door elkaar wordt gehusseld.</string>
+    <string name="models_actual_vs_predicted">Laatste registraties: werkelijk vs. voorspeld</string>
+    <string name="models_actual">Werkelijk</string>
+    <string name="models_predicted">Voorspeld</string>
+    <string name="models_next_feed_around">Volgende voeding rond %s</string>
+    <string name="models_next_change_around">Volgende verschoning rond %s</string>
+    <string name="models_wake_up_around">Wakker rond %s</string>
+    <string name="models_ready_to_sleep_around">Klaar om te slapen rond %s</string>
+
+    <!-- Common words -->
+    <string name="nap">Dutje</string>
+    <string name="note">Notitie</string>
+    <string name="amount_ml">%d ml</string>
+    <string name="amount_minutes">%d min</string>
+    <string name="previous_week">Vorige week</string>
+    <string name="next_week">Volgende week</string>
+    <string name="last_7_days">Afgelopen 7 dagen</string>
+    <plurals name="feeds_count">
+        <item quantity="one">%d voeding</item>
+        <item quantity="other">%d voedingen</item>
+    </plurals>
+    <plurals name="diapers_count">
+        <item quantity="one">%d luier</item>
+        <item quantity="other">%d luiers</item>
+    </plurals>
+    <plurals name="baths_count">
+        <item quantity="one">%d badje</item>
+        <item quantity="other">%d badjes</item>
+    </plurals>
+    <plurals name="measurements_count">
+        <item quantity="one">%d meting</item>
+        <item quantity="other">%d metingen</item>
+    </plurals>
+    <plurals name="notes_count">
+        <item quantity="one">%d notitie</item>
+        <item quantity="other">%d notities</item>
+    </plurals>
+
+    <!-- History list -->
+    <string name="history_amount">Hoeveelheid: %s</string>
+    <string name="history_ml_formula">%d ml kunstvoeding</string>
+    <string name="history_ml_breast_milk">%d ml moedermelk</string>
+    <string name="history_minutes_sides">%1$d min · %2$s</string>
+    <string name="history_ml_minutes">%1$d ml · %2$d min</string>
+    <string name="history_sleep_until">%1$s · tot %2$s</string>
+    <string name="history_min_nursing">%d min borstvoeding</string>
+    <string name="history_ml_bottle">%d ml fles</string>
+    <string name="history_asleep">%s geslapen</string>
+    <string name="history_empty_all">Niets vastgelegd in deze 7 dagen.</string>
+    <string name="history_empty_growth">Nog geen groeimetingen.</string>
+    <string name="history_empty_filter">Geen %s vastgelegd in deze 7 dagen.</string>
+
+    <!-- Common words -->
+    <string name="add">Toevoegen</string>
+
+    <!-- Today cards -->
+    <string name="cards_remove">Kaart verwijderen</string>
+    <string name="cards_tummy_progress">%1$d van %2$d min</string>
+    <string name="cards_plus_minutes">+%d min</string>
+    <string name="cards_no_readings">Geen metingen vandaag</string>
+    <string name="cards_no_measurements">Nog geen metingen</string>
+    <string name="cards_percentile">%s percentiel</string>
+    <string name="cards_choose_sex">Kies jongen of meisje in Instellingen → Jij om WHO-percentielen te zien.</string>
+    <string name="cards_log_growth">Groei invoeren</string>
+    <string name="cards_no_notes">Nog geen notities</string>
+    <string name="cards_add_note">Notitie toevoegen</string>
+    <string name="cards_asleep_for">Slaapt al</string>
+    <string name="cards_since_awake_before">sinds %1$s · daarvoor %2$s wakker</string>
+    <string name="cards_since">sinds %s</string>
+    <string name="cards_no_sleep">Nog geen slaap vastgelegd</string>
+    <string name="cards_nap_due_in">Dutje ~%1$s · over %2$s</string>
+    <string name="cards_nap_due_over">Dutje ~%1$s · %2$s over tijd</string>
+    <string name="cards_wake_today_stats">Vandaag: %1$d · gemiddeld %2$s · langste %3$s</string>
+
+    <!-- Common words -->
+    <string name="off">Uit</string>
+
+    <!-- Login and certificate -->
+    <string name="cert_changed_title">Servercertificaat gewijzigd</string>
+    <string name="cert_trust_title">Dit certificaat vertrouwen?</string>
+    <string name="cert_changed_text">Het certificaat van de server is niet het certificaat dat je eerder vertrouwde. Dat klopt als je het hebt vernieuwd; zo niet, dan onderschept iemand misschien de verbinding.</string>
+    <string name="cert_unknown_text">Het certificaat van de server is niet ondertekend door een bekende instantie. Controleer of deze SHA-256-vingerafdruk overeenkomt met het certificaat van je server voordat je het vertrouwt.</string>
+    <string name="cert_trust">Vertrouwen</string>
+    <string name="login_server_url">Server-URL</string>
+    <string name="login_api_token">API-token</string>
+    <string name="login_hide_token">Token verbergen</string>
+    <string name="login_show_token">Token tonen</string>
+    <string name="login_token_hint">Je vindt hem in Baby Buddy bij je gebruikersinstellingen → API-key.</string>
+    <string name="login_self_signed">Zelfondertekende certificaten toestaan</string>
+    <string name="login_self_signed_desc">Je bevestigt het certificaat van de server één keer; alleen dat certificaat wordt vertrouwd</string>
+    <string name="login_cloudflare">Achter Cloudflare Access</string>
+    <string name="login_cloudflare_desc">Stuurt een servicetoken zodat de app de Cloudflare-login overslaat</string>
+    <string name="login_hide_secret">Secret verbergen</string>
+    <string name="login_show_secret">Secret tonen</string>
+    <string name="login_cloudflare_hint">Maak er een aan in Cloudflare Zero Trust → Access → Service Auth en voeg een Service Auth-policy toe aan de app.</string>
+    <string name="login_enter_url_token">Vul een server-URL en API-token in</string>
+    <string name="login_enter_cloudflare">Vul zowel de Cloudflare-client-ID als de secret in</string>
+    <string name="login_reconnect">Opnieuw verbinden</string>
+    <string name="login_connect">Verbinden</string>
+    <string name="login_try_demo">Demomodus met voorbeeldgegevens proberen</string>
+    <string name="login_intro">Verbind met je Baby Buddy-server om te beginnen.</string>
+    <string name="login_no_server">Nog geen server? Probeer de demo met voorbeeldgegevens →</string>
+    <string name="login_what_is_open">Wat is Baby Buddy? ▴</string>
+    <string name="login_what_is_closed">Wat is Baby Buddy? ▾</string>
+    <string name="login_what_is_text">Baby Buddy is een gratis, opensource webapp om de voedingen, slaap, luiers en groei van een baby bij te houden. Je host hem zelf (op een thuisserver, NAS of cloudmachine), dus je gegevens blijven bij jou.</string>
+    <string name="login_what_is_companion">Deze app is een onofficiële telefoon-app ervoor: hij verbindt met je Baby Buddy-server en bewaart alles daar, zodat het hele gezin hetzelfde logboek deelt.</string>
+    <string name="login_set_up_server">Een server opzetten: Baby Buddy op GitHub →</string>
+
+    <!-- Settings -->
+    <string name="settings_open_section">%s openen</string>
+    <string name="settings_no_browser">Geen browser om %s te openen</string>
+    <string name="settings_connection">Serververbinding</string>
+    <string name="settings_you">Jij</string>
+    <string name="settings_tracked">Bijgehouden onderdelen</string>
+    <string name="settings_appearance">Weergave</string>
+    <string name="settings_notifications">Meldingen</string>
+    <string name="settings_about">Over</string>
+    <string name="settings_connected_to">Verbonden · %s</string>
+    <string name="settings_disconnect">Verbinding verbreken</string>
+    <string name="settings_add_your_name">Voeg je naam toe</string>
+    <string name="settings_your_name">Je naam</string>
+    <string name="settings_your_name_desc">Wordt toegevoegd aan alles wat je invoert, zodat anderen zien wie het heeft ingevoerd</string>
+    <string name="settings_growth_charts">Groeicurves</string>
+    <string name="settings_growth_charts_desc">De WHO publiceert aparte curves voor jongens en meisjes. Alleen gebruikt voor de groeipercentielen op deze telefoon.</string>
+    <string name="settings_start_side">Startkant borstvoeding</string>
+    <string name="settings_start_side_desc">Aan welke kant de timerwidget en de tegel in Snelle instellingen beginnen. In de app kies je de kant zelf.</string>
+    <string name="settings_tracking_everything">Alles wordt bijgehouden</string>
+    <string name="settings_hidden">Verborgen: %s</string>
+    <string name="settings_tracked_desc">Zet uit wat je niet bijhoudt. Het wordt verborgen in Vandaag, snelle acties, Geschiedenis, Trends en herinneringen op deze telefoon; er wordt niets van de server verwijderd.</string>
+    <string name="settings_appearance_24h">%s · 24-uursklok</string>
+    <string name="settings_appearance_12h">%s · 12-uursklok</string>
+    <string name="settings_theme">Thema</string>
+    <string name="settings_24h">24-uursklok</string>
+    <string name="settings_24h_on">Tijden worden getoond als 19:06</string>
+    <string name="settings_24h_off">Tijden worden getoond als 7:06 PM</string>
+    <string name="settings_models_tab">Tabblad Modellen in Trends</string>
+    <string name="settings_models_tab_desc">Traint op deze telefoon een model per ritme en voorspelt de volgende voeding, verschoning, dutje en wakker worden</string>
+    <string name="settings_summary_lock_screen">Timers op vergrendelscherm</string>
+    <string name="settings_summary_next_up">wat komt er</string>
+    <string name="settings_summary_feed">voedingsherinnering</string>
+    <string name="settings_summary_awake">wakkerherinnering</string>
+    <string name="settings_summary_sleep">slaapherinnering</string>
+    <string name="settings_summary_diaper">luierherinnering</string>
+    <string name="settings_lock_screen_timers">Timers op vergrendelscherm</string>
+    <string name="settings_lock_screen_timers_desc">Knoppen Links/Rechts/Einde voor de voeding en de slaaptimer zolang ze lopen</string>
+    <string name="settings_next_up">Wat komt er, op vergrendelscherm</string>
+    <string name="settings_next_up_desc">Een stille melding met de volgende voeding, verschoning en het volgende dutje (uit de herinneringen of een opgeslagen model) zolang er geen timer loopt</string>
+    <string name="settings_model_timed">Wanneer het in Trends → Modellen opgeslagen model het verwacht; de tijd hieronder is de terugval</string>
+    <string name="settings_remind_after">Herinneren na</string>
+    <string name="settings_feed_reminder">Voedingsherinnering</string>
+    <string name="settings_feed_reminder_on">Als er %s voorbij is sinds het begin van de laatste voeding</string>
+    <string name="settings_feed_reminder_off">Melden wanneer de volgende voeding eraan komt</string>
+    <string name="settings_feed_reminder_note">Tijd sinds het begin van de laatste voeding (uu:mm)</string>
+    <string name="settings_awake_reminder">Wakkerherinnering</string>
+    <string name="settings_awake_reminder_on">Als de baby %s wakker is</string>
+    <string name="settings_awake_reminder_off">Melden als de laatste slaap een tijd geleden is</string>
+    <string name="settings_awake_reminder_note">Tijd wakker sinds het einde van de laatste slaap (uu:mm)</string>
+    <string name="settings_sleep_reminder">Slaapherinnering</string>
+    <string name="settings_sleep_reminder_on">Als een getimede slaap %s duurt</string>
+    <string name="settings_sleep_reminder_off">Melden als de baby lang slaapt</string>
+    <string name="settings_sleep_reminder_note">Slaaptijd, gerekend vanaf de start van de slaaptimer (uu:mm)</string>
+    <string name="settings_diaper_reminder">Luierherinnering</string>
+    <string name="settings_diaper_reminder_on">Als er %s voorbij is sinds de laatste verschoning</string>
+    <string name="settings_diaper_reminder_off">Melden wanneer de volgende verschoning eraan komt</string>
+    <string name="settings_diaper_reminder_note">Tijd sinds de laatste luierverschoning (uu:mm)</string>
+    <string name="settings_heads_up">Vooraf waarschuwen</string>
+    <string name="settings_heads_up_on">Ook %s voor elke herinnering melden</string>
+    <string name="settings_heads_up_off">Alleen als een herinnering afgaat</string>
+    <string name="settings_reminders_note">Herinneringen kijken eerst op de server, dus een voeding, verschoning of slaap die op een andere telefoon is ingevoerd telt mee.</string>
+    <string name="about_summary">Versie %1$s · gebouwd %2$s</string>
+    <string name="about_version">Versie</string>
+    <string name="about_build">Build</string>
+    <string name="about_git">Git-tag / commit</string>
+    <string name="about_build_date">Builddatum</string>
+    <string name="about_app_id">App-ID</string>
+    <string name="about_source">Broncode, issues en releases op GitHub →</string>
+    <string name="about_server">Baby Buddy, de server waarmee deze app werkt →</string>
+
+    <!-- Customize Today -->
+    <string name="customize_title">Vandaag aanpassen</string>
+    <string name="customize_subtitle">Kaarten en startschermwidgets</string>
+    <string name="customize_tab_cards">Dashboardkaarten</string>
+    <string name="customize_active">%d actief</string>
+    <string name="customize_tab_home">Startscherm</string>
+    <string name="customize_cards_hint">Zet kaarten aan of uit voor je weergave Vandaag.</string>
+    <string name="customize_summary_tiles">Overzichtstegels</string>
+    <string name="customize_summary_tiles_desc">Het raster met totalen op \"Vandaag\". Onderdelen die je niet bijhoudt blijven verborgen.</string>
+    <string name="customize_show">Tonen</string>
+    <string name="customize_added">Toegevoegd</string>
+    <string name="customize_home_title">📱 Android-startschermwidgets</string>
+    <string name="customize_home_desc">Zet deze widgets op het startscherm van je telefoon om met één tik in te voeren en de timer te bedienen zonder de app te openen.</string>
+    <string name="customize_quick_title">Widget Snel invoeren met één tik</string>
+    <string name="customize_quick_size">4 × 1 standaard</string>
+    <string name="customize_quick_desc">Knoppen voor Voeding, Luier en Buikliggen.</string>
+    <string name="customize_preview_baby">Baby Leo • 3 mnd 12 d</string>
+    <string name="customize_preview_last_fed">45 min geleden gevoed</string>
+    <string name="customize_timer_title">Widget Live borstvoedingstimer</string>
+    <string name="customize_timer_size">4 × 2 volledige bediening</string>
+    <string name="customize_timer_desc">Live stopwatch met links/rechts-verdeling en knoppen Pauze/Wissel.</string>
+    <string name="customize_preview_timer">🤱 LIVE BORSTVOEDINGSTIMER</string>
+    <string name="customize_preview_right_active">Rechterborst actief</string>
+    <string name="customize_summary_title">Widget Overzicht vandaag</string>
+    <string name="customize_tip_title">💡 Tip voor handmatig toevoegen</string>
+    <string name="customize_tip_text">Ondersteunt je launcher geen vastzetten met één tik, houd dan een lege plek op je Android-startscherm ingedrukt, tik op \'Widgets\', scrol naar \'Baby Buddy\' en sleep de widget op zijn plek.</string>
+    <string name="customize_add_to_home">Toevoegen aan Android-startscherm</string>
+    <string name="card_last_feed_long">Wanneer de laatste voeding begon, hoe lang geleden, en de laatste kant.</string>
+    <string name="card_last_diaper_long">Wanneer de laatste luierverschoning was, hoe lang geleden, en welk type.</string>
+    <string name="card_wake_windows_long">Hoe lang de baby al wakker is, wanneer het volgende dutje eraan komt, en de wakkertijden van vandaag.</string>
+    <string name="card_tummy_time_long">Leg buikliggen vast richting een dagdoel.</string>
+    <string name="card_temperature_long">Temperatuurmetingen invoeren en bekijken.</string>
+    <string name="card_notes_long">Gedeelde notities zoals badjes en routines.</string>
+    <string name="card_growth_long">Laatste gewicht, lengte en hoofdomtrek met WHO-percentielen.</string>
+
+    <!-- History calendar -->
+    <string name="retry">Opnieuw</string>
+    <string name="history_show_list">Lijst tonen</string>
+    <string name="history_show_calendar">Kalender tonen</string>
+    <string name="history_legend_nursing">Borstvoeding</string>
+
+    <!-- Common words -->
+    <string name="date">Datum</string>
+    <string name="duration">Duur</string>
+    <string name="delete">Verwijderen</string>
+    <string name="tap_again_to_delete">Tik nogmaals om te verwijderen</string>
+
+    <!-- Entry dialogs -->
+    <string name="dialog_growth_last">Laatst: %1$s op %2$s</string>
+    <string name="dialog_edit_named">%s bewerken</string>
+    <string name="dialog_logged_by">Ingevoerd door %s</string>
+    <string name="dialog_edit_bath">Badje bewerken</string>
+    <string name="dialog_edit_note">Notitie bewerken</string>
+    <string name="dialog_side_title">Kant %s</string>
+    <string name="dialog_side_note">Stel in hoe lang aan deze kant is gevoed. De timer telt vanaf hier verder.</string>
+    <string name="dialog_milk_stash_note">Hoeveel gekolfde melk is er nu bewaard? Afkolven vult de voorraad aan en flessen moedermelk halen ervan af. Gedeeld met alle telefoons.</string>
+    <string name="dialog_stored_milk">Bewaarde melk</string>
+    <string name="dialog_note_placeholder">bijv. vitamine D, badje, onrustige avond</string>
+    <string name="dialog_tags">Tags</string>
+    <string name="dialog_night_sleep">Nachtslaap</string>
+    <string name="dialog_edit_sleep">Slaap bewerken</string>
+    <string name="dialog_minutes">Minuten</string>
+    <string name="dialog_quick_actions">Snelle acties</string>
+    <string name="dialog_quick_actions_note">Kies de knoppen bovenaan Vandaag en hun volgorde.</string>
+    <string name="dialog_move_up">%s omhoog</string>
+    <string name="dialog_move_down">%s omlaag</string>
+    <string name="dialog_edit_feeding">Voeding bewerken</string>
+    <string name="dialog_edit_diaper">Luier bewerken</string>
+    <string name="dialog_skin_care">Huidverzorging</string>
+    <string name="dialog_edit_tummy">Buikliggen bewerken</string>
+    <string name="dialog_edit_pumping">Afkolven bewerken</string>
+    <string name="dialog_breast_milk">Moedermelk</string>
+    <string name="dialog_formula">Kunstvoeding</string>
+    <string name="dialog_change_label">%s wijzigen</string>
+
+    <!-- Shared formats -->
+    <string name="duration_hours">%d u</string>
+    <string name="duration_hours_minutes_short">%1$d u %2$02d</string>
+
+    <!-- Trends charts -->
+    <string name="trends_charts">Grafieken</string>
+    <string name="trends_models">Modellen</string>
+    <string name="trends_no_data">Geen gegevens voor deze periode.</string>
+    <string name="trends_server_settings">Serverinstellingen</string>
+    <string name="trends_feeding_rhythm">Voedingsritme</string>
+    <string name="trends_no_feeds">Geen voedingen vastgelegd in deze periode.</string>
+    <string name="trends_longest_gap">Langste pauze</string>
+    <string name="trends_longest_week">Langste pauze: gemiddeld %s deze week</string>
+    <string name="trends_longest_month">Langste pauze: gemiddeld %s deze maand</string>
+    <string name="trends_up_week">, %s langer dan aan het begin van de week</string>
+    <string name="trends_up_month">, %s langer dan aan het begin van de maand</string>
+    <string name="trends_down_week">, %s korter dan aan het begin van de week</string>
+    <string name="trends_down_month">, %s korter dan aan het begin van de maand</string>
+    <string name="trends_sleep_rhythm">Slaapritme</string>
+    <string name="trends_sleep_week">Slaap: gemiddeld %s per dag deze week</string>
+    <string name="trends_sleep_month">Slaap: gemiddeld %s per dag deze maand</string>
+    <string name="trends_sleep_longest">, langste periode %s</string>
+    <string name="trends_diaper_rhythm">Luierritme</string>
+    <string name="trends_metric_feeds">Voedingen</string>
+    <string name="trends_metric_wet">Natte luiers</string>
+    <string name="trends_metric_dirty">Poepluiers</string>
+    <string name="trends_metric_naps">Dutjes</string>
+    <string name="trends_unit_per_day">per dag</string>
+    <string name="trends_unit_min_day">min/dag</string>
+    <string name="trends_unit_ml_day">ml/dag</string>
+    <string name="trends_unit_h_day">u/dag</string>
+    <string name="trends_daily_numbers">Dagcijfers</string>
+    <string name="trends_left_right">Links en rechts</string>
+    <string name="trends_left_pct">Links %d%%</string>
+    <string name="trends_right_pct">Rechts %d%%</string>
+    <string name="trends_pick_sex">De WHO heeft aparte curves voor jongens en meisjes. Kies er een om mee te vergelijken.</string>
+    <string name="trends_need_birth_date">Voeg de geboortedatum toe op de server om te vergelijken met de WHO-curves.</string>
+    <string name="trends_growth_none">Nog geen metingen (%s). Voer ze in via het scherm Invoeren (Groei).</string>
+    <string name="trends_growth_latest_no_percentile">Laatst: %1$s op %2$s. De WHO-curves lopen hier van geboorte tot 2 jaar.</string>
+    <string name="trends_growth_previous">" (%1$s op %2$s)"</string>
+    <string name="trends_growth_latest">Laatst: %1$s op %2$s, %3$s percentiel%4$s. Tik op een punt om het te bewerken.</string>
+    <string name="trends_who_median">Middelste lijn: WHO-mediaan (%s percentiel)</string>
+    <string name="trends_birth">Geboorte</string>
+    <string name="trends_months_short">%d mnd</string>
+
+    <!-- Common words -->
+    <string name="none_yet">Nog niets</string>
+    <string name="just_now">Zojuist</string>
+    <string name="ago_minutes">%d min geleden</string>
+    <string name="ago_hours_minutes">%1$d u %2$02d geleden</string>
+    <string name="ago_days_hours">%1$d d %2$d u geleden</string>
+    <plurals name="days_ago">
+        <item quantity="one">%d dag geleden</item>
+        <item quantity="other">%d dagen geleden</item>
+    </plurals>
+    <plurals name="naps_count">
+        <item quantity="one">%d dutje</item>
+        <item quantity="other">%d dutjes</item>
+    </plurals>
+    <plurals name="sessions_count">
+        <item quantity="one">%d sessie</item>
+        <item quantity="other">%d sessies</item>
+    </plurals>
+
+    <!-- Today screen -->
+    <string name="today_formula">kunstvoeding</string>
+    <string name="today_breast_milk">moedermelk</string>
+    <string name="today_solid_food">Vast voedsel</string>
+    <string name="today_handoff_wet">nat</string>
+    <string name="today_handoff_dirty">poep</string>
+    <string name="today_handoff_both">nat + poep</string>
+    <string name="today_handoff_dry">droog</string>
+    <string name="today_handoff_diaper">Luier · %s</string>
+    <string name="today_handoff_nap">Dutje · %s</string>
+    <string name="today_handoff_sleep">Slaap · %s</string>
+    <string name="today_handoff_title">Terwijl je weg was</string>
+    <string name="today_handoff_more">+%d meer in Geschiedenis</string>
+    <string name="today_last_bottle_formula">Fles · %d ml kunstvoeding</string>
+    <string name="today_last_bottle_breast_milk">Fles · %d ml moedermelk</string>
+    <string name="today_last_breastfeed">Borstvoeding · %d min</string>
+    <string name="today_last_breast">Borst · %s</string>
+    <string name="today_side_minutes">%1$s %2$d min</string>
+    <string name="today_add_quick_actions">Snelle acties toevoegen</string>
+    <string name="today_edit_quick_actions">Snelle acties bewerken</string>
+    <string name="today_nursing_and_bottle">%1$d min · %2$d ml</string>
+    <string name="today_sleeping_now">Slaapt nu</string>
+    <string name="today_asleep">Slaapt</string>
+    <string name="today_none_ended">Vandaag nog geen afgelopen</string>
+    <string name="today_wake_avg">Gem. %1$s · %2$d vandaag</string>
+    <string name="today_set">Instellen</string>
+    <string name="today_tap_to_enter">Tik om hoeveelheid in te voeren</string>
+    <string name="today_tap_to_correct">Tik om te corrigeren</string>
+    <string name="today_tap_to_log_bath">Tik om een badje in te voeren</string>
+    <string name="today_in">over %s</string>
+    <string name="today_due_ago">%s over tijd</string>
+    <string name="today_logged_today">Vandaag ingevoerd</string>
+    <string name="today_last_pump">Laatste keer kolven</string>
+    <string name="today_none_today">Vandaag nog niets</string>
+    <string name="today_time_between_feeds">Tijd tussen voedingen</string>
+    <string name="today_same_as_last_week">Ongeveer gelijk aan vorige week</string>
+    <string name="today_longer_than_last_week">%s langer dan vorige week</string>
+    <string name="today_shorter_than_last_week">%s korter dan vorige week</string>
+
+    <!-- Today side chips -->
+    <string name="side_left_short">L</string>
+    <string name="side_right_short">R</string>
+    <string name="side_chip_last">laatst</string>
+
+    <!-- Trends charts (row label) -->
+    <string name="trends_today_chart">Vandaag</string>
+</resources>

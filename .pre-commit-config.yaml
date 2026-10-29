@@ -70,3 +70,9 @@ repos:
         language: script
         entry: tools/hooks/check-personal-words.sh
         types: [text]
+      - id: check-translations
+        name: translations match the English strings (tools/i18n/check_strings.py)
+        language: script
+        entry: tools/i18n/check_strings.py
+        files: ^app/src/main/res/values(-[^/]+)?/strings\.xml$
+        pass_filenames: false

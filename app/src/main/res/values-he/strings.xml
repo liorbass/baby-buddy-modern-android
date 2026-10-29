@@ -1,0 +1,869 @@
+<resources>
+    <string name="app_name">Baby Buddy Companion</string>
+    <string name="widget_quick_log_name">Baby Buddy – רישום מהיר</string>
+    <string name="widget_quick_log_desc">רישום בהקשה אחת של האכלות, טיטולים וזמן בטן.</string>
+    <string name="widget_timer_name">Baby Buddy – טיימר פעיל</string>
+    <string name="widget_timer_desc">שליטה בטיימר ההנקה ישירות ממסך הבית: השהיה, המשך והחלפת צד.</string>
+    <string name="widget_summary_name">Baby Buddy – סיכום היום</string>
+    <string name="tile_feed_name">הנקה</string>
+    <string name="tile_sleep_name">שינה</string>
+    <string name="tile_diaper_name">טיטול</string>
+    <string name="widget_summary_desc">האכלות וטיטולים של היום במבט אחד.</string>
+
+    <!-- Shared formats -->
+    <string name="duration_hours_minutes">%1$d ש׳ %2$02d דק׳</string>
+    <string name="duration_minutes">%d דק׳</string>
+    <string name="percentile_below">&lt;%s</string>
+    <string name="percentile_above">&gt;%s</string>
+    <string name="yesterday_at">אתמול %s</string>
+    <string name="date_at">%1$s, %2$s</string>
+
+    <!-- Tracked items (Settings) -->
+    <string name="item_breastfeeding">הנקה</string>
+    <string name="item_breastfeeding_desc">טיימר שמאל/ימין, צד אחרון, נתוני הנקה</string>
+    <string name="item_bottle">האכלות בבקבוק</string>
+    <string name="item_bottle_desc">בקבוקי תמ״ל וחלב אם</string>
+    <string name="item_diapers">טיטולים</string>
+    <string name="item_diapers_desc">החלפות, ספירת רטובים/מלוכלכים, קצב טיטולים</string>
+    <string name="item_sleep">שינה</string>
+    <string name="item_sleep_desc">טיימר שינה, נמנומים, זמן ערות, קצב שינה</string>
+    <string name="item_pumping">שאיבה</string>
+    <string name="item_pumping_desc">שאיבות וכמויות</string>
+    <string name="item_milk_stash">מלאי חלב</string>
+    <string name="item_milk_stash_desc">חלב אם מאוחסן במסך היום</string>
+    <string name="item_tummy_time">זמן בטן</string>
+    <string name="item_tummy_time_desc">פעמים וכרטיס היעד היומי</string>
+    <string name="item_quick_notes">הערות מהירות</string>
+    <string name="item_quick_notes_desc">הערות עם תגית בהקשה אחת במסך היום</string>
+    <string name="item_bath">אמבטיות</string>
+    <string name="item_bath_desc">יומן אמבטיות והזמן מאז האמבטיה האחרונה</string>
+    <string name="item_growth">גדילה</string>
+    <string name="item_growth_desc">משקל, אורך והיקף ראש, עם עקומות ארגון הבריאות העולמי במגמות</string>
+
+    <!-- Settings choices -->
+    <string name="start_side_opposite">הפוך מההאכלה האחרונה</string>
+    <string name="start_side_opposite_desc">לסירוגין: להתחיל בצד שבו ההאכלה האחרונה לא הסתיימה</string>
+    <string name="start_side_same">כמו ההאכלה האחרונה</string>
+    <string name="start_side_same_desc">להתחיל בצד שבו ההאכלה האחרונה הסתיימה</string>
+    <string name="start_side_left">תמיד שמאל</string>
+    <string name="start_side_left_desc">להתחיל כל האכלה בצד שמאל</string>
+    <string name="start_side_right">תמיד ימין</string>
+    <string name="start_side_right_desc">להתחיל כל האכלה בצד ימין</string>
+    <string name="theme_by_time">לפי שעה ביום</string>
+    <string name="theme_by_time_desc">כהה מ־20:00 עד 07:00</string>
+    <string name="theme_system">כמו בטלפון</string>
+    <string name="theme_system_desc">לפי העיצוב הכהה של הטלפון</string>
+    <string name="theme_light">בהיר</string>
+    <string name="theme_light_desc">תמיד בהיר</string>
+    <string name="theme_dark">כהה</string>
+    <string name="theme_dark_desc">תמיד כהה</string>
+    <string name="sex_boy">בן</string>
+    <string name="sex_girl">בת</string>
+
+    <!-- Today: quick actions, cards, tiles -->
+    <string name="action_feeding">האכלה</string>
+    <string name="action_diaper">טיטול</string>
+    <string name="action_pump">שאיבה</string>
+    <string name="action_tummy_time">זמן בטן</string>
+    <string name="action_sleep">שינה</string>
+    <string name="action_bath">אמבטיה</string>
+    <string name="card_last_feed">האכלה אחרונה</string>
+    <string name="card_last_diaper">טיטול אחרון</string>
+    <string name="card_wake_windows">חלונות ערות</string>
+    <string name="card_tummy_time">זמן בטן</string>
+    <string name="card_temperature">טמפרטורה</string>
+    <string name="card_notes">הערות</string>
+    <string name="card_growth">גדילה</string>
+    <string name="card_category_feeding">האכלה</string>
+    <string name="card_category_diapers">טיטולים</string>
+    <string name="card_category_sleep">שינה</string>
+    <string name="card_category_activity">פעילות</string>
+    <string name="card_category_health">בריאות</string>
+    <string name="card_category_family">משפחה</string>
+    <string name="tile_feeds">האכלות</string>
+    <string name="tile_diapers">טיטולים</string>
+    <string name="tile_sleep">שינה</string>
+    <string name="tile_wake_window">חלון ערות</string>
+    <string name="tile_pumped">נשאב</string>
+    <string name="tile_milk_stash">מלאי חלב</string>
+    <string name="tile_tummy_time">זמן בטן</string>
+    <string name="tile_last_bath">אמבטיה אחרונה</string>
+    <string name="wake_part_awake_for">זמן ערות</string>
+    <string name="wake_part_nap_due">מועד הנמנום</string>
+    <string name="wake_part_today_stats">ממוצע היום</string>
+    <string name="wake_part_window_bars">כל חלון</string>
+    <string name="growth_weight">משקל</string>
+    <string name="growth_length">אורך</string>
+    <string name="growth_head">היקף ראש</string>
+    <string name="growth_head_short">ראש</string>
+
+    <!-- History filters, Log entries, rhythm models -->
+    <string name="history_filter_all">הכול</string>
+    <string name="history_filter_feeds">האכלות</string>
+    <string name="history_filter_diapers">טיטולים</string>
+    <string name="history_filter_pumping">שאיבה</string>
+    <string name="history_filter_tummy">זמן בטן</string>
+    <string name="history_filter_sleep">שינה</string>
+    <string name="history_filter_bath">אמבטיות</string>
+    <string name="history_filter_growth">גדילה</string>
+    <string name="history_filter_notes">הערות</string>
+    <string name="log_breastfeeding">הנקה</string>
+    <string name="log_bottle">בקבוק</string>
+    <string name="log_diaper">טיטול</string>
+    <string name="log_sleep">שינה</string>
+    <string name="log_pumping">שאיבה</string>
+    <string name="log_bath">אמבטיה</string>
+    <string name="log_growth">גדילה</string>
+    <string name="rhythm_feed_gap">ההאכלה הבאה</string>
+    <string name="rhythm_feed_gap_desc">דקות מתחילת האכלה אחת עד הבאה</string>
+    <string name="rhythm_diaper_gap">הטיטול הבא</string>
+    <string name="rhythm_diaper_gap_desc">דקות מהחלפה אחת עד הבאה</string>
+    <string name="rhythm_awake_window">השינה הבאה</string>
+    <string name="rhythm_awake_window_desc">דקות ערות בין שינות</string>
+    <string name="rhythm_sleep_length">התעוררות</string>
+    <string name="rhythm_sleep_length_desc">כמה זמן נמשכת שינה</string>
+
+    <!-- Common words -->
+    <string name="side_left">שמאל</string>
+    <string name="side_right">ימין</string>
+    <string name="pause">השהיה</string>
+    <string name="resume">המשך</string>
+
+    <!-- Launcher shortcuts and home-screen widgets -->
+    <string name="shortcut_feed_left">הנקה משמאל</string>
+    <string name="shortcut_feed_left_desc">להתחיל בצד שמאל או לעבור אליו</string>
+    <string name="shortcut_feed_right">הנקה מימין</string>
+    <string name="shortcut_feed_right_desc">להתחיל בצד ימין או לעבור אליו</string>
+    <string name="shortcut_diaper">טיטול</string>
+    <string name="shortcut_diaper_desc">רישום החלפת טיטול</string>
+    <string name="shortcut_sleep">שינה עכשיו</string>
+    <string name="shortcut_sleep_desc">הפעלת טיימר השינה</string>
+    <string name="widget_last_fed">האכלה אחרונה %s</string>
+    <string name="widget_no_feeds_today">עוד אין האכלות היום</string>
+    <string name="widget_wet_dirty">רטוב %1$d · מלוכלך %2$d</string>
+    <string name="next_up_feed">האכלה</string>
+    <string name="next_up_diaper">טיטול</string>
+    <string name="next_up_wake_up">התעוררות</string>
+    <string name="next_up_nap">נמנום</string>
+    <string name="next_up_item">%1$s ~%2$s</string>
+    <string name="next_up_line">הבא: %s</string>
+    <string name="widget_last_side">אחרון: %s</string>
+    <string name="widget_paused_side">מושהה · %s</string>
+    <string name="widget_on_side_started">צד %1$s · התחלה %2$s</string>
+    <string name="widget_last_ended_on">הסתיים לאחרונה בצד %1$s · %2$s</string>
+    <string name="widget_tap_start">להקיש על התחלה כדי להתחיל</string>
+    <string name="widget_start_side">התחלה בצד %s</string>
+
+    <!-- Common words -->
+    <string name="end">סיום</string>
+    <string name="sleeping">בשינה</string>
+    <string name="since_time">מאז %s</string>
+    <string name="woke_up">התעוררות</string>
+    <string name="sleep_saved">השינה נשמרה</string>
+    <string name="feed_paused">ההאכלה מושהית</string>
+
+    <!-- Notifications, Quick Settings tiles, reminders -->
+    <string name="channel_feed_timer">טיימר הנקה</string>
+    <string name="channel_next_up">מה הלאה</string>
+    <string name="channel_sleep_timer">טיימר שינה</string>
+    <string name="channel_reminders">תזכורות</string>
+    <string name="feeding_left_side">האכלה · צד שמאל</string>
+    <string name="feeding_right_side">האכלה · צד ימין</string>
+    <string name="pause_left">השהיית שמאל</string>
+    <string name="pause_right">השהיית ימין</string>
+    <string name="feed_started_suffix">" · התחלה ב־%s"</string>
+    <string name="left_short_time">ש %s</string>
+    <string name="right_short_time">י %s</string>
+    <string name="feed_paused_text">סה״כ %1$s · ש %2$s · י %3$s</string>
+    <string name="next_up_title_feed">האכלה</string>
+    <string name="next_up_title_diaper">טיטול</string>
+    <string name="next_up_title_wake_up">התעוררות</string>
+    <string name="next_up_title_nap">נמנום</string>
+    <string name="reminder_feed_due_in">האכלה בעוד %s</string>
+    <string name="reminder_feed_due">הגיע זמן האכלה</string>
+    <string name="reminder_feed_text">ההאכלה האחרונה התחילה לפני %1$s, ב־%2$s</string>
+    <string name="reminder_diaper_due_in">החלפת טיטול בעוד %s</string>
+    <string name="reminder_diaper_due">הגיע זמן להחליף טיטול</string>
+    <string name="reminder_diaper_text">ההחלפה האחרונה לפני %1$s, ב־%2$s</string>
+    <string name="reminder_wake_up_in">התעוררות בעוד %s</string>
+    <string name="reminder_asleep_for">בשינה כבר %s</string>
+    <string name="reminder_fell_asleep_at">הירדמות ב־%s</string>
+    <string name="reminder_nap_in">נמנום בעוד %s</string>
+    <string name="reminder_awake_for">ערות כבר %s</string>
+    <string name="reminder_woke_up_at">התעוררות ב־%s</string>
+    <string name="reminder_woke_up_at_nap">התעוררות ב־%s. הגיע זמן לנמנום?</string>
+    <string name="tile_open_app">פתיחת האפליקציה</string>
+    <string name="tile_tap_to_resume">הקשה להמשך</string>
+    <string name="tile_feeding">האכלה</string>
+    <string name="tile_side_tap_to_pause">%s · הקשה להשהיה</string>
+    <string name="tile_since_tap_when_awake">מאז %s · הקשה בהתעוררות</string>
+    <string name="tile_tap_when_asleep">הקשה בהירדמות</string>
+    <string name="tile_log_a_change">רישום החלפה</string>
+    <string name="timer_paused">הטיימר מושהה</string>
+    <string name="timer_running">הטיימר פועל</string>
+    <string name="switched_to_left">עברנו לצד שמאל</string>
+    <string name="switched_to_right">עברנו לצד ימין</string>
+    <string name="tummy_time_logged_5">זמן בטן נרשם: 5 דק׳</string>
+    <string name="widget_added">הווידג׳ט נוסף</string>
+
+    <!-- Home-screen widget layouts -->
+    <string name="widget_summary_today">היום</string>
+    <string name="widget_summary_feeds">האכלות</string>
+    <string name="widget_summary_diapers">טיטולים</string>
+    <string name="widget_quick_feed">האכלה</string>
+    <string name="widget_quick_diaper">טיטול</string>
+    <string name="widget_quick_tummy">בטן</string>
+    <string name="widget_quick_tummy_desc">זמן בטן</string>
+    <string name="widget_timer_title">הנקה</string>
+    <string name="widget_switch_side">החלפת צד</string>
+    <string name="widget_pause_play">השהיה/הפעלה</string>
+    <string name="saved_to_offline_queue">הפעילות נשמרה בתור המקומי ותישלח כשיהיה חיבור</string>
+
+    <!-- Toasts and status messages (view model) -->
+    <string name="error_load_history">לא ניתן לטעון את ההיסטוריה</string>
+    <string name="error_load_trends">לא ניתן לטעון את המגמות</string>
+    <string name="error_load_entries">לא ניתן לטעון את הרשומות</string>
+    <plurals name="models_loading_days">
+        <item quantity="one">טעינת רשומות של יום אחד</item>
+        <item quantity="two">טעינת רשומות של יומיים</item>
+        <item quantity="other">טעינת רשומות של %d ימים</item>
+    </plurals>
+    <string name="models_fitting">מאמן: %s</string>
+    <string name="models_now_estimated_by">%1$s: מוערך עכשיו לפי %2$s</string>
+    <string name="models_all_reset">כל המקצבים חזרו להערכת ברירת המחדל</string>
+    <string name="models_reset">%s: חזרה להערכת ברירת המחדל</string>
+    <string name="toast_bottle_logged_formula">בקבוק נרשם: %d מ״ל תמ״ל</string>
+    <string name="toast_bottle_logged_breast_milk">בקבוק נרשם: %d מ״ל חלב אם</string>
+    <string name="toast_pumping_logged">שאיבה נרשמה: %d מ״ל</string>
+    <string name="toast_pumping_updated">השאיבה עודכנה</string>
+    <string name="toast_pumping_deleted">השאיבה נמחקה</string>
+    <string name="toast_feeding_updated">ההאכלה עודכנה</string>
+    <string name="toast_feeding_deleted">ההאכלה נמחקה</string>
+    <string name="toast_diaper_updated">החלפת הטיטול עודכנה</string>
+    <string name="toast_tummy_updated">זמן הבטן עודכן</string>
+    <string name="toast_tummy_deleted">זמן הבטן נמחק</string>
+    <string name="toast_diaper_deleted">החלפת הטיטול נמחקה</string>
+    <string name="toast_undone">בוטל</string>
+    <string name="toast_left_side_set">צד שמאל הוגדר ל־%1$02d:%2$02d</string>
+    <string name="toast_right_side_set">צד ימין הוגדר ל־%1$02d:%2$02d</string>
+    <string name="toast_feed_start_set">תחילת ההאכלה הוגדרה ל־%s</string>
+    <string name="toast_sleep_started">השינה התחילה</string>
+    <string name="toast_nap_saved">הנמנום נשמר: %s</string>
+    <string name="toast_sleep_saved">השינה נשמרה: %s</string>
+    <string name="toast_sleep_discarded">טיימר השינה בוטל</string>
+    <string name="toast_nap_logged">נמנום נרשם: %s</string>
+    <string name="toast_sleep_logged">שינה נרשמה: %s</string>
+    <string name="toast_sleep_updated">השינה עודכנה</string>
+    <string name="toast_sleep_deleted">השינה נמחקה</string>
+    <string name="toast_feed_ended">ההאכלה הסתיימה</string>
+    <string name="toast_chime_on">צליל עדין: פעיל</string>
+    <string name="toast_chime_muted">צליל עדין: מושתק</string>
+    <string name="toast_feeding_saved">ההאכלה נשמרה</string>
+    <string name="toast_diaper_saved_start_timer">הטיטול נשמר! מפעילים את טיימר ההנקה…</string>
+    <string name="toast_diaper_saved">הטיטול נשמר</string>
+    <string name="toast_bottle_logged">בקבוק נרשם</string>
+    <string name="toast_quick_pee">טיטול פיפי נרשם</string>
+    <string name="toast_quick_wet">טיטול רטוב נרשם</string>
+    <string name="toast_quick_poop">טיטול קקי נרשם</string>
+    <string name="toast_quick_dirty">טיטול מלוכלך נרשם</string>
+    <string name="toast_quick_both">טיטול רטוב ומלוכלך נרשם</string>
+    <string name="toast_connecting">מתחבר ל־Baby Buddy…</string>
+    <string name="toast_connected">החיבור הצליח!</string>
+    <string name="toast_connection_failed">החיבור נכשל: %s</string>
+    <string name="toast_logged_out">התנתקת</string>
+    <string name="toast_demo_mode">מצב הדגמה פעיל עם נתונים לדוגמה</string>
+    <string name="toast_simulating_disconnected">הדמיית מצב מנותק</string>
+    <string name="toast_server_connected">השרת מחובר</string>
+    <string name="toast_card_added">הכרטיס %s נוסף להיום</string>
+    <string name="toast_card_removed">הכרטיס %s הוסר מהיום</string>
+    <string name="toast_card_removed_short">הוסר: %s</string>
+    <string name="toast_tummy_logged">זמן בטן נרשם: %d דק׳</string>
+    <string name="toast_temperature_logged">טמפרטורה נרשמה: %.1f°</string>
+    <string name="toast_growth_logged">גדילה נרשמה: %s</string>
+    <string name="toast_growth_updated">%s עודכן</string>
+    <string name="toast_growth_deleted">%s נמחק</string>
+    <string name="toast_bath_logged">אמבטיה נרשמה</string>
+    <string name="toast_bath_updated">האמבטיה עודכנה</string>
+    <string name="toast_note_updated">ההערה עודכנה</string>
+    <string name="toast_bath_deleted">האמבטיה נמחקה</string>
+    <string name="toast_note_deleted">ההערה נמחקה</string>
+    <string name="toast_note_added">ההערה נוספה</string>
+    <string name="toast_tagged_note_logged">נרשם: %s</string>
+    <string name="toast_milk_stash_set">מלאי החלב הוגדר ל־%d מ״ל</string>
+    <string name="toast_requesting_widget">שולח בקשה להוספת הווידג׳ט למסך הבית…</string>
+    <string name="toast_widget_added_hint">הווידג׳ט נוסף! אפשר גם להוסיף בלחיצה ארוכה על מסך הבית.</string>
+
+    <!-- Connection, sync and repository messages -->
+    <string name="connected_as">מחובר בתור %s</string>
+    <string name="error_blocked_by_cloudflare">HTTP %d: נחסם על ידי Cloudflare. יש להוסיף טוקן שירות של Cloudflare Access.</string>
+    <string name="error_check_token">HTTP %d: יש לבדוק את טוקן ה־API</string>
+    <string name="error_check_token_and_cloudflare">HTTP %d: יש לבדוק את טוקן ה־API ואת טוקן Cloudflare Access</string>
+    <string name="error_web_page_not_api">השרת החזיר דף אינטרנט במקום ה־API. אם הוא מאחורי Cloudflare Access, יש להוסיף טוקן שירות.</string>
+    <string name="error_certificate_not_trusted">אישור האבטחה של השרת אינו מהימן. אם הוא בחתימה עצמית, יש להפעיל את ״לאפשר אישורים בחתימה עצמית״.</string>
+    <string name="error_connect_for_history">יש להתחבר לשרת Baby Buddy כדי לראות היסטוריה</string>
+    <string name="error_connect_for_trends">יש להתחבר לשרת Baby Buddy כדי לראות מגמות</string>
+    <string name="error_not_connected">לא מחובר</string>
+    <string name="profile_my_baby">התינוק שלי</string>
+    <string name="profile_baby">תינוק</string>
+    <string name="profile_newborn">יילוד</string>
+    <plurals name="sync_discarded">
+        <item quantity="one">נמחקה רשומה אחת שעוד לא נשמרה בשרת</item>
+        <item quantity="two">נמחקו %d רשומות שעוד לא נשמרו בשרת</item>
+        <item quantity="other">נמחקו %d רשומות שעוד לא נשמרו בשרת</item>
+    </plurals>
+    <string name="sync_proxy_rejected">פרוקסי שלפני השרת דחה את %s, ננסה שוב</string>
+    <string name="sync_unreachable">אין גישה לשרת, ממשיכים לנסות</string>
+    <plurals name="sync_token_rejected">
+        <item quantity="one">השרת דחה את טוקן ה־API. יש להתחבר מחדש בהגדרות כדי לשלוח רשומה אחת שלא נשמרה</item>
+        <item quantity="two">השרת דחה את טוקן ה־API. יש להתחבר מחדש בהגדרות כדי לשלוח %d רשומות שלא נשמרו</item>
+        <item quantity="other">השרת דחה את טוקן ה־API. יש להתחבר מחדש בהגדרות כדי לשלוח %d רשומות שלא נשמרו</item>
+    </plurals>
+    <string name="sync_could_not_save">לא ניתן לשמור %1$s: %2$s</string>
+    <string name="sync_server_rejected">השרת דחה %1$s (HTTP %2$d) %3$s</string>
+    <string name="write_feeding">האכלה</string>
+    <string name="write_diaper_change">החלפת טיטול</string>
+    <string name="write_pumping">שאיבה</string>
+    <string name="write_temperature">טמפרטורה</string>
+    <string name="write_note">הערה</string>
+    <string name="write_sleep">שינה</string>
+    <string name="write_tummy_time">זמן בטן</string>
+    <string name="write_edit">עריכת %s</string>
+    <string name="write_delete">מחיקת %s</string>
+    <string name="age_days">%d י׳</string>
+    <string name="age_months_days">%1$d ח׳ %2$d י׳</string>
+    <string name="demo_mode">מצב הדגמה</string>
+    <string name="synced_just_now">סונכרן הרגע</string>
+    <string name="synced_at">סונכרן %s</string>
+    <string name="connecting">מתחבר…</string>
+    <string name="card_last_feed_desc">זמן שעבר, צד</string>
+    <string name="card_last_diaper_desc">זמן שעבר, סוג</string>
+    <string name="card_wake_windows_desc">זמן ערות, חלונות היום</string>
+    <string name="card_tummy_time_desc">יעד יומי</string>
+    <string name="card_temperature_desc">מדידות</string>
+    <string name="card_notes_desc">הערות משותפות</string>
+    <string name="card_growth_desc">משקל, אורך, ראש</string>
+
+    <!-- Common words -->
+    <string name="undo">ביטול פעולה</string>
+    <string name="dismiss">סגירה</string>
+    <string name="back">חזרה</string>
+    <string name="started">התחלה</string>
+    <string name="today">היום</string>
+    <string name="yesterday">אתמול</string>
+    <string name="tomorrow">מחר</string>
+
+    <!-- Top bar, navigation, feed controls, pickers -->
+    <string name="status_offline">לא מקוון</string>
+    <string name="status_demo">הדגמה</string>
+    <string name="status_unsent">%d לא נשלחו</string>
+    <string name="status_synced">מסונכרן</string>
+    <string name="nav_today">היום</string>
+    <string name="nav_trends">מגמות</string>
+    <string name="nav_log">רישום</string>
+    <string name="nav_log_desc">רישום מהיר</string>
+    <string name="nav_history">היסטוריה</string>
+    <string name="nav_settings">הגדרות</string>
+    <string name="nav_login">כניסה</string>
+    <string name="feed_tap_side_to_start">הקשה על צד כדי להתחיל</string>
+    <string name="feed_paused_tap_side">מושהה · הקשה על צד כדי להמשיך</string>
+    <string name="feed_feeding_on">הנקה מצד %s</string>
+    <string name="feed_since_previous">%1$s מאז ההאכלה הקודמת (%2$s)</string>
+    <string name="feed_start_note">זמן שנוסף או הורד נזקף לצד שבו ההאכלה התחילה.</string>
+    <string name="edit_side">עריכת צד %s</string>
+    <string name="end_feed">סיום האכלה</string>
+    <string name="last_side">צד אחרון</string>
+    <string name="type_instead">הקלדה במקום</string>
+    <string name="use_wheel">גלגלת</string>
+    <string name="earlier_today">מוקדם יותר היום</string>
+    <string name="feed_left_right_minutes">ש %1$d דק׳ · י %2$d דק׳</string>
+
+    <!-- Common words -->
+    <string name="notes">הערות</string>
+    <string name="fell_asleep">הירדמות</string>
+    <string name="tap_again_to_discard">הקשה נוספת לביטול</string>
+
+    <!-- Sleep screen -->
+    <string name="sleep_duration_nap">%s · נמנום</string>
+    <string name="sleep_duration_night">%s · לילה</string>
+    <string name="sleep_start_timer">הפעלת טיימר שינה</string>
+    <string name="sleep_asleep_since">בשינה מאז %s</string>
+    <string name="sleep_woke_up_save">התעוררות · שמירה</string>
+    <string name="sleep_discard_timer">ביטול הטיימר</string>
+    <string name="sleep_log_past">רישום שינה קודמת</string>
+    <string name="sleep_slept">שינה של %s</string>
+    <string name="sleep_save">שמירת שינה</string>
+
+    <!-- Common words -->
+    <string name="close">סגירה</string>
+    <string name="open">פתיחה</string>
+    <string name="note_optional">הערה (לא חובה)</string>
+
+    <!-- Log screen -->
+    <string name="log_nothing">אין כאן מה לרשום. אפשר להפעיל פריטים מחדש בהגדרות ← פריטים במעקב.</string>
+    <string name="log_feed_paused">מושהה · %s</string>
+    <string name="log_feed_running">פועל · %s</string>
+    <string name="log_feed_subtitle">טיימר שמאל / ימין</string>
+    <string name="log_bottle_subtitle">חלב אם או תמ״ל</string>
+    <string name="log_diaper_subtitle">רטוב, מלוכלך, שניהם או יבש</string>
+    <string name="log_sleep_subtitle">טיימר או שינה קודמת</string>
+    <string name="log_pumping_subtitle">כמות ומשך</string>
+    <string name="log_bath_subtitle">זמן והערה</string>
+    <string name="log_last_weight">משקל אחרון: %s</string>
+
+    <!-- Diaper values (stored in English, shown translated) -->
+    <string name="diaper_amount_light">קל</string>
+    <string name="diaper_amount_medium">בינוני</string>
+    <string name="diaper_amount_heavy">כבד</string>
+    <string name="diaper_consistency_loose_long">רך מאוד / נוזלי</string>
+    <string name="diaper_consistency_seedy_long">גרגרי / חרדל</string>
+    <string name="diaper_consistency_paste_long">משחתי / רגיל</string>
+    <string name="diaper_consistency_hard_long">קשה / יבש</string>
+    <string name="diaper_consistency_loose">נוזלי</string>
+    <string name="diaper_consistency_seedy">גרגרי</string>
+    <string name="diaper_consistency_paste">משחתי</string>
+    <string name="diaper_consistency_hard">קשה</string>
+    <string name="diaper_consistency_soft">רך</string>
+    <string name="diaper_color_mustard">חרדל</string>
+    <string name="diaper_color_brown">בז׳/חום</string>
+    <string name="diaper_color_greenish">ירקרק</string>
+    <string name="diaper_color_dark">כהה</string>
+    <string name="diaper_cream_barrier_long">אקוופור / משחת הגנה</string>
+    <string name="diaper_cream_zinc_long">משחת תחמוצת אבץ</string>
+    <string name="diaper_cream_powder_long">אבקת תינוקות</string>
+    <string name="diaper_cream_barrier">הגנה</string>
+    <string name="diaper_cream_zinc">אבץ</string>
+    <string name="diaper_cream_powder">אבקה</string>
+
+    <!-- Common words -->
+    <string name="save">שמירה</string>
+    <string name="time">זמן</string>
+    <string name="now_at">עכשיו · %s</string>
+    <string name="more_details">פרטים נוספים</string>
+    <string name="hide_details">הסתרת פרטים</string>
+    <string name="show_details">הצגת פרטים</string>
+
+    <!-- Diaper form -->
+    <string name="diaper_change">החלפת טיטול</string>
+    <string name="diaper_wet">רטוב</string>
+    <string name="diaper_dirty">מלוכלך</string>
+    <string name="diaper_both">שניהם</string>
+    <string name="diaper_dry">יבש</string>
+    <string name="diaper_amount">כמות</string>
+    <string name="diaper_consistency_optional">מרקם (לא חובה)</string>
+    <string name="diaper_color">צבע</string>
+    <string name="diaper_rash">תפרחת</string>
+    <string name="diaper_cream">משחה</string>
+    <string name="diaper_save_start_feed">שמירה והתחלת האכלה</string>
+
+    <!-- Common words -->
+    <string name="ok">אישור</string>
+    <string name="cancel">ביטול</string>
+    <string name="reset">איפוס</string>
+    <string name="reset_all">איפוס הכול</string>
+    <string name="in_duration">בעוד %s</string>
+    <string name="duration_ago">לפני %s</string>
+    <plurals name="days_count">
+        <item quantity="one">יום אחד</item>
+        <item quantity="two">יומיים</item>
+        <item quantity="other">%d ימים</item>
+    </plurals>
+
+    <!-- Trends: rhythm models tab -->
+    <string name="models_intro">לכל מקצב יש מודל משלו, שנבחר אוטומטית: רגרסיה לינארית, עצי החלטה מוגברים (boosting), רשת נוירונים קטנה, שכנים קרובים והחציון האחרון לפי שעה ביום – כל אחד נבדק עם כמה הגדרות ומקבל ציון, לצד הערכת ברירת המחדל של האפליקציה, לפי מידת הדיוק שלו בחיזוי הרשומות האחרונות. אפשר לשמור מודל כדי שיעריך את התזכורות, את מסך היום ואת הווידג׳ט; כשזמן חזוי עובר, מסך היום מעריך אותו מחדש לפי האיחורים הקודמים של המודל. הכול רץ בטלפון הזה.</string>
+    <string name="models_train_on">אימון על</string>
+    <string name="models_custom_range">טווח מותאם…</string>
+    <string name="models_fit_again">אימון מחדש</string>
+    <string name="models_fit">אימון מודלים</string>
+    <string name="models_pick_history">יש לבחור כמה היסטוריה ללמוד ממנה ולהקיש על ״אימון מודלים״. זה לוקח כמה שניות.</string>
+    <string name="models_fitted_on">אומן על %1$s – %2$s ב־%3$s</string>
+    <string name="models_in_use_title">הערכות בשימוש</string>
+    <string name="models_default_estimate">הערכת ברירת מחדל</string>
+    <string name="models_saved_summary">%1$s (%2$s) · ±%3$s · אומן %4$s</string>
+    <plurals name="models_examples">
+        <item quantity="one">דוגמה אחת</item>
+        <item quantity="two">%d דוגמאות</item>
+        <item quantity="other">%d דוגמאות</item>
+    </plurals>
+    <string name="models_not_enough">עדיין אין מספיק רשומות: %1$d מתוך %2$d הנדרשות. כדאי לנסות טווח ארוך יותר.</string>
+    <string name="models_best">הטוב ביותר: %1$s (%2$s), סטייה טיפוסית של %3$s.</string>
+    <string name="models_default_off_better">הערכת ברירת המחדל (%1$s) סוטה ב־%2$s: שיפור של %3$d%%.</string>
+    <string name="models_default_off_same">הערכת ברירת המחדל (%1$s) סוטה ב־%2$s, כך שכאן ברירת המחדל טובה באותה מידה.</string>
+    <string name="models_tried">מודלים שנבדקו (שגיאה טיפוסית)</string>
+    <string name="models_in_use_now">בשימוש כעת: %1$s, ±%2$s (אומן %3$s). באימון הזה %4$s: ±%5$s.</string>
+    <string name="models_in_use">בשימוש</string>
+    <string name="models_save_version">שמירת הגרסה הזו</string>
+    <string name="models_use">שימוש ב־%s</string>
+    <string name="models_reset_default">חזרה לברירת המחדל</string>
+    <string name="models_what_matters">מה הכי משפיע (%s)</string>
+    <string name="models_importance_note">כמה החיזויים נפגעים כשהקלט הזה מעורבב.</string>
+    <string name="models_actual_vs_predicted">רשומות אחרונות: בפועל מול חיזוי</string>
+    <string name="models_actual">בפועל</string>
+    <string name="models_predicted">חיזוי</string>
+    <string name="models_next_feed_around">ההאכלה הבאה בסביבות %s</string>
+    <string name="models_next_change_around">ההחלפה הבאה בסביבות %s</string>
+    <string name="models_wake_up_around">התעוררות בסביבות %s</string>
+    <string name="models_ready_to_sleep_around">מוכנות לשינה בסביבות %s</string>
+
+    <!-- Common words -->
+    <string name="nap">נמנום</string>
+    <string name="note">הערה</string>
+    <string name="amount_ml">%d מ״ל</string>
+    <string name="amount_minutes">%d דק׳</string>
+    <string name="previous_week">השבוע הקודם</string>
+    <string name="next_week">השבוע הבא</string>
+    <string name="last_7_days">7 הימים האחרונים</string>
+    <plurals name="feeds_count">
+        <item quantity="one">האכלה אחת</item>
+        <item quantity="two">%d האכלות</item>
+        <item quantity="other">%d האכלות</item>
+    </plurals>
+    <plurals name="diapers_count">
+        <item quantity="one">טיטול אחד</item>
+        <item quantity="two">%d טיטולים</item>
+        <item quantity="other">%d טיטולים</item>
+    </plurals>
+    <plurals name="baths_count">
+        <item quantity="one">אמבטיה אחת</item>
+        <item quantity="two">%d אמבטיות</item>
+        <item quantity="other">%d אמבטיות</item>
+    </plurals>
+    <plurals name="measurements_count">
+        <item quantity="one">מדידה אחת</item>
+        <item quantity="two">%d מדידות</item>
+        <item quantity="other">%d מדידות</item>
+    </plurals>
+    <plurals name="notes_count">
+        <item quantity="one">הערה אחת</item>
+        <item quantity="two">%d הערות</item>
+        <item quantity="other">%d הערות</item>
+    </plurals>
+
+    <!-- History list -->
+    <string name="history_amount">כמות: %s</string>
+    <string name="history_ml_formula">%d מ״ל תמ״ל</string>
+    <string name="history_ml_breast_milk">%d מ״ל חלב אם</string>
+    <string name="history_minutes_sides">%1$d דק׳ · %2$s</string>
+    <string name="history_ml_minutes">%1$d מ״ל · %2$d דק׳</string>
+    <string name="history_sleep_until">%1$s · עד %2$s</string>
+    <string name="history_min_nursing">%d דק׳ הנקה</string>
+    <string name="history_ml_bottle">בקבוק %d מ״ל</string>
+    <string name="history_asleep">%s שינה</string>
+    <string name="history_empty_all">לא נרשם דבר ב־7 הימים האלה.</string>
+    <string name="history_empty_growth">עדיין אין מדידות גדילה.</string>
+    <string name="history_empty_filter">לא נרשמו %s ב־7 הימים האלה.</string>
+
+    <!-- Common words -->
+    <string name="add">הוספה</string>
+
+    <!-- Today cards -->
+    <string name="cards_remove">הסרת הכרטיס</string>
+    <string name="cards_tummy_progress">%1$d מתוך %2$d דק׳</string>
+    <string name="cards_plus_minutes">+%d דק׳</string>
+    <string name="cards_no_readings">אין מדידות היום</string>
+    <string name="cards_no_measurements">עדיין אין מדידות</string>
+    <string name="cards_percentile">אחוזון %s</string>
+    <string name="cards_choose_sex">כדי לראות אחוזונים של ארגון הבריאות העולמי, יש לבחור בן או בת בהגדרות ← אני.</string>
+    <string name="cards_log_growth">רישום גדילה</string>
+    <string name="cards_no_notes">עדיין אין הערות</string>
+    <string name="cards_add_note">הוספת הערה</string>
+    <string name="cards_asleep_for">בשינה כבר</string>
+    <string name="cards_since_awake_before">מאז %1$s · ערות של %2$s לפני כן</string>
+    <string name="cards_since">מאז %s</string>
+    <string name="cards_no_sleep">עדיין לא נרשמה שינה</string>
+    <string name="cards_nap_due_in">נמנום ב־~%1$s · בעוד %2$s</string>
+    <string name="cards_nap_due_over">נמנום ב־~%1$s · איחור של %2$s</string>
+    <string name="cards_wake_today_stats">היום: %1$d · ממוצע %2$s · הארוך ביותר %3$s</string>
+
+    <!-- Common words -->
+    <string name="off">כבוי</string>
+
+    <!-- Login and certificate -->
+    <string name="cert_changed_title">אישור האבטחה של השרת השתנה</string>
+    <string name="cert_trust_title">לסמוך על האישור הזה?</string>
+    <string name="cert_changed_text">אישור האבטחה של השרת אינו זה שאושר קודם. זה צפוי אם האישור חודש; אחרת, ייתכן שמישהו מיירט את החיבור.</string>
+    <string name="cert_unknown_text">אישור האבטחה של השרת אינו חתום על ידי רשות מוכרת. לפני שמאשרים אותו, יש לוודא שטביעת האצבע SHA-256 הזו תואמת לאישור של השרת.</string>
+    <string name="cert_trust">אישור</string>
+    <string name="login_server_url">כתובת השרת</string>
+    <string name="login_api_token">טוקן API</string>
+    <string name="login_hide_token">הסתרת הטוקן</string>
+    <string name="login_show_token">הצגת הטוקן</string>
+    <string name="login_token_hint">נמצא ב־Baby Buddy בהגדרות המשתמש ← מפתח API.</string>
+    <string name="login_self_signed">לאפשר אישורים בחתימה עצמית</string>
+    <string name="login_self_signed_desc">האישור של השרת מאושר פעם אחת; רק הוא יהיה מהימן</string>
+    <string name="login_cloudflare">מאחורי Cloudflare Access</string>
+    <string name="login_cloudflare_desc">שולח טוקן שירות כדי שהאפליקציה תדלג על ההתחברות ל־Cloudflare</string>
+    <string name="login_hide_secret">הסתרת הסוד</string>
+    <string name="login_show_secret">הצגת הסוד</string>
+    <string name="login_cloudflare_hint">אפשר ליצור אחד ב־Cloudflare Zero Trust ← Access ← Service Auth, ולהוסיף לאפליקציה מדיניות Service Auth.</string>
+    <string name="login_enter_url_token">יש להזין כתובת שרת וטוקן API</string>
+    <string name="login_enter_cloudflare">יש להזין גם את ה־Client ID וגם את הסוד של Cloudflare</string>
+    <string name="login_reconnect">התחברות מחדש</string>
+    <string name="login_connect">התחברות</string>
+    <string name="login_try_demo">ניסיון במצב הדגמה עם נתונים לדוגמה</string>
+    <string name="login_intro">כדי להתחיל, יש להתחבר לשרת Baby Buddy.</string>
+    <string name="login_no_server">אין עדיין שרת? אפשר לנסות את ההדגמה עם נתונים לדוגמה ←</string>
+    <string name="login_what_is_open">מה זה Baby Buddy?‏ ▴</string>
+    <string name="login_what_is_closed">מה זה Baby Buddy?‏ ▾</string>
+    <string name="login_what_is_text">Baby Buddy היא אפליקציית ווב חינמית בקוד פתוח למעקב אחר האכלות, שינה, טיטולים וגדילה של תינוק. מתקינים אותה בעצמכם (בשרת ביתי, NAS או מכונה בענן), כך שהנתונים נשארים אצלכם.</string>
+    <string name="login_what_is_companion">האפליקציה הזו היא אפליקציית טלפון נלווית ולא רשמית: היא מתחברת לשרת Baby Buddy ושומרת בו הכול, כך שכל המשפחה משתפת את אותו יומן.</string>
+    <string name="login_set_up_server">הקמת שרת: Baby Buddy ב־GitHub ←</string>
+
+    <!-- Settings -->
+    <string name="settings_open_section">פתיחת %s</string>
+    <string name="settings_no_browser">אין דפדפן לפתיחת %s</string>
+    <string name="settings_connection">חיבור לשרת</string>
+    <string name="settings_you">אני</string>
+    <string name="settings_tracked">פריטים במעקב</string>
+    <string name="settings_appearance">מראה</string>
+    <string name="settings_notifications">התראות</string>
+    <string name="settings_about">מידע על האפליקציה</string>
+    <string name="settings_connected_to">מחובר · %s</string>
+    <string name="settings_disconnect">התנתקות</string>
+    <string name="settings_add_your_name">הוספת שם</string>
+    <string name="settings_your_name">השם שלי</string>
+    <string name="settings_your_name_desc">מתווסף לכל מה שנרשם מכאן, כדי שאחרים יראו מי רשם</string>
+    <string name="settings_growth_charts">עקומות גדילה</string>
+    <string name="settings_growth_charts_desc">ארגון הבריאות העולמי מפרסם עקומות נפרדות לבנים ולבנות. משמש רק לאחוזוני הגדילה בטלפון הזה.</string>
+    <string name="settings_start_side">צד התחלת ההנקה</string>
+    <string name="settings_start_side_desc">באיזה צד מתחילים הווידג׳ט של הטיימר והאריח בהגדרות המהירות. באפליקציה בוחרים את הצד ידנית.</string>
+    <string name="settings_tracking_everything">מעקב אחר הכול</string>
+    <string name="settings_hidden">מוסתר: %s</string>
+    <string name="settings_tracked_desc">אפשר לכבות את מה שלא עוקבים אחריו. הוא יוסתר ממסך היום, מהפעולות המהירות, מההיסטוריה, מהמגמות ומהתזכורות בטלפון הזה; שום דבר לא נמחק מהשרת.</string>
+    <string name="settings_appearance_24h">%s · שעון 24 שעות</string>
+    <string name="settings_appearance_12h">%s · שעון 12 שעות</string>
+    <string name="settings_theme">עיצוב</string>
+    <string name="settings_24h">שעון 24 שעות</string>
+    <string name="settings_24h_on">השעות יוצגו כ־19:06</string>
+    <string name="settings_24h_off">השעות יוצגו כ־7:06 אחה״צ</string>
+    <string name="settings_models_tab">לשונית מודלים במגמות</string>
+    <string name="settings_models_tab_desc">מאמן מודל לכל מקצב בטלפון הזה וחוזה את ההאכלה, ההחלפה, הנמנום וההתעוררות הבאים</string>
+    <string name="settings_summary_lock_screen">טיימרים במסך הנעילה</string>
+    <string name="settings_summary_next_up">מה הלאה</string>
+    <string name="settings_summary_feed">תזכורת האכלה</string>
+    <string name="settings_summary_awake">תזכורת ערות</string>
+    <string name="settings_summary_sleep">תזכורת שינה</string>
+    <string name="settings_summary_diaper">תזכורת טיטול</string>
+    <string name="settings_lock_screen_timers">טיימרים במסך הנעילה</string>
+    <string name="settings_lock_screen_timers_desc">כפתורי שמאל/ימין/סיום להאכלה וטיימר השינה בזמן שהם פועלים</string>
+    <string name="settings_next_up">מה הלאה במסך הנעילה</string>
+    <string name="settings_next_up_desc">התראה שקטה עם ההאכלה, החלפת הטיטול והנמנום הבאים (מהתזכורות או ממודל שמור) כשאין טיימר פועל</string>
+    <string name="settings_model_timed">מתי שהמודל השמור במגמות ← מודלים צופה; הזמן שלמטה משמש כגיבוי</string>
+    <string name="settings_remind_after">תזכורת אחרי</string>
+    <string name="settings_feed_reminder">תזכורת האכלה</string>
+    <string name="settings_feed_reminder_on">כשעברו %s מתחילת ההאכלה האחרונה</string>
+    <string name="settings_feed_reminder_off">התראה כשמגיע זמן ההאכלה הבאה</string>
+    <string name="settings_feed_reminder_note">הזמן מתחילת ההאכלה האחרונה (hh:mm)</string>
+    <string name="settings_awake_reminder">תזכורת ערות</string>
+    <string name="settings_awake_reminder_on">אחרי %s של ערות</string>
+    <string name="settings_awake_reminder_off">התראה כשעבר זמן רב מאז השינה האחרונה</string>
+    <string name="settings_awake_reminder_note">זמן ערות מסוף השינה האחרונה (hh:mm)</string>
+    <string name="settings_sleep_reminder">תזכורת שינה</string>
+    <string name="settings_sleep_reminder_on">כששינה מתוזמנת נמשכת %s</string>
+    <string name="settings_sleep_reminder_off">התראה אחרי שינה ארוכה</string>
+    <string name="settings_sleep_reminder_note">זמן השינה, מהפעלת טיימר השינה (hh:mm)</string>
+    <string name="settings_diaper_reminder">תזכורת טיטול</string>
+    <string name="settings_diaper_reminder_on">כשעברו %s מההחלפה האחרונה</string>
+    <string name="settings_diaper_reminder_off">התראה כשמגיע זמן החלפת הטיטול הבאה</string>
+    <string name="settings_diaper_reminder_note">הזמן מהחלפת הטיטול האחרונה (hh:mm)</string>
+    <string name="settings_heads_up">התראה מוקדמת</string>
+    <string name="settings_heads_up_on">התראה גם %s לפני כל תזכורת</string>
+    <string name="settings_heads_up_off">רק כשמגיע זמן התזכורת</string>
+    <string name="settings_reminders_note">התזכורות בודקות קודם את השרת, כך שהאכלה, החלפה או שינה שנרשמו בטלפון אחר נספרות.</string>
+    <string name="about_summary">גרסה %1$s · נבנתה %2$s</string>
+    <string name="about_version">גרסה</string>
+    <string name="about_build">בנייה</string>
+    <string name="about_git">תג / commit ב־Git</string>
+    <string name="about_build_date">תאריך בנייה</string>
+    <string name="about_app_id">מזהה אפליקציה</string>
+    <string name="about_source">קוד מקור, דיווח באגים וגרסאות ב־GitHub ←</string>
+    <string name="about_server">Baby Buddy, השרת שהאפליקציה עובדת איתו ←</string>
+
+    <!-- Customize Today -->
+    <string name="customize_title">התאמת מסך היום</string>
+    <string name="customize_subtitle">כרטיסים ווידג׳טים למסך הבית</string>
+    <string name="customize_tab_cards">כרטיסי לוח</string>
+    <string name="customize_active">%d פעילים</string>
+    <string name="customize_tab_home">מסך הבית בטלפון</string>
+    <string name="customize_cards_hint">הפעלה או כיבוי של כרטיסים במסך היום.</string>
+    <string name="customize_summary_tiles">אריחי סיכום</string>
+    <string name="customize_summary_tiles_desc">רשת הסיכומים של ״היום״. פריטים שלא נמצאים במעקב נשארים מוסתרים.</string>
+    <string name="customize_show">הצגה</string>
+    <string name="customize_added">נוסף</string>
+    <string name="customize_home_title">📱 ווידג׳טים למסך הבית של Android</string>
+    <string name="customize_home_desc">אפשר להוסיף את הווידג׳טים האלה ישירות למסך הבית לרישום מהיר בהקשה אחת ולשליטה בטיימר בלי לפתוח את האפליקציה.</string>
+    <string name="customize_quick_title">ווידג׳ט רישום מהיר בהקשה אחת</string>
+    <string name="customize_quick_size">4 × 1 רגיל</string>
+    <string name="customize_quick_desc">כפתורי האכלה, טיטול וזמן בטן.</string>
+    <string name="customize_preview_baby">התינוק ליאו • 3 ח׳ 12 י׳</string>
+    <string name="customize_preview_last_fed">האכלה אחרונה לפני 45 דק׳</string>
+    <string name="customize_timer_title">ווידג׳ט טיימר הנקה פעיל</string>
+    <string name="customize_timer_size">4 × 2 שליטה מלאה</string>
+    <string name="customize_timer_desc">שעון עצר בזמן אמת עם פירוט שמאל/ימין וכפתורי השהיה/החלפה.</string>
+    <string name="customize_preview_timer">🤱 טיימר הנקה פעיל</string>
+    <string name="customize_preview_right_active">שד ימין פעיל</string>
+    <string name="customize_summary_title">ווידג׳ט סיכום היום במבט אחד</string>
+    <string name="customize_tip_title">💡 טיפ להוספה ידנית</string>
+    <string name="customize_tip_text">אם מסך הבית לא תומך בהוספה בהקשה אחת, יש ללחוץ לחיצה ארוכה על מקום ריק במסך הבית, להקיש על ״ווידג׳טים״, לגלול אל ״Baby Buddy״ ולגרור למקום הרצוי.</string>
+    <string name="customize_add_to_home">הוספה למסך הבית</string>
+    <string name="card_last_feed_long">מתי התחילה ההאכלה האחרונה, לפני כמה זמן, והצד האחרון.</string>
+    <string name="card_last_diaper_long">מתי הייתה החלפת הטיטול האחרונה, לפני כמה זמן, ומה הסוג.</string>
+    <string name="card_wake_windows_long">כמה זמן התינוק ער, מתי הנמנום הבא, וחלונות הערות של היום.</string>
+    <string name="card_tummy_time_long">רישום זמן בטן לקראת יעד יומי.</string>
+    <string name="card_temperature_long">רישום וצפייה במדידות טמפרטורה.</string>
+    <string name="card_notes_long">הערות משותפות, כמו אמבטיות ושגרה.</string>
+    <string name="card_growth_long">משקל, אורך והיקף ראש אחרונים, עם אחוזונים של ארגון הבריאות העולמי.</string>
+
+    <!-- History calendar -->
+    <string name="retry">ניסיון חוזר</string>
+    <string name="history_show_list">הצגת רשימה</string>
+    <string name="history_show_calendar">הצגת לוח שנה</string>
+    <string name="history_legend_nursing">הנקה</string>
+
+    <!-- Common words -->
+    <string name="date">תאריך</string>
+    <string name="duration">משך זמן</string>
+    <string name="delete">מחיקה</string>
+    <string name="tap_again_to_delete">הקשה נוספת למחיקה</string>
+
+    <!-- Entry dialogs -->
+    <string name="dialog_growth_last">אחרון: %1$s ב־%2$s</string>
+    <string name="dialog_edit_named">עריכת %s</string>
+    <string name="dialog_logged_by">נרשם על ידי %s</string>
+    <string name="dialog_edit_bath">עריכת אמבטיה</string>
+    <string name="dialog_edit_note">עריכת הערה</string>
+    <string name="dialog_side_title">צד %s</string>
+    <string name="dialog_side_note">כמה זמן הניקו מהצד הזה. הטיימר ממשיך לספור מכאן.</string>
+    <string name="dialog_milk_stash_note">כמה חלב שאוב מאוחסן עכשיו? שאיבה מוסיפה למלאי ובקבוקי חלב אם מורידים ממנו. משותף לכל הטלפונים.</string>
+    <string name="dialog_stored_milk">חלב מאוחסן</string>
+    <string name="dialog_note_placeholder">לדוגמה: ויטמין D, אמבטיה, ערב עצבני</string>
+    <string name="dialog_tags">תגיות</string>
+    <string name="dialog_night_sleep">שינת לילה</string>
+    <string name="dialog_edit_sleep">עריכת שינה</string>
+    <string name="dialog_minutes">דקות</string>
+    <string name="dialog_quick_actions">פעולות מהירות</string>
+    <string name="dialog_quick_actions_note">בחירת הכפתורים בראש מסך היום והסדר שלהם.</string>
+    <string name="dialog_move_up">הזזת %s למעלה</string>
+    <string name="dialog_move_down">הזזת %s למטה</string>
+    <string name="dialog_edit_feeding">עריכת האכלה</string>
+    <string name="dialog_edit_diaper">עריכת טיטול</string>
+    <string name="dialog_skin_care">טיפוח העור</string>
+    <string name="dialog_edit_tummy">עריכת זמן בטן</string>
+    <string name="dialog_edit_pumping">עריכת שאיבה</string>
+    <string name="dialog_breast_milk">חלב אם</string>
+    <string name="dialog_formula">תמ״ל</string>
+    <string name="dialog_change_label">שינוי %s</string>
+
+    <!-- Shared formats -->
+    <string name="duration_hours">%d ש׳</string>
+    <string name="duration_hours_minutes_short">%1$d ש׳ %2$02d דק׳</string>
+
+    <!-- Trends charts -->
+    <string name="trends_charts">גרפים</string>
+    <string name="trends_models">מודלים</string>
+    <string name="trends_no_data">אין נתונים לתקופה הזו.</string>
+    <string name="trends_server_settings">הגדרות השרת</string>
+    <string name="trends_feeding_rhythm">מקצב ההאכלות</string>
+    <string name="trends_no_feeds">לא נרשמו האכלות בתקופה הזו.</string>
+    <string name="trends_longest_gap">הפער הארוך ביותר</string>
+    <string name="trends_longest_week">הרצף הארוך ביותר: %s בממוצע השבוע</string>
+    <string name="trends_longest_month">הרצף הארוך ביותר: %s בממוצע החודש</string>
+    <string name="trends_up_week">, עלייה של %s מתחילת השבוע</string>
+    <string name="trends_up_month">, עלייה של %s מתחילת החודש</string>
+    <string name="trends_down_week">, ירידה של %s מתחילת השבוע</string>
+    <string name="trends_down_month">, ירידה של %s מתחילת החודש</string>
+    <string name="trends_sleep_rhythm">מקצב השינה</string>
+    <string name="trends_sleep_week">שינה: %s ביום בממוצע השבוע</string>
+    <string name="trends_sleep_month">שינה: %s ביום בממוצע החודש</string>
+    <string name="trends_sleep_longest">, הרצף הארוך ביותר %s</string>
+    <string name="trends_diaper_rhythm">מקצב הטיטולים</string>
+    <string name="trends_metric_feeds">האכלות</string>
+    <string name="trends_metric_wet">טיטולים רטובים</string>
+    <string name="trends_metric_dirty">טיטולים מלוכלכים</string>
+    <string name="trends_metric_naps">נמנומים</string>
+    <string name="trends_unit_per_day">ליום</string>
+    <string name="trends_unit_min_day">דק׳/יום</string>
+    <string name="trends_unit_ml_day">מ״ל/יום</string>
+    <string name="trends_unit_h_day">ש׳/יום</string>
+    <string name="trends_daily_numbers">נתונים יומיים</string>
+    <string name="trends_left_right">שמאל וימין</string>
+    <string name="trends_left_pct">שמאל %d%%</string>
+    <string name="trends_right_pct">ימין %d%%</string>
+    <string name="trends_pick_sex">לארגון הבריאות העולמי יש עקומות נפרדות לבנים ולבנות. יש לבחור אחת כדי להשוות אליהן.</string>
+    <string name="trends_need_birth_date">כדי להשוות לעקומות של ארגון הבריאות העולמי, יש להוסיף תאריך לידה בשרת.</string>
+    <string name="trends_growth_none">עדיין אין מדידות %s. אפשר לרשום אותן במסך הרישום (גדילה).</string>
+    <string name="trends_growth_latest_no_percentile">אחרון: %1$s ב־%2$s. העקומות של ארגון הבריאות העולמי כאן מכסות מהלידה ועד גיל שנתיים.</string>
+    <string name="trends_growth_previous">" (%1$s ב־%2$s)"</string>
+    <string name="trends_growth_latest">אחרון: %1$s ב־%2$s, אחוזון %3$s%4$s. הקשה על נקודה כדי לערוך אותה.</string>
+    <string name="trends_who_median">הקו האמצעי: החציון של ארגון הבריאות העולמי (אחוזון %s)</string>
+    <string name="trends_birth">לידה</string>
+    <string name="trends_months_short">%d ח׳</string>
+
+    <!-- Common words -->
+    <string name="none_yet">עדיין אין</string>
+    <string name="just_now">הרגע</string>
+    <string name="ago_minutes">לפני %d דק׳</string>
+    <string name="ago_hours_minutes">לפני %1$d ש׳ %2$02d דק׳</string>
+    <string name="ago_days_hours">לפני %1$d י׳ %2$d ש׳</string>
+    <plurals name="days_ago">
+        <item quantity="one">לפני יום</item>
+        <item quantity="two">לפני יומיים</item>
+        <item quantity="other">לפני %d ימים</item>
+    </plurals>
+    <plurals name="naps_count">
+        <item quantity="one">נמנום אחד</item>
+        <item quantity="two">%d נמנומים</item>
+        <item quantity="other">%d נמנומים</item>
+    </plurals>
+    <plurals name="sessions_count">
+        <item quantity="one">פעם אחת</item>
+        <item quantity="two">פעמיים</item>
+        <item quantity="other">%d פעמים</item>
+    </plurals>
+
+    <!-- Today screen -->
+    <string name="today_formula">תמ״ל</string>
+    <string name="today_breast_milk">חלב אם</string>
+    <string name="today_solid_food">מזון מוצק</string>
+    <string name="today_handoff_wet">רטוב</string>
+    <string name="today_handoff_dirty">מלוכלך</string>
+    <string name="today_handoff_both">רטוב + מלוכלך</string>
+    <string name="today_handoff_dry">יבש</string>
+    <string name="today_handoff_diaper">טיטול · %s</string>
+    <string name="today_handoff_nap">נמנום · %s</string>
+    <string name="today_handoff_sleep">שינה · %s</string>
+    <string name="today_handoff_title">בזמן שלא היית כאן</string>
+    <string name="today_handoff_more">ועוד %d בהיסטוריה</string>
+    <string name="today_last_bottle_formula">בקבוק · %d מ״ל תמ״ל</string>
+    <string name="today_last_bottle_breast_milk">בקבוק · %d מ״ל חלב אם</string>
+    <string name="today_last_breastfeed">הנקה · %d דק׳</string>
+    <string name="today_last_breast">הנקה · %s</string>
+    <string name="today_side_minutes">%1$s %2$d דק׳</string>
+    <string name="today_add_quick_actions">הוספת פעולות מהירות</string>
+    <string name="today_edit_quick_actions">עריכת פעולות מהירות</string>
+    <string name="today_nursing_and_bottle">%1$d דק׳ · %2$d מ״ל</string>
+    <string name="today_sleeping_now">בשינה עכשיו</string>
+    <string name="today_asleep">בשינה</string>
+    <string name="today_none_ended">אף שינה לא הסתיימה היום</string>
+    <string name="today_wake_avg">ממוצע %1$s · %2$d היום</string>
+    <string name="today_set">הגדרה</string>
+    <string name="today_tap_to_enter">הקשה להזנת כמות</string>
+    <string name="today_tap_to_correct">הקשה לתיקון</string>
+    <string name="today_tap_to_log_bath">הקשה לרישום אמבטיה</string>
+    <string name="today_in">בעוד %s</string>
+    <string name="today_due_ago">באיחור של %s</string>
+    <string name="today_logged_today">נרשם היום</string>
+    <string name="today_last_pump">שאיבה אחרונה</string>
+    <string name="today_none_today">אין היום</string>
+    <string name="today_time_between_feeds">זמן בין האכלות</string>
+    <string name="today_same_as_last_week">בערך כמו בשבוע שעבר</string>
+    <string name="today_longer_than_last_week">ארוך ב־%s מבשבוע שעבר</string>
+    <string name="today_shorter_than_last_week">קצר ב־%s מבשבוע שעבר</string>
+
+    <!-- Today side chips -->
+    <string name="side_left_short">ש</string>
+    <string name="side_right_short">י</string>
+    <string name="side_chip_last">אחרון</string>
+
+    <!-- Trends charts (row label) -->
+    <string name="trends_today_chart">היום</string>
+</resources>
