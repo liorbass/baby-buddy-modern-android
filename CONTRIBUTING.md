@@ -42,6 +42,15 @@ cp tools/hooks/blocklist.example tools/hooks/blocklist.local   # names/addresses
 ./gradlew connectedDebugAndroidTest # instrumented tests (needs a device/emulator)
 ```
 
+## Translations
+
+All UI text lives in `app/src/main/res/values/strings.xml`; a translation is a `values-<lang>/strings.xml` with the same names (the language then shows up in the phone's per-app language setting, Android 13+).
+
+- In composables use `stringResource` / `pluralStringResource`. Elsewhere (view model, repository, widgets, notifications, enum labels) use `context.getString` when there is a `Context`, else `AppText.get` / `AppText.plural` (`data/model/AppText.kt`).
+- Anything written to the server stays English, so other clients can read it: the note segments in the [ICD](docs/ICD.md) (§5), tags, shared timer names and the stored diaper values (amount, consistency, color, cream). Show those through `diaperValueLabel`.
+- Use positional arguments (`%1$s`, `%2$d`) when a string has more than one, and `plurals` for counts.
+- Not translated yet: the rhythm models' internals (model families, settings and input names in `data/ml/`), which also key saved models and tests, and the low-level `HTTP … loading …` errors.
+
 ## Project layout
 
 ```

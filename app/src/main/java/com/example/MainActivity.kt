@@ -41,6 +41,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.data.model.AppText
 import com.example.data.model.BreastSide
 import com.example.data.model.ThemeMode
 import com.example.ui.HistoryFilter
@@ -451,7 +452,7 @@ fun BabyBuddyApp(
                             viewModel.finishAndSaveNursing()
                         },
                         onSaveDraft = {
-                            viewModel.showToast("Activity saved to local offline queue")
+                            viewModel.showToast(AppText.get(R.string.saved_to_offline_queue))
                             viewModel.navigateTo(ScreenDestination.TODAY_DASHBOARD)
                         },
                         onQuickAction = { action ->

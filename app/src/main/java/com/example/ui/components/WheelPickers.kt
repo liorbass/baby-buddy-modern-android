@@ -42,9 +42,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.R
+import com.example.data.model.AppText
 import com.example.data.model.TimeFormat
 import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
@@ -187,7 +190,7 @@ fun InputModeToggle(modifier: Modifier = Modifier) {
             modifier = Modifier.size(18.dp)
         )
         Text(
-            if (TimeFormat.useWheel) "Type instead" else "Use wheel",
+            stringResource(if (TimeFormat.useWheel) R.string.type_instead else R.string.use_wheel),
             color = OnSurfaceVariant,
             modifier = Modifier.padding(start = 6.dp)
         )
@@ -240,11 +243,11 @@ fun ClockTimeEntry(millis: Long, onChange: (Long) -> Unit, fromTyped: (hour: Int
                     label = { i ->
                         val offset = i - DATE_DAYS_BACK
                         when (offset) {
-                            0 -> "Today"
+                            0 -> AppText.get(R.string.today)
 
-                            -1 -> "Yesterday"
+                            -1 -> AppText.get(R.string.yesterday)
 
-                            1 -> "Tomorrow"
+                            1 -> AppText.get(R.string.tomorrow)
 
                             else -> {
                                 val day = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, offset) }

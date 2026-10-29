@@ -1,5 +1,7 @@
 package com.example.data.ml
 
+import com.example.R
+import com.example.data.model.AppText
 import com.example.data.model.DiaperEvent
 import com.example.data.model.DiaperType
 import com.example.data.model.FeedType
@@ -12,13 +14,16 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /** What a rhythm model predicts, in minutes. */
-enum class RhythmTarget(val title: String, val description: String) {
-    FEED_GAP("Next feed", "Minutes from one feed's start to the next"),
-    DIAPER_GAP("Next diaper", "Minutes from one change to the next"),
+enum class RhythmTarget(private val titleRes: Int, private val descriptionRes: Int) {
+    FEED_GAP(R.string.rhythm_feed_gap, R.string.rhythm_feed_gap_desc),
+    DIAPER_GAP(R.string.rhythm_diaper_gap, R.string.rhythm_diaper_gap_desc),
 
     // Falling asleep before waking up, the order they're listed in (Trends → Models)
-    AWAKE_WINDOW("Next sleep", "Minutes awake between sleeps"),
-    SLEEP_LENGTH("Wake-up", "How long a sleep lasts")
+    AWAKE_WINDOW(R.string.rhythm_awake_window, R.string.rhythm_awake_window_desc),
+    SLEEP_LENGTH(R.string.rhythm_sleep_length, R.string.rhythm_sleep_length_desc);
+
+    val title: String get() = AppText.get(titleRes)
+    val description: String get() = AppText.get(descriptionRes)
 }
 
 /** A target's rows, plus the row for "now" (the latest feed / change / sleep) and when that row starts counting. */

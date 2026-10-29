@@ -56,12 +56,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.R
 import com.example.data.model.BATH_NOTE_TEXT
 import com.example.data.model.BreastSide
 import com.example.data.model.DIAPER_AMOUNTS
@@ -78,8 +80,10 @@ import com.example.data.model.SleepEvent
 import com.example.data.model.TimeFormat
 import com.example.data.model.TummyTimeEvent
 import com.example.data.model.dayAndTime
+import com.example.data.model.diaperValueLabel
 import com.example.data.model.formatGrowth
 import com.example.data.model.formatMinutes
+import com.example.data.model.localDatePattern
 import com.example.data.model.parseGrowth
 import com.example.ui.theme.OnPrimary
 import com.example.ui.theme.OnSurface
@@ -128,18 +132,18 @@ private val COLOR_OPTIONS = listOf("Mustard", "Tan/Brown", "Greenish", "Dark")
 @Composable
 fun FeedTypeChooserDialog(onDismiss: () -> Unit, onBreastfeed: () -> Unit, onBottle: () -> Unit) {
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Feeding")
+        DialogTitle(stringResource(R.string.action_feeding))
         Spacer(Modifier.height(20.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            ChoiceTile(emoji = "🤱", label = "Breastfeed", onClick = onBreastfeed, modifier = Modifier.weight(1f))
-            ChoiceTile(emoji = "🍼", label = "Bottle", onClick = onBottle, modifier = Modifier.weight(1f))
+            ChoiceTile(emoji = "🤱", label = stringResource(R.string.tile_feed_name), onClick = onBreastfeed, modifier = Modifier.weight(1f))
+            ChoiceTile(emoji = "🍼", label = stringResource(R.string.log_bottle), onClick = onBottle, modifier = Modifier.weight(1f))
         }
         Spacer(Modifier.height(8.dp))
         TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
-            Text("Cancel", color = OnSurfaceVariant)
+            Text(stringResource(R.string.cancel), color = OnSurfaceVariant)
         }
     }
 }
@@ -148,7 +152,7 @@ fun FeedTypeChooserDialog(onDismiss: () -> Unit, onBreastfeed: () -> Unit, onBot
 @Composable
 fun BottleDialog(initialMl: Int, initialFormula: Boolean, onDismiss: () -> Unit, onSave: (ml: Int, formula: Boolean, notes: String) -> Unit) {
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Bottle")
+        DialogTitle(stringResource(R.string.log_bottle))
         Spacer(Modifier.height(20.dp))
         BottleForm(initialMl = initialMl, initialFormula = initialFormula, onCancel = onDismiss, onSave = { ml, formula, notes, _ -> onSave(ml, formula, notes) }, showTime = false)
     }
@@ -169,14 +173,14 @@ fun BottleForm(
     var pickedTime by remember { mutableStateOf<Long?>(null) } // null = now
     Column {
         if (showTime) {
-            NowTimeField(label = "Time", picked = pickedTime, onChange = { pickedTime = it })
+            NowTimeField(label = stringResource(R.string.time), picked = pickedTime, onChange = { pickedTime = it })
             Spacer(Modifier.height(16.dp))
         }
         MilkToggle(formula = formula, onChange = { formula = it })
         Spacer(Modifier.height(20.dp))
         AmountStepper(ml = ml, onChange = { ml = it })
         Spacer(Modifier.height(20.dp))
-        NotesField(value = notes, onChange = { notes = it }, placeholderText = "Note (optional)")
+        NotesField(value = notes, onChange = { notes = it }, placeholderText = stringResource(R.string.note_optional))
         Spacer(Modifier.height(24.dp))
         CancelSaveRow(onCancel = onCancel, onSave = { onSave(ml, formula, notes.trim(), pickedTime) })
     }
@@ -186,7 +190,7 @@ fun BottleForm(
 @Composable
 fun PumpingDialog(initialMl: Int, initialMinutes: Int, onDismiss: () -> Unit, onSave: (ml: Int, minutes: Int, notes: String, startMillis: Long) -> Unit) {
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Pumping")
+        DialogTitle(stringResource(R.string.log_pumping))
         Spacer(Modifier.height(16.dp))
         PumpingForm(initialMl = initialMl, initialMinutes = initialMinutes, onCancel = onDismiss, onSave = onSave)
     }
@@ -203,19 +207,19 @@ fun PumpingForm(initialMl: Int, initialMinutes: Int, onCancel: () -> Unit, onSav
     val start = pickedStart ?: (openedAt - minutes * 60_000L)
 
     Column {
-        TimeField(label = "Started", millis = start, onChange = { pickedStart = it })
+        TimeField(label = stringResource(R.string.started), millis = start, onChange = { pickedStart = it })
         Spacer(Modifier.height(16.dp))
         AmountStepper(ml = ml, onChange = { ml = it }, max = PUMP_ML_MAX)
         Spacer(Modifier.height(20.dp))
         MinuteStepper(
-            label = "Duration",
+            label = stringResource(R.string.duration),
             minutes = minutes,
             onChange = { minutes = it },
             min = PUMP_MIN_MINUTES,
             max = PUMP_MAX_MINUTES
         )
         Spacer(Modifier.height(20.dp))
-        NotesField(value = notes, onChange = { notes = it }, placeholderText = "Note (optional)")
+        NotesField(value = notes, onChange = { notes = it }, placeholderText = stringResource(R.string.note_optional))
         Spacer(Modifier.height(24.dp))
         CancelSaveRow(onCancel = onCancel, onSave = { onSave(ml, minutes, notes.trim(), pickedStart ?: (System.currentTimeMillis() - minutes * 60_000L)) })
     }
@@ -227,9 +231,9 @@ fun BathForm(onCancel: () -> Unit, onSave: (notes: String, timeMillis: Long?) ->
     var notes by remember { mutableStateOf("") }
     var pickedTime by remember { mutableStateOf<Long?>(null) } // null = now
     Column {
-        NowTimeField(label = "Time", picked = pickedTime, onChange = { pickedTime = it })
+        NowTimeField(label = stringResource(R.string.time), picked = pickedTime, onChange = { pickedTime = it })
         Spacer(Modifier.height(16.dp))
-        NotesField(value = notes, onChange = { notes = it }, placeholderText = "Note (optional)")
+        NotesField(value = notes, onChange = { notes = it }, placeholderText = stringResource(R.string.note_optional))
         Spacer(Modifier.height(24.dp))
         CancelSaveRow(onCancel = onCancel, onSave = { onSave(notes.trim(), pickedTime) })
     }
@@ -238,7 +242,7 @@ fun BathForm(onCancel: () -> Unit, onSave: (notes: String, timeMillis: Long?) ->
 @Composable
 fun BathDialog(onDismiss: () -> Unit, onSave: (notes: String, timeMillis: Long?) -> Unit) {
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Bath")
+        DialogTitle(stringResource(R.string.log_bath))
         Spacer(Modifier.height(16.dp))
         BathForm(onCancel = onDismiss, onSave = onSave)
     }
@@ -271,7 +275,7 @@ fun GrowthForm(
                 placeholder = { Text(last?.let { formatGrowth(kind, it.value).removeSuffix(" ${kind.unit}") } ?: kind.example) },
                 isError = text.isNotBlank() && parsed[kind] == null,
                 supportingText = if (last != null) {
-                    { Text("Last: ${formatGrowth(kind, last.value)} on ${shortDate(last.dateMillis)}") }
+                    { Text(stringResource(R.string.dialog_growth_last, formatGrowth(kind, last.value), shortDate(last.dateMillis))) }
                 } else {
                     null
                 },
@@ -283,9 +287,9 @@ fun GrowthForm(
             Spacer(Modifier.height(4.dp))
         }
         Spacer(Modifier.height(8.dp))
-        SegmentedToggle(options = listOf("Today", "Yesterday"), selectedIndex = daysAgo, onSelect = { daysAgo = it })
+        SegmentedToggle(options = listOf(stringResource(R.string.today), stringResource(R.string.yesterday)), selectedIndex = daysAgo, onSelect = { daysAgo = it })
         Spacer(Modifier.height(20.dp))
-        NotesField(value = notes, onChange = { notes = it }, placeholderText = "Note (optional)")
+        NotesField(value = notes, onChange = { notes = it }, placeholderText = stringResource(R.string.note_optional))
         Spacer(Modifier.height(24.dp))
         CancelSaveRow(
             onCancel = onCancel,
@@ -304,7 +308,7 @@ fun GrowthDialog(
     onSave: (values: Map<GrowthKind, Double>, dateMillis: Long, notes: String) -> Unit
 ) {
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Growth")
+        DialogTitle(stringResource(R.string.log_growth))
         Spacer(Modifier.height(16.dp))
         GrowthForm(latest = latest, onCancel = onDismiss, onSave = onSave)
     }
@@ -319,10 +323,10 @@ fun EditGrowthDialog(event: GrowthEvent, onDismiss: () -> Unit, onSave: (GrowthE
     var notes by remember(event.id) { mutableStateOf(event.notes) }
     val parsed = parseGrowth(kind, text)
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Edit ${kind.label.lowercase()}")
+        DialogTitle(stringResource(R.string.dialog_edit_named, kind.label.lowercase()))
         event.caregiver?.let {
             Spacer(Modifier.height(4.dp))
-            Text("Logged by $it", style = MaterialTheme.typography.bodyMedium, color = OnSurfaceVariant)
+            Text(stringResource(R.string.dialog_logged_by, it), style = MaterialTheme.typography.bodyMedium, color = OnSurfaceVariant)
         }
         Spacer(Modifier.height(16.dp))
         OutlinedTextField(
@@ -337,7 +341,7 @@ fun EditGrowthDialog(event: GrowthEvent, onDismiss: () -> Unit, onSave: (GrowthE
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(12.dp))
-        DateField(label = "Date", millis = date, onChange = { date = it })
+        DateField(label = stringResource(R.string.date), millis = date, onChange = { date = it })
         Spacer(Modifier.height(16.dp))
         NotesField(value = notes, onChange = { notes = it })
         Spacer(Modifier.height(20.dp))
@@ -369,9 +373,9 @@ private fun DateField(label: String, millis: Long, onChange: (Long) -> Unit) {
                         picking = false
                         onChange(utcDateToLocalNoon(state.selectedDateMillis!!))
                     }
-                ) { Text("OK") }
+                ) { Text(stringResource(R.string.ok)) }
             },
-            dismissButton = { TextButton(onClick = { picking = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { picking = false }) { Text(stringResource(R.string.cancel)) } }
         ) {
             DatePicker(state = state)
         }
@@ -387,14 +391,14 @@ private fun DateField(label: String, millis: Long, onChange: (Long) -> Unit) {
     ) {
         Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = OnSurface, modifier = Modifier.weight(1f))
         Text(
-            SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(millis)),
+            SimpleDateFormat(localDatePattern("dMMMyyyy"), Locale.getDefault()).format(Date(millis)),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = PrimaryColor
         )
         Icon(
             Icons.Default.Edit,
-            contentDescription = "Change $label",
+            contentDescription = stringResource(R.string.dialog_change_label, label),
             tint = OnSurfaceVariant,
             modifier = Modifier.padding(start = 8.dp).size(18.dp)
         )
@@ -423,7 +427,7 @@ private fun utcDateToLocalNoon(utcMillis: Long): Long {
 fun latestGrowth(growth: List<GrowthEvent>): Map<GrowthKind, GrowthEvent> = growth.groupBy { it.kind }.mapValues { (_, list) -> list.maxBy { it.dateMillis } }
 
 /** "30 Sep" */
-internal fun shortDate(millis: Long): String = java.text.SimpleDateFormat("d MMM", java.util.Locale.getDefault()).format(java.util.Date(millis))
+internal fun shortDate(millis: Long): String = java.text.SimpleDateFormat(localDatePattern("dMMM"), java.util.Locale.getDefault()).format(java.util.Date(millis))
 
 /** Edit or delete a bath (a note tagged "bath"). */
 @Composable
@@ -431,9 +435,9 @@ fun EditBathDialog(bath: NoteEvent, onDismiss: () -> Unit, onSave: (NoteEvent) -
     var time by remember(bath.id) { mutableStateOf(bath.timeMillis) }
     var notes by remember(bath.id) { mutableStateOf(if (bath.text == BATH_NOTE_TEXT) "" else bath.text) }
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Edit bath")
+        DialogTitle(stringResource(R.string.dialog_edit_bath))
         Spacer(Modifier.height(16.dp))
-        TimeField(label = "Time", millis = time, onChange = { time = it }, keepDay = true)
+        TimeField(label = stringResource(R.string.time), millis = time, onChange = { time = it }, keepDay = true)
         Spacer(Modifier.height(16.dp))
         NotesField(value = notes, onChange = { notes = it })
         Spacer(Modifier.height(20.dp))
@@ -450,13 +454,13 @@ fun EditNoteDialog(note: NoteEvent, onDismiss: () -> Unit, onSave: (NoteEvent) -
     var time by remember(note.id) { mutableStateOf(note.timeMillis) }
     var text by remember(note.id) { mutableStateOf(note.text) }
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Edit note")
+        DialogTitle(stringResource(R.string.dialog_edit_note))
         if (note.tags.isNotEmpty()) {
             Spacer(Modifier.height(4.dp))
             Text(note.tags.joinToString("  ") { "#$it" }, style = MaterialTheme.typography.bodyMedium, color = OnSurfaceVariant)
         }
         Spacer(Modifier.height(16.dp))
-        TimeField(label = "Time", millis = time, onChange = { time = it }, keepDay = true)
+        TimeField(label = stringResource(R.string.time), millis = time, onChange = { time = it }, keepDay = true)
         Spacer(Modifier.height(16.dp))
         NotesField(value = text, onChange = { text = it })
         Spacer(Modifier.height(20.dp))
@@ -475,7 +479,7 @@ private fun NowTimeField(label: String, picked: Long?, onChange: (Long) -> Unit)
         label = label,
         millis = picked ?: openedAt,
         onChange = onChange,
-        valueText = if (picked == null) "Now · ${TimeFormat.clock(openedAt)}" else null
+        valueText = if (picked == null) stringResource(R.string.now_at, TimeFormat.clock(openedAt)) else null
     )
 }
 
@@ -484,15 +488,15 @@ private fun NowTimeField(label: String, picked: Long?, onChange: (Long) -> Unit)
 fun SideDurationDialog(sideLabel: String, initialSeconds: Int, onDismiss: () -> Unit, onSave: (seconds: Int) -> Unit) {
     var seconds by remember { mutableIntStateOf(initialSeconds) }
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("$sideLabel side")
+        DialogTitle(stringResource(R.string.dialog_side_title, sideLabel))
         Spacer(Modifier.height(4.dp))
         Text(
-            "Set how long this side has been fed. The timer keeps counting from here.",
+            stringResource(R.string.dialog_side_note),
             style = MaterialTheme.typography.bodyMedium,
             color = OnSurfaceVariant
         )
         Spacer(Modifier.height(20.dp))
-        DurationInput(label = "Time", seconds = seconds, onChange = { seconds = it })
+        DurationInput(label = stringResource(R.string.time), seconds = seconds, onChange = { seconds = it })
         Spacer(Modifier.height(24.dp))
         CancelSaveRow(onCancel = onDismiss, onSave = { onSave(seconds) })
     }
@@ -590,7 +594,7 @@ fun TimeField(
         )
         Icon(
             Icons.Default.Edit,
-            contentDescription = "Change $label",
+            contentDescription = stringResource(R.string.dialog_change_label, label),
             tint = OnSurfaceVariant,
             modifier = Modifier.padding(start = 8.dp).size(18.dp)
         )
@@ -690,7 +694,7 @@ fun DurationField(label: String, minutes: Int, onChange: (Int) -> Unit, modifier
         )
         Icon(
             Icons.Default.Edit,
-            contentDescription = "Change $label",
+            contentDescription = stringResource(R.string.dialog_change_label, label),
             tint = OnSurfaceVariant,
             modifier = Modifier.padding(start = 8.dp).size(18.dp)
         )
@@ -735,7 +739,7 @@ fun SecondsField(label: String, seconds: Int, onChange: (Int) -> Unit, modifier:
         )
         Icon(
             Icons.Default.Edit,
-            contentDescription = "Change $label",
+            contentDescription = stringResource(R.string.dialog_change_label, label),
             tint = OnSurfaceVariant,
             modifier = Modifier.padding(start = 8.dp).size(18.dp)
         )
@@ -828,10 +832,10 @@ private fun DurationTyped(label: String, seconds: Int, onChange: (Int) -> Unit) 
 fun MilkStashDialog(initialMl: Int?, onDismiss: () -> Unit, onSave: (ml: Int) -> Unit) {
     var text by remember { mutableStateOf(initialMl?.toString().orEmpty()) }
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Milk stash")
+        DialogTitle(stringResource(R.string.item_milk_stash))
         Spacer(Modifier.height(4.dp))
         Text(
-            "How much pumped milk is stored now? Pumping adds to it and breast-milk bottles take from it. Shared with every phone.",
+            stringResource(R.string.dialog_milk_stash_note),
             style = MaterialTheme.typography.bodyMedium,
             color = OnSurfaceVariant
         )
@@ -839,7 +843,7 @@ fun MilkStashDialog(initialMl: Int?, onDismiss: () -> Unit, onSave: (ml: Int) ->
         OutlinedTextField(
             value = text,
             onValueChange = { v -> text = v.filter(Char::isDigit).take(5) },
-            label = { Text("Stored milk") },
+            label = { Text(stringResource(R.string.dialog_stored_milk)) },
             suffix = { Text("ml") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -857,12 +861,12 @@ fun NoteDialog(tags: List<String>, onDismiss: () -> Unit, onSave: (text: String,
     var text by remember { mutableStateOf("") }
     var picked by remember { mutableStateOf(setOf<String>()) }
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Note")
+        DialogTitle(stringResource(R.string.note))
         Spacer(Modifier.height(16.dp))
-        NotesField(value = text, onChange = { text = it }, placeholderText = "e.g. Vitamin D, bath, fussy evening")
+        NotesField(value = text, onChange = { text = it }, placeholderText = stringResource(R.string.dialog_note_placeholder))
         if (tags.isNotEmpty()) {
             Spacer(Modifier.height(16.dp))
-            SectionLabel("Tags")
+            SectionLabel(stringResource(R.string.dialog_tags))
             ChipGroup(
                 options = tags.map { it.replaceFirstChar(Char::uppercase) to it },
                 isSelected = { it in picked },
@@ -884,7 +888,7 @@ fun NoteDialog(tags: List<String>, onDismiss: () -> Unit, onSave: (text: String,
 @Composable
 fun NapToggle(isNap: Boolean, onChange: (Boolean) -> Unit) {
     SegmentedToggle(
-        options = listOf("Nap", "Night sleep"),
+        options = listOf(stringResource(R.string.nap), stringResource(R.string.dialog_night_sleep)),
         selectedIndex = if (isNap) 0 else 1,
         onSelect = { onChange(it == 0) }
     )
@@ -901,15 +905,15 @@ fun EditSleepDialog(sleep: SleepEvent, onDismiss: () -> Unit, onSave: (SleepEven
     val fixedStart = if (start > end) start - 24 * 60 * 60_000L else start
 
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Edit sleep")
+        DialogTitle(stringResource(R.string.dialog_edit_sleep))
         Spacer(Modifier.height(16.dp))
         // Keep the entry's own dates (it may be from earlier in the week)
-        TimeField(label = "Fell asleep", millis = start, onChange = { start = it }, keepDay = true)
+        TimeField(label = stringResource(R.string.fell_asleep), millis = start, onChange = { start = it }, keepDay = true)
         Spacer(Modifier.height(8.dp))
-        TimeField(label = "Woke up", millis = end, onChange = { end = it }, keepDay = true)
+        TimeField(label = stringResource(R.string.woke_up), millis = end, onChange = { end = it }, keepDay = true)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Slept ${formatMinutes(((end - fixedStart) / 60_000L).toInt())}",
+            stringResource(R.string.sleep_slept, formatMinutes(((end - fixedStart) / 60_000L).toInt())),
             style = MaterialTheme.typography.bodyMedium,
             color = OnSurfaceVariant,
             modifier = Modifier.padding(start = 4.dp)
@@ -941,9 +945,9 @@ fun EditSleepDialog(sleep: SleepEvent, onDismiss: () -> Unit, onSave: (SleepEven
 fun TummyTimeDialog(initialMinutes: Int, onDismiss: () -> Unit, onSave: (minutes: Int) -> Unit) {
     var minutes by remember { mutableIntStateOf(initialMinutes.coerceIn(TUMMY_MIN, TUMMY_MAX)) }
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Tummy time")
+        DialogTitle(stringResource(R.string.item_tummy_time))
         Spacer(Modifier.height(20.dp))
-        MinuteStepper(label = "Minutes", minutes = minutes, onChange = { minutes = it }, min = TUMMY_MIN, max = TUMMY_MAX)
+        MinuteStepper(label = stringResource(R.string.dialog_minutes), minutes = minutes, onChange = { minutes = it }, min = TUMMY_MIN, max = TUMMY_MAX)
         Spacer(Modifier.height(24.dp))
         CancelSaveRow(onCancel = onDismiss, onSave = { onSave(minutes) })
     }
@@ -968,10 +972,10 @@ fun QuickActionsEditorDialog(
     }
 
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Quick actions")
+        DialogTitle(stringResource(R.string.dialog_quick_actions))
         Spacer(Modifier.height(4.dp))
         Text(
-            "Pick the buttons at the top of Today and their order.",
+            stringResource(R.string.dialog_quick_actions_note),
             style = MaterialTheme.typography.bodyMedium,
             color = OnSurfaceVariant
         )
@@ -990,10 +994,10 @@ fun QuickActionsEditorDialog(
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = { move(index, -1) }, enabled = index > 0) {
-                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Move ${action.label} up")
+                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = stringResource(R.string.dialog_move_up, action.label))
                 }
                 IconButton(onClick = { move(index, 1) }, enabled = index < order.lastIndex) {
-                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Move ${action.label} down")
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = stringResource(R.string.dialog_move_down, action.label))
                 }
             }
         }
@@ -1016,10 +1020,10 @@ fun EditFeedingDialog(feeding: FeedingEvent, onDismiss: () -> Unit, onSave: (Fee
     var notes by remember { mutableStateOf(feeding.notes) }
 
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Edit feeding")
+        DialogTitle(stringResource(R.string.dialog_edit_feeding))
         Spacer(Modifier.height(16.dp))
         // Keeps the entry's own date (it may be from earlier in the week)
-        TimeField(label = "Time", millis = time, onChange = { time = it }, keepDay = true)
+        TimeField(label = stringResource(R.string.time), millis = time, onChange = { time = it }, keepDay = true)
         Spacer(Modifier.height(16.dp))
 
         if (isBottle) {
@@ -1027,13 +1031,13 @@ fun EditFeedingDialog(feeding: FeedingEvent, onDismiss: () -> Unit, onSave: (Fee
             Spacer(Modifier.height(20.dp))
             AmountStepper(ml = ml, onChange = { ml = it })
         } else {
-            SecondsField(label = "Left", seconds = leftSec, onChange = { leftSec = it })
+            SecondsField(label = stringResource(R.string.side_left), seconds = leftSec, onChange = { leftSec = it })
             Spacer(Modifier.height(8.dp))
-            SecondsField(label = "Right", seconds = rightSec, onChange = { rightSec = it })
+            SecondsField(label = stringResource(R.string.side_right), seconds = rightSec, onChange = { rightSec = it })
             Spacer(Modifier.height(16.dp))
-            SectionLabel("Last side")
+            SectionLabel(stringResource(R.string.last_side))
             SegmentedToggle(
-                options = listOf("Left", "Right"),
+                options = listOf(stringResource(R.string.side_left), stringResource(R.string.side_right)),
                 selectedIndex = when (lastSide) {
                     BreastSide.LEFT -> 0
                     BreastSide.RIGHT -> 1
@@ -1104,28 +1108,28 @@ fun EditDiaperDialog(diaper: DiaperEvent, onDismiss: () -> Unit, onSave: (Diaper
     val showStool = type == DiaperType.DIRTY || type == DiaperType.BOTH
     // Keep an unknown stored color visible (and selectable) so it isn't lost.
     val colorOptions = remember(diaper.id) {
-        val base = COLOR_OPTIONS.map { it to it }
+        val base = COLOR_OPTIONS.map { diaperValueLabel(it) to it }
         if (diaper.color.isNotBlank() && diaper.color !in COLOR_OPTIONS) base + (diaper.color to diaper.color) else base
     }
 
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Edit diaper")
+        DialogTitle(stringResource(R.string.dialog_edit_diaper))
         Spacer(Modifier.height(16.dp))
         // Keeps the entry's own date (it may be from earlier in the week)
-        TimeField(label = "Time", millis = time, onChange = { time = it }, keepDay = true)
+        TimeField(label = stringResource(R.string.time), millis = time, onChange = { time = it }, keepDay = true)
         Spacer(Modifier.height(16.dp))
 
         SegmentedToggle(
-            options = listOf("Wet", "Dirty", "Both", "Dry"),
+            options = listOf(stringResource(R.string.diaper_wet), stringResource(R.string.diaper_dirty), stringResource(R.string.diaper_both), stringResource(R.string.diaper_dry)),
             selectedIndex = DiaperType.entries.indexOf(type).coerceAtLeast(0),
             onSelect = { type = DiaperType.entries[it] }
         )
 
         if (type != DiaperType.DRY) {
             Spacer(Modifier.height(16.dp))
-            SectionLabel("Amount")
+            SectionLabel(stringResource(R.string.diaper_amount))
             ChipGroup(
-                options = DIAPER_AMOUNTS.map { it to it },
+                options = DIAPER_AMOUNTS.map { diaperValueLabel(it) to it },
                 isSelected = { it == amount },
                 onToggle = { value -> amount = if (amount == value) "" else value }
             )
@@ -1133,14 +1137,14 @@ fun EditDiaperDialog(diaper: DiaperEvent, onDismiss: () -> Unit, onSave: (Diaper
 
         if (showStool) {
             Spacer(Modifier.height(16.dp))
-            SectionLabel("Consistency (optional)")
+            SectionLabel(stringResource(R.string.diaper_consistency_optional))
             ChipGroup(
-                options = CONSISTENCY_OPTIONS,
+                options = CONSISTENCY_OPTIONS.map { (label, value) -> diaperValueLabel(label) to value },
                 isSelected = { it == consistency },
                 onToggle = { value -> consistency = if (consistency == value) "" else value }
             )
             Spacer(Modifier.height(12.dp))
-            SectionLabel("Color")
+            SectionLabel(stringResource(R.string.diaper_color))
             ChipGroup(
                 options = colorOptions,
                 isSelected = { it == color },
@@ -1149,14 +1153,14 @@ fun EditDiaperDialog(diaper: DiaperEvent, onDismiss: () -> Unit, onSave: (Diaper
         }
 
         Spacer(Modifier.height(16.dp))
-        SectionLabel("Skin care")
+        SectionLabel(stringResource(R.string.dialog_skin_care))
         ChipGroup(
-            options = BARRIER_OPTIONS,
+            options = BARRIER_OPTIONS.map { (label, value) -> diaperValueLabel(label) to value },
             isSelected = { it in barriers },
             onToggle = { value -> barriers = if (value in barriers) barriers - value else barriers + value }
         )
         Spacer(Modifier.height(8.dp))
-        SwitchRow(label = "Rash", checked = rash, onChange = { rash = it })
+        SwitchRow(label = stringResource(R.string.diaper_rash), checked = rash, onChange = { rash = it })
 
         Spacer(Modifier.height(16.dp))
         NotesField(value = notes, onChange = { notes = it })
@@ -1193,14 +1197,14 @@ fun EditTummyTimeDialog(tummyTime: TummyTimeEvent, onDismiss: () -> Unit, onSave
     var notes by remember { mutableStateOf(tummyTime.milestone) }
 
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Edit tummy time")
+        DialogTitle(stringResource(R.string.dialog_edit_tummy))
         Spacer(Modifier.height(16.dp))
         // Keeps the entry's own date (it may be from earlier in the week)
-        TimeField(label = "Time", millis = time, onChange = { time = it }, keepDay = true)
+        TimeField(label = stringResource(R.string.time), millis = time, onChange = { time = it }, keepDay = true)
         Spacer(Modifier.height(16.dp))
 
         MinuteStepper(
-            label = "Duration",
+            label = stringResource(R.string.duration),
             minutes = minutes,
             onChange = { minutes = it },
             min = TUMMY_MIN,
@@ -1238,16 +1242,16 @@ fun EditPumpingDialog(pumping: PumpingEvent, onDismiss: () -> Unit, onSave: (Pum
     var notes by remember { mutableStateOf(pumping.notes) }
 
     DialogFrame(onDismiss = onDismiss) {
-        DialogTitle("Edit pumping")
+        DialogTitle(stringResource(R.string.dialog_edit_pumping))
         Spacer(Modifier.height(16.dp))
         // Keeps the entry's own date (it may be from earlier in the week)
-        TimeField(label = "Time", millis = time, onChange = { time = it }, keepDay = true)
+        TimeField(label = stringResource(R.string.time), millis = time, onChange = { time = it }, keepDay = true)
         Spacer(Modifier.height(16.dp))
 
         AmountStepper(ml = ml, onChange = { ml = it }, max = PUMP_ML_MAX)
         Spacer(Modifier.height(20.dp))
         MinuteStepper(
-            label = "Duration",
+            label = stringResource(R.string.duration),
             minutes = minutes,
             onChange = { minutes = it },
             min = PUMP_MIN_MINUTES,
@@ -1364,7 +1368,7 @@ fun SegmentedToggle(options: List<String>, selectedIndex: Int, onSelect: (Int) -
 @Composable
 private fun MilkToggle(formula: Boolean, onChange: (Boolean) -> Unit) {
     SegmentedToggle(
-        options = listOf("Breast milk", "Formula"),
+        options = listOf(stringResource(R.string.dialog_breast_milk), stringResource(R.string.dialog_formula)),
         selectedIndex = if (formula) 1 else 0,
         onSelect = { onChange(it == 1) }
     )
@@ -1399,7 +1403,7 @@ private fun AmountStepper(ml: Int, onChange: (Int) -> Unit, max: Int = ML_MAX) {
         ) {
             StepButton("−", enabled = ml > ML_MIN) { onChange((ml - ML_STEP).coerceIn(ML_MIN, max)) }
             Text(
-                "$ml ml",
+                stringResource(R.string.amount_ml, ml),
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
                 color = OnSurface
@@ -1455,7 +1459,7 @@ private fun MinuteStepper(
         )
         StepButton("−", enabled = minutes > min) { onChange((minutes - 1).coerceIn(min, max)) }
         Text(
-            "$minutes min",
+            stringResource(R.string.amount_minutes, minutes),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = OnSurface,
@@ -1537,7 +1541,7 @@ private fun NotesField(value: String, onChange: (String) -> Unit, placeholderTex
     OutlinedTextField(
         value = value,
         onValueChange = onChange,
-        label = { Text("Notes") },
+        label = { Text(stringResource(R.string.notes)) },
         placeholder = if (placeholderText != null) {
             { Text(placeholderText) }
         } else {
@@ -1566,9 +1570,9 @@ private fun CancelSaveRow(onCancel: () -> Unit, onSave: () -> Unit) {
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TextButton(onClick = onCancel) { Text("Cancel", color = OnSurfaceVariant) }
+        TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel), color = OnSurfaceVariant) }
         Spacer(Modifier.width(8.dp))
-        PrimaryButton(text = "Save", onClick = onSave)
+        PrimaryButton(text = stringResource(R.string.save), onClick = onSave)
     }
 }
 
@@ -1582,12 +1586,12 @@ private fun DeleteSaveRow(onDelete: () -> Unit, onSave: () -> Unit) {
     ) {
         TextButton(onClick = { if (confirmDelete) onDelete() else confirmDelete = true }) {
             Text(
-                if (confirmDelete) "Tap again to delete" else "Delete",
+                stringResource(if (confirmDelete) R.string.tap_again_to_delete else R.string.delete),
                 color = MaterialTheme.colorScheme.error,
                 fontWeight = FontWeight.Bold
             )
         }
-        PrimaryButton(text = "Save", onClick = onSave)
+        PrimaryButton(text = stringResource(R.string.save), onClick = onSave)
     }
 }
 

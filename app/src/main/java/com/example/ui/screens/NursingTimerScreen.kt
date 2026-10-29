@@ -23,8 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.data.model.BreastSide
 import com.example.data.model.FeedType
 import com.example.data.model.FeedingEvent
@@ -69,10 +71,10 @@ fun NursingTimerScreen(
                 onClick = onBack,
                 modifier = Modifier.clip(CircleShape).background(SurfaceContainerLow)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Text("Breastfeeding", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.item_breastfeeding), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
 
         BreastSideControls(
@@ -88,12 +90,12 @@ fun NursingTimerScreen(
 
         if (earlier.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Earlier today", style = MaterialTheme.typography.titleSmall, color = OutlineColor)
+                Text(stringResource(R.string.earlier_today), style = MaterialTheme.typography.titleSmall, color = OutlineColor)
                 earlier.forEach { feed ->
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(feed.timeFormatted, style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            "L ${feed.leftDurationMinutes}m · R ${feed.rightDurationMinutes}m",
+                            stringResource(R.string.feed_left_right_minutes, feed.leftDurationMinutes, feed.rightDurationMinutes),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

@@ -24,7 +24,6 @@ import com.example.data.model.TimeFormat
 object NextUpNotification {
 
     private const val CHANNEL_ID = "next_up"
-    private const val CHANNEL_NAME = "What's next"
     const val NOTIFICATION_ID = 4203
 
     private const val REQUEST_CONTENT = 4230
@@ -42,7 +41,7 @@ object NextUpNotification {
             return
         }
         ensureChannel(context)
-        val items = next.entries.sortedBy { it.value }.map { (target, at) -> "${label(target)} ~${TimeFormat.clock(at)}" to at }
+        val items = next.entries.sortedBy { it.value }.map { (target, at) -> context.getString(R.string.next_up_item, context.getString(label(target)), TimeFormat.clock(at)) to at }
         val (first, firstAt) = items.first()
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_widget_feed)
@@ -67,18 +66,18 @@ object NextUpNotification {
         }
     }
 
-    private fun label(target: RhythmTarget): String = when (target) {
-        RhythmTarget.FEED_GAP -> "Feed"
-        RhythmTarget.DIAPER_GAP -> "Diaper"
-        RhythmTarget.SLEEP_LENGTH -> "Wake-up"
-        RhythmTarget.AWAKE_WINDOW -> "Nap"
+    private fun label(target: RhythmTarget): Int = when (target) {
+        RhythmTarget.FEED_GAP -> R.string.next_up_title_feed
+        RhythmTarget.DIAPER_GAP -> R.string.next_up_title_diaper
+        RhythmTarget.SLEEP_LENGTH -> R.string.next_up_title_wake_up
+        RhythmTarget.AWAKE_WINDOW -> R.string.next_up_title_nap
     }
 
     private fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (manager.getNotificationChannel(CHANNEL_ID) != null) return
-        val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW).apply {
+        val channel = NotificationChannel(CHANNEL_ID, context.getString(R.string.channel_next_up), NotificationManager.IMPORTANCE_LOW).apply {
             setShowBadge(false)
             lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
         }

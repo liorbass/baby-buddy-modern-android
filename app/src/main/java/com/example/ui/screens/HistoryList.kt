@@ -30,10 +30,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.R
+import com.example.data.model.AppText
 import com.example.data.model.BATH_NOTE_TEXT
 import com.example.data.model.DiaperEvent
 import com.example.data.model.DiaperType
@@ -47,8 +50,11 @@ import com.example.data.model.SleepEvent
 import com.example.data.model.TimeFormat
 import com.example.data.model.TrackedItem
 import com.example.data.model.TummyTimeEvent
+import com.example.data.model.diaperTypeLabel
+import com.example.data.model.diaperValueLabel
 import com.example.data.model.formatGrowth
 import com.example.data.model.formatMinutes
+import com.example.data.model.localDatePattern
 import com.example.ui.HistoryFilter
 import com.example.ui.theme.ItemColors
 import com.example.ui.theme.OnPrimary
@@ -86,17 +92,17 @@ private fun whoAndNote(caregiver: String?, notes: String): String = listOfNotNul
 private fun diaperDetail(d: DiaperEvent): String {
     val stool = d.type == DiaperType.DIRTY || d.type == DiaperType.BOTH
     return listOfNotNull(
-        d.type.name.lowercase().replaceFirstChar(Char::uppercase),
-        d.color.takeIf { stool && it.isNotBlank() },
-        d.consistency.substringBefore(" / ").takeIf { stool && it.isNotBlank() }
+        diaperTypeLabel(d.type),
+        d.color.takeIf { stool && it.isNotBlank() }?.let(::diaperValueLabel),
+        d.consistency.takeIf { stool && it.isNotBlank() }?.let { diaperValueLabel(it.substringBefore(" / ")) }
     ).joinToString(" · ")
 }
 
 /** Amount, rash and cream, then who logged it and the note. */
 private fun diaperSubtitle(d: DiaperEvent): String = listOfNotNull(
-    "Amount: ${d.amount}".takeIf { d.type != DiaperType.DRY && d.amount.isNotBlank() },
-    "Rash".takeIf { d.rashPresent },
-    d.skinBarrierApplied.takeIf { it.isNotEmpty() }?.joinToString(", ") { it.substringBefore(" / ") },
+    AppText.get(R.string.history_amount, diaperValueLabel(d.amount)).takeIf { d.type != DiaperType.DRY && d.amount.isNotBlank() },
+    AppText.get(R.string.diaper_rash).takeIf { d.rashPresent },
+    d.skinBarrierApplied.takeIf { it.isNotEmpty() }?.joinToString(", ") { diaperValueLabel(it.substringBefore(" / ")) },
     whoAndNote(d.caregiver, d.notes).takeIf { it.isNotBlank() }
 ).joinToString(" · ")
 
@@ -111,10 +117,16 @@ private fun localDayStart(millis: Long): Long = Calendar.getInstance().apply {
 private fun sideLabel(feed: FeedingEvent): String {
     val sides = feed.sides
         ?.split("->")
-        ?.map { it.trim().lowercase().replaceFirstChar(Char::uppercase) }
+        ?.map {
+            when (it.trim().uppercase()) {
+                "LEFT" -> AppText.get(R.string.side_left)
+                "RIGHT" -> AppText.get(R.string.side_right)
+                else -> it.trim().lowercase().replaceFirstChar(Char::uppercase)
+            }
+        }
         ?.filter { it.isNotBlank() }
         ?.joinToString(" → ")
-    return sides ?: "L ${feed.leftDurationMinutes}m · R ${feed.rightDurationMinutes}m"
+    return sides ?: AppText.get(R.string.feed_left_right_minutes, feed.leftDurationMinutes, feed.rightDurationMinutes)
 }
 
 private fun entriesOf(
@@ -138,11 +150,11 @@ private fun entriesOf(
                 key = "feed_${f.id}",
                 timeMillis = f.timeMillis,
                 time = f.timeFormatted,
-                title = if (isBottle) "Bottle" else "Breastfeed",
+                title = AppText.get(if (isBottle) R.string.log_bottle else R.string.tile_feed_name),
                 detail = if (isBottle) {
-                    "${f.amountMl ?: 0} ml ${if (f.bottleFormula) "formula" else "breast milk"}"
+                    AppText.get(if (f.bottleFormula) R.string.history_ml_formula else R.string.history_ml_breast_milk, f.amountMl ?: 0)
                 } else {
-                    "${f.totalDurationMinutes} min · ${sideLabel(f)}"
+                    AppText.get(R.string.history_minutes_sides, f.totalDurationMinutes, sideLabel(f))
                 },
                 subtitle = whoAndNote(f.caregiver, f.notes),
                 dot = ItemColors.tint(if (isBottle) TrackedItem.BOTTLE else TrackedItem.BREASTFEEDING),
@@ -156,7 +168,7 @@ private fun entriesOf(
                 key = "diaper_${d.id}",
                 timeMillis = d.timeMillis,
                 time = d.timeFormatted,
-                title = "Diaper",
+                title = AppText.get(R.string.log_diaper),
                 detail = diaperDetail(d),
                 subtitle = diaperSubtitle(d),
                 dot = when (d.type) {
@@ -174,8 +186,8 @@ private fun entriesOf(
                 key = "pump_${p.id}",
                 timeMillis = p.timeMillis,
                 time = p.timeFormatted,
-                title = "Pumping",
-                detail = "${p.amountMl} ml" + if (p.durationMinutes > 0) " · ${p.durationMinutes} min" else "",
+                title = AppText.get(R.string.log_pumping),
+                detail = if (p.durationMinutes > 0) AppText.get(R.string.history_ml_minutes, p.amountMl, p.durationMinutes) else AppText.get(R.string.amount_ml, p.amountMl),
                 subtitle = whoAndNote(p.caregiver, p.notes),
                 dot = ItemColors.tint(TrackedItem.PUMPING),
                 onClick = { onPumping(p) }
@@ -188,8 +200,8 @@ private fun entriesOf(
                 key = "tummy_${t.id}",
                 timeMillis = t.timeMillis,
                 time = t.timeFormatted,
-                title = "Tummy time",
-                detail = "${t.durationMinutes} min",
+                title = AppText.get(R.string.item_tummy_time),
+                detail = AppText.get(R.string.amount_minutes, t.durationMinutes),
                 subtitle = whoAndNote(t.caregiver, t.milestone),
                 dot = ItemColors.tint(TrackedItem.TUMMY_TIME),
                 onClick = { onTummy(t) }
@@ -202,8 +214,8 @@ private fun entriesOf(
                 key = "sleep_${s.id}",
                 timeMillis = s.timeMillis,
                 time = s.timeFormatted,
-                title = if (s.isNap) "Nap" else "Sleep",
-                detail = "${formatMinutes(s.durationMinutes)} · until ${TimeFormat.clock(s.endMillis)}",
+                title = AppText.get(if (s.isNap) R.string.nap else R.string.item_sleep),
+                detail = AppText.get(R.string.history_sleep_until, formatMinutes(s.durationMinutes), TimeFormat.clock(s.endMillis)),
                 subtitle = whoAndNote(s.caregiver, s.notes),
                 dot = ItemColors.tint(TrackedItem.SLEEP),
                 onClick = { onSleep(s) }
@@ -216,7 +228,7 @@ private fun entriesOf(
                 key = "bath_${b.id}",
                 timeMillis = b.timeMillis,
                 time = b.timeFormatted,
-                title = "Bath",
+                title = AppText.get(R.string.log_bath),
                 detail = "",
                 subtitle = if (b.text == BATH_NOTE_TEXT) "" else whoAndNote(null, b.text),
                 dot = ItemColors.tint(TrackedItem.BATH),
@@ -245,7 +257,7 @@ private fun entriesOf(
                 key = "note_${n.id}",
                 timeMillis = n.timeMillis,
                 time = n.timeFormatted,
-                title = "Note",
+                title = AppText.get(R.string.note),
                 detail = lines.firstOrNull().orEmpty(),
                 subtitle = listOfNotNull(
                     lines.drop(1).joinToString(" ").takeIf { it.isNotBlank() },
@@ -293,34 +305,34 @@ internal fun HistoryDay.withoutHidden(hidden: Set<TrackedItem>): HistoryDay = if
 /** A short summary for a day's header, matching the filter. */
 private fun daySummary(day: HistoryDay, growth: List<GrowthEvent>, filter: HistoryFilter): String = when (filter) {
     HistoryFilter.ALL -> listOf(
-        "${day.feedings.size} feeds",
-        "${day.diapers.size} diapers"
+        AppText.plural(R.plurals.feeds_count, day.feedings.size, day.feedings.size),
+        AppText.plural(R.plurals.diapers_count, day.diapers.size, day.diapers.size)
     ).joinToString(" · ")
 
     HistoryFilter.FEEDS -> {
         val nursing = day.feedings.filter { it.amountMl == null }.sumOf { it.totalDurationMinutes }
         val ml = day.feedings.sumOf { it.amountMl ?: 0 }
-        listOfNotNull("${day.feedings.size} feeds", "$nursing min nursing", if (ml > 0) "$ml ml bottle" else null)
+        listOfNotNull(AppText.plural(R.plurals.feeds_count, day.feedings.size, day.feedings.size), AppText.get(R.string.history_min_nursing, nursing), if (ml > 0) AppText.get(R.string.history_ml_bottle, ml) else null)
             .joinToString(" · ")
     }
 
     HistoryFilter.DIAPERS -> {
         val wet = day.diapers.count { it.type == DiaperType.WET || it.type == DiaperType.BOTH }
         val dirty = day.diapers.count { it.type == DiaperType.DIRTY || it.type == DiaperType.BOTH }
-        "$wet wet · $dirty dirty"
+        AppText.get(R.string.widget_wet_dirty, wet, dirty)
     }
 
-    HistoryFilter.PUMPING -> "${day.pumpings.sumOf { it.amountMl }} ml"
+    HistoryFilter.PUMPING -> AppText.get(R.string.amount_ml, day.pumpings.sumOf { it.amountMl })
 
-    HistoryFilter.TUMMY -> "${day.tummyTimes.sumOf { it.durationMinutes }} min"
+    HistoryFilter.TUMMY -> AppText.get(R.string.amount_minutes, day.tummyTimes.sumOf { it.durationMinutes })
 
-    HistoryFilter.SLEEP -> "${formatMinutes(day.sleeps.sumOf { it.durationMinutes })} asleep"
+    HistoryFilter.SLEEP -> AppText.get(R.string.history_asleep, formatMinutes(day.sleeps.sumOf { it.durationMinutes }))
 
-    HistoryFilter.BATH -> if (day.baths.size == 1) "1 bath" else "${day.baths.size} baths"
+    HistoryFilter.BATH -> AppText.plural(R.plurals.baths_count, day.baths.size, day.baths.size)
 
-    HistoryFilter.GROWTH -> if (growth.size == 1) "1 measurement" else "${growth.size} measurements"
+    HistoryFilter.GROWTH -> AppText.plural(R.plurals.measurements_count, growth.size, growth.size)
 
-    HistoryFilter.NOTES -> if (day.notes.size == 1) "1 note" else "${day.notes.size} notes"
+    HistoryFilter.NOTES -> AppText.plural(R.plurals.notes_count, day.notes.size, day.notes.size)
 }
 
 private fun dayTitle(dayStartMillis: Long): String {
@@ -331,9 +343,9 @@ private fun dayTitle(dayStartMillis: Long): String {
         set(Calendar.MILLISECOND, 0)
     }.timeInMillis
     return when {
-        dayStartMillis >= today -> "Today"
-        dayStartMillis >= today - 24 * 60 * 60_000L -> "Yesterday"
-        else -> SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(Date(dayStartMillis))
+        dayStartMillis >= today -> AppText.get(R.string.today)
+        dayStartMillis >= today - 24 * 60 * 60_000L -> AppText.get(R.string.yesterday)
+        else -> SimpleDateFormat(localDatePattern("EEEEMMMd"), Locale.getDefault()).format(Date(dayStartMillis))
     }
 }
 
@@ -380,7 +392,7 @@ internal fun HistoryWeekNav(
 ) {
     val first = days.firstOrNull()?.dayStartMillis ?: return
     val last = days.last().dayStartMillis
-    val month = SimpleDateFormat("MMM d", Locale.getDefault())
+    val month = SimpleDateFormat(localDatePattern("MMMd"), Locale.getDefault())
     val sameMonth = Calendar.getInstance().apply { timeInMillis = first }.get(Calendar.MONTH) ==
         Calendar.getInstance().apply { timeInMillis = last }.get(Calendar.MONTH)
     val endLabel = if (sameMonth) {
@@ -390,10 +402,10 @@ internal fun HistoryWeekNav(
     }
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPreviousWeek) {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous week", tint = OnSurfaceVariant)
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.previous_week), tint = OnSurfaceVariant)
         }
         Text(
-            text = if (isCurrentWeek) "Last 7 days" else "${month.format(Date(first))} – $endLabel",
+            text = if (isCurrentWeek) stringResource(R.string.last_7_days) else "${month.format(Date(first))} – $endLabel",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
@@ -402,7 +414,7 @@ internal fun HistoryWeekNav(
         IconButton(onClick = onNextWeek, enabled = !isCurrentWeek) {
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Next week",
+                contentDescription = stringResource(R.string.next_week),
                 tint = if (isCurrentWeek) OutlineVariant else OnSurfaceVariant
             )
         }
@@ -443,9 +455,9 @@ internal fun HistoryList(
             item {
                 Text(
                     text = when (filter) {
-                        HistoryFilter.ALL -> "Nothing logged these 7 days."
-                        HistoryFilter.GROWTH -> "No growth measurements yet."
-                        else -> "No ${filter.label.lowercase()} logged these 7 days."
+                        HistoryFilter.ALL -> stringResource(R.string.history_empty_all)
+                        HistoryFilter.GROWTH -> stringResource(R.string.history_empty_growth)
+                        else -> stringResource(R.string.history_empty_filter, filter.label.lowercase())
                     },
                     style = MaterialTheme.typography.bodyLarge,
                     color = OnSurfaceVariant,

@@ -89,16 +89,16 @@ class FeedTileService : QuickTile() {
         val repo = BabyBuddyRepository.instance
         val t = repo.liveTimerState.value
         when {
-            signedOut() -> tile.set("Breastfeed", "Open the app", false, R.drawable.ic_widget_feed)
+            signedOut() -> tile.set(getString(R.string.tile_feed_name), getString(R.string.tile_open_app), false, R.drawable.ic_widget_feed)
 
             !t.isRunning -> {
-                val next = if (repo.nextStartSide() == BreastSide.LEFT) "Left" else "Right"
-                tile.set("Breastfeed", "Start $next", false, R.drawable.ic_widget_feed)
+                val next = getString(if (repo.nextStartSide() == BreastSide.LEFT) R.string.side_left else R.string.side_right)
+                tile.set(getString(R.string.tile_feed_name), getString(R.string.widget_start_side, next), false, R.drawable.ic_widget_feed)
             }
 
-            t.isPaused -> tile.set("Feed paused", "Tap to resume", true, R.drawable.ic_widget_pause)
+            t.isPaused -> tile.set(getString(R.string.feed_paused), getString(R.string.tile_tap_to_resume), true, R.drawable.ic_widget_pause)
 
-            else -> tile.set("Feeding", "${if (t.activeBreast == BreastSide.LEFT) "Left" else "Right"} · tap to pause", true, R.drawable.ic_widget_play)
+            else -> tile.set(getString(R.string.tile_feeding), getString(R.string.tile_side_tap_to_pause, getString(if (t.activeBreast == BreastSide.LEFT) R.string.side_left else R.string.side_right)), true, R.drawable.ic_widget_play)
         }
     }
 
@@ -119,9 +119,9 @@ class SleepTileService : QuickTile() {
     override fun draw(tile: Tile) {
         val sleep = BabyBuddyRepository.instance.sleepTimer.value
         when {
-            signedOut() -> tile.set("Sleep", "Open the app", false, R.drawable.ic_widget_sleep)
-            sleep.isRunning -> tile.set("Sleeping", "Since ${TimeFormat.clock(sleep.startMillis)} · tap when awake", true, R.drawable.ic_widget_sleep)
-            else -> tile.set("Sleep", "Tap when asleep", false, R.drawable.ic_widget_sleep)
+            signedOut() -> tile.set(getString(R.string.tile_sleep_name), getString(R.string.tile_open_app), false, R.drawable.ic_widget_sleep)
+            sleep.isRunning -> tile.set(getString(R.string.sleeping), getString(R.string.tile_since_tap_when_awake, TimeFormat.clock(sleep.startMillis)), true, R.drawable.ic_widget_sleep)
+            else -> tile.set(getString(R.string.tile_sleep_name), getString(R.string.tile_tap_when_asleep), false, R.drawable.ic_widget_sleep)
         }
     }
 
@@ -129,7 +129,7 @@ class SleepTileService : QuickTile() {
         val repo = BabyBuddyRepository.instance
         if (repo.sleepTimer.value.isRunning) {
             repo.stopSleep()
-            Toast.makeText(this, "Sleep saved", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.sleep_saved), Toast.LENGTH_SHORT).show()
         } else {
             repo.startSleep()
         }
@@ -138,7 +138,7 @@ class SleepTileService : QuickTile() {
 
 class DiaperTileService : QuickTile() {
 
-    override fun draw(tile: Tile) = tile.set("Diaper", "Log a change", false, R.drawable.ic_widget_diaper)
+    override fun draw(tile: Tile) = tile.set(getString(R.string.tile_diaper_name), getString(R.string.tile_log_a_change), false, R.drawable.ic_widget_diaper)
 
     override fun onTap() = openApp("LOG_DIAPER")
 }

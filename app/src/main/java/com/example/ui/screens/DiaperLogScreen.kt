@@ -49,14 +49,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.data.model.BabyProfile
 import com.example.data.model.DIAPER_AMOUNTS
 import com.example.data.model.DiaperEvent
 import com.example.data.model.DiaperType
 import com.example.data.model.TimeFormat
 import com.example.data.model.TrackedItem
+import com.example.data.model.diaperValueLabel
 import com.example.ui.components.TimeField
 import com.example.ui.theme.ItemColors
 import com.example.ui.theme.OnPrimary
@@ -113,10 +116,10 @@ fun DiaperLogScreen(
                         .clip(CircleShape)
                         .background(SurfaceContainerLow)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
                 Text(
-                    text = "Diaper change",
+                    text = stringResource(R.string.diaper_change),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -177,7 +180,7 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             DiaperTypeButton(
-                label = "Wet",
+                label = stringResource(R.string.diaper_wet),
                 icon = Icons.Default.WaterDrop,
                 isSelected = selectedType == DiaperType.WET,
                 tint = ItemColors.tint(TrackedItem.DIAPERS),
@@ -186,7 +189,7 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
                 onClick = { selectedType = DiaperType.WET }
             )
             DiaperTypeButton(
-                label = "Dirty",
+                label = stringResource(R.string.diaper_dirty),
                 icon = Icons.Default.Eco,
                 isSelected = selectedType == DiaperType.DIRTY,
                 tint = ItemColors.tint(TrackedItem.DIAPERS),
@@ -195,7 +198,7 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
                 onClick = { selectedType = DiaperType.DIRTY }
             )
             DiaperTypeButton(
-                label = "Both",
+                label = stringResource(R.string.diaper_both),
                 icon = Icons.Default.CleaningServices,
                 isSelected = selectedType == DiaperType.BOTH,
                 tint = ItemColors.tint(TrackedItem.DIAPERS),
@@ -204,7 +207,7 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
                 onClick = { selectedType = DiaperType.BOTH }
             )
             DiaperTypeButton(
-                label = "Dry",
+                label = stringResource(R.string.diaper_dry),
                 icon = Icons.Default.CheckCircle,
                 isSelected = selectedType == DiaperType.DRY,
                 tint = ItemColors.tint(TrackedItem.DIAPERS),
@@ -216,19 +219,19 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
 
         // Time of the change: now unless changed
         TimeField(
-            label = "Time",
+            label = stringResource(R.string.time),
             millis = pickedTime ?: now,
             onChange = { pickedTime = it },
-            valueText = if (pickedTime == null) "Now · ${TimeFormat.clock(now)}" else null
+            valueText = if (pickedTime == null) stringResource(R.string.now_at, TimeFormat.clock(now)) else null
         )
 
         // Amount
         if (selectedType != DiaperType.DRY) {
-            DiaperSection(title = "Amount") {
+            DiaperSection(title = stringResource(R.string.diaper_amount)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     DIAPER_AMOUNTS.forEach { amt ->
                         DiaperOptionChip(
-                            label = amt,
+                            label = diaperValueLabel(amt),
                             isSelected = selectedAmount == amt,
                             onClick = { selectedAmount = amt },
                             modifier = Modifier.weight(1f)
@@ -241,7 +244,7 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
         // Stool details (dirty / both only)
         AnimatedVisibility(visible = isDirty) {
             Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                DiaperSection(title = "Consistency (optional)") {
+                DiaperSection(title = stringResource(R.string.diaper_consistency_optional)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf(
                             "Loose / Liquid" to "Loose",
@@ -250,7 +253,7 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
                             "Hard / Dry" to "Hard"
                         ).forEach { (value, label) ->
                             DiaperOptionChip(
-                                label = label,
+                                label = diaperValueLabel(label),
                                 isSelected = selectedConsistency == value,
                                 onClick = { selectedConsistency = if (selectedConsistency == value) "" else value },
                                 modifier = Modifier.weight(1f)
@@ -258,7 +261,7 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
                         }
                     }
                 }
-                DiaperSection(title = "Color") {
+                DiaperSection(title = stringResource(R.string.diaper_color)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf(
                             "Mustard" to PrimaryContainer,
@@ -267,7 +270,7 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
                             "Dark" to MaterialTheme.colorScheme.inverseSurface
                         ).forEach { (label, dot) ->
                             ColorSwatch(
-                                label = label,
+                                label = diaperValueLabel(label),
                                 colorDot = dot,
                                 isSelected = selectedColor == label,
                                 onClick = { selectedColor = label },
@@ -290,10 +293,10 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("More details", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.more_details), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Icon(
                     imageVector = if (showMore) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (showMore) "Hide details" else "Show details",
+                    contentDescription = stringResource(if (showMore) R.string.hide_details else R.string.show_details),
                     tint = OutlineColor
                 )
             }
@@ -305,7 +308,7 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Rash", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.diaper_rash), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                         Switch(
                             checked = rashPresent,
                             onCheckedChange = { rashPresent = it },
@@ -313,13 +316,13 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
                         )
                     }
 
-                    DiaperSection(title = "Cream") {
+                    DiaperSection(title = stringResource(R.string.diaper_cream)) {
                         val barriers = listOf("Aquaphor / Barrier" to "Barrier", "Zinc Oxide Cream" to "Zinc", "Baby Powder" to "Powder")
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             barriers.forEach { (value, label) ->
                                 val isSel = value in selectedSkinBarriers
                                 DiaperOptionChip(
-                                    label = label,
+                                    label = diaperValueLabel(label),
                                     isSelected = isSel,
                                     onClick = {
                                         selectedSkinBarriers = if (isSel) selectedSkinBarriers - value else selectedSkinBarriers + value
@@ -333,7 +336,7 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
                     OutlinedTextField(
                         value = notesText,
                         onValueChange = { notesText = it },
-                        placeholder = { Text("Notes", style = MaterialTheme.typography.bodyMedium) },
+                        placeholder = { Text(stringResource(R.string.notes), style = MaterialTheme.typography.bodyMedium) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -361,10 +364,10 @@ fun DiaperForm(onSave: DiaperSave, modifier: Modifier = Modifier) {
                     .height(54.dp)
                     .testTag("save_diaper_btn")
             ) {
-                Text("Save", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.save), style = MaterialTheme.typography.labelLarge)
             }
             TextButton(onClick = { save(true) }) {
-                Text("Save & start feed", color = SecondaryColor, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.diaper_save_start_feed), color = SecondaryColor, fontWeight = FontWeight.SemiBold)
             }
         }
     }

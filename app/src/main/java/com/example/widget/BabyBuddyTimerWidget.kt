@@ -26,19 +26,19 @@ class BabyBuddyTimerWidget : AppWidgetProvider() {
         val lastFeed = repo.lastBreastfeed.value
         val lastSide = lastFeed?.lastSide
         val nextSide = repo.nextStartSide()
-        val activeName = if (timer.activeBreast == BreastSide.LEFT) "Left" else "Right"
+        val activeName = sideName(context, timer.activeBreast)
         val sessionLabel = when {
-            !timer.isRunning -> lastSide?.let { "Last: ${sideName(it)}" } ?: ""
-            timer.isPaused -> "Paused · $activeName"
+            !timer.isRunning -> lastSide?.let { context.getString(R.string.widget_last_side, sideName(context, it)) } ?: ""
+            timer.isPaused -> context.getString(R.string.widget_paused_side, activeName)
             else -> "● $activeName"
         }
         val subtext = when {
-            timer.isRunning -> "On $activeName · started ${timer.sessionStartedTime}"
+            timer.isRunning -> context.getString(R.string.widget_on_side_started, activeName, timer.sessionStartedTime)
 
             lastFeed != null && lastSide != null ->
-                "Last ended on ${sideName(lastSide)} · ${dayAndTime(lastFeed.timeMillis, lastFeed.timeFormatted)}"
+                context.getString(R.string.widget_last_ended_on, sideName(context, lastSide), dayAndTime(lastFeed.timeMillis, lastFeed.timeFormatted))
 
-            else -> "Tap Start to begin"
+            else -> context.getString(R.string.widget_tap_start)
         }
         // The Chronometer ticks by itself from this base, so the widget only needs updating on start/pause/switch
         val base = SystemClock.elapsedRealtime() - timer.totalSeconds * 1000L
@@ -52,13 +52,13 @@ class BabyBuddyTimerWidget : AppWidgetProvider() {
 
             // Pause / Resume / Start button state
             if (!timer.isRunning) {
-                views.setTextViewText(R.id.tv_pause_play_label, "Start ${sideName(nextSide)}")
+                views.setTextViewText(R.id.tv_pause_play_label, context.getString(R.string.widget_start_side, sideName(context, nextSide)))
                 views.setImageViewResource(R.id.iv_pause_play_icon, R.drawable.ic_widget_play)
             } else if (timer.isPaused) {
-                views.setTextViewText(R.id.tv_pause_play_label, "Resume")
+                views.setTextViewText(R.id.tv_pause_play_label, context.getString(R.string.resume))
                 views.setImageViewResource(R.id.iv_pause_play_icon, R.drawable.ic_widget_play)
             } else {
-                views.setTextViewText(R.id.tv_pause_play_label, "Pause")
+                views.setTextViewText(R.id.tv_pause_play_label, context.getString(R.string.pause))
                 views.setImageViewResource(R.id.iv_pause_play_icon, R.drawable.ic_widget_pause)
             }
 
@@ -103,7 +103,7 @@ class BabyBuddyTimerWidget : AppWidgetProvider() {
         }
     }
 
-    private fun sideName(side: BreastSide) = if (side == BreastSide.LEFT) "Left" else "Right"
+    private fun sideName(context: Context, side: BreastSide) = context.getString(if (side == BreastSide.LEFT) R.string.side_left else R.string.side_right)
 
     companion object {
         private const val REQ_PAUSE = 201

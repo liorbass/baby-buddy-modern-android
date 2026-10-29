@@ -50,11 +50,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.DiaperEvent
 import com.example.data.model.DiaperType
 import com.example.data.model.FeedType
@@ -233,7 +235,7 @@ fun HistoryScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "History",
+                text = stringResource(R.string.nav_history),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = OnSurface,
@@ -242,7 +244,7 @@ fun HistoryScreen(
             IconButton(onClick = { showCalendar = !showCalendar }) {
                 Icon(
                     imageVector = if (showCalendar) Icons.AutoMirrored.Filled.List else Icons.Default.CalendarMonth,
-                    contentDescription = if (showCalendar) "Show list" else "Show calendar",
+                    contentDescription = stringResource(if (showCalendar) R.string.history_show_list else R.string.history_show_calendar),
                     tint = OnSurfaceVariant
                 )
             }
@@ -299,7 +301,7 @@ fun HistoryScreen(
                                 maxLines = 2,
                                 modifier = Modifier.weight(1f)
                             )
-                            TextButton(onClick = onRetry) { Text("Retry", color = PrimaryColor) }
+                            TextButton(onClick = onRetry) { Text(stringResource(R.string.retry), color = PrimaryColor) }
                         }
                     }
                     HistoryList(
@@ -340,7 +342,7 @@ fun HistoryScreen(
                                 modifier = Modifier.weight(1f)
                             )
                             TextButton(onClick = onRetry) {
-                                Text("Retry", color = PrimaryColor)
+                                Text(stringResource(R.string.retry), color = PrimaryColor)
                             }
                         }
                     }
@@ -528,7 +530,7 @@ private fun HistoryErrorState(message: String, onRetry: () -> Unit) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "Couldn't load history",
+                text = stringResource(R.string.error_load_history),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = OnSurface
@@ -548,7 +550,7 @@ private fun HistoryErrorState(message: String, onRetry: () -> Unit) {
                     contentColor = OnPrimary
                 )
             ) {
-                Text("Retry")
+                Text(stringResource(R.string.retry))
             }
         }
     }
@@ -563,10 +565,10 @@ private fun HistoryLegend() {
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        LegendItem(color = NursingColor, label = "Nursing")
-        LegendItem(color = BottleColor, label = "Bottle")
-        LegendItem(color = WetColor, label = "Diaper")
-        LegendItem(color = TummyColor, label = "Tummy")
+        LegendItem(color = NursingColor, label = stringResource(R.string.history_legend_nursing))
+        LegendItem(color = BottleColor, label = stringResource(R.string.log_bottle))
+        LegendItem(color = WetColor, label = stringResource(R.string.log_diaper))
+        LegendItem(color = TummyColor, label = stringResource(R.string.widget_quick_tummy))
     }
 }
 
@@ -608,7 +610,7 @@ private fun WeekHeaderRow(
             IconButton(onClick = onPreviousWeek, modifier = Modifier.size(36.dp)) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    contentDescription = "Previous week",
+                    contentDescription = stringResource(R.string.previous_week),
                     tint = OnSurfaceVariant
                 )
             }
@@ -658,7 +660,7 @@ private fun WeekHeaderRow(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "Next week",
+                    contentDescription = stringResource(R.string.next_week),
                     tint = if (isCurrentWeek) OutlineVariant else OnSurfaceVariant
                 )
             }

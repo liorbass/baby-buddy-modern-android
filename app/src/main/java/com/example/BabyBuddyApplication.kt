@@ -1,6 +1,7 @@
 package com.example
 
 import android.app.Application
+import com.example.data.model.AppText
 import com.example.data.repository.BabyBuddyRepository
 import com.example.widget.AppShortcuts
 import com.example.widget.FeedNotification
@@ -28,6 +29,7 @@ class BabyBuddyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppText.resources = resources
         val repository = BabyBuddyRepository.instance
         repository.attach(this)
         appScope.launch {

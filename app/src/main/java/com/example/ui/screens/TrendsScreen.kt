@@ -51,11 +51,15 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.R
+import com.example.data.model.AppText
 import com.example.data.model.BabySex
 import com.example.data.model.DayStats
 import com.example.data.model.GrowthEvent
@@ -66,6 +70,7 @@ import com.example.data.model.WhoGrowthStandards
 import com.example.data.model.ageInDays
 import com.example.data.model.formatGrowth
 import com.example.data.model.growthPercentile
+import com.example.data.model.ordinal
 import com.example.data.model.ordinalPercentile
 import com.example.ui.components.EditGrowthDialog
 import com.example.ui.components.SegmentedToggle
@@ -123,13 +128,13 @@ fun TrendsScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
-                    text = "Trends",
+                    text = stringResource(R.string.nav_trends),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = OnSurface
                 )
                 if (modelsTab != null) {
-                    Segmented(options = listOf("Charts", "Models"), selected = if (showModels) 1 else 0, onSelect = { showModels = it == 1 })
+                    Segmented(options = listOf(stringResource(R.string.trends_charts), stringResource(R.string.trends_models)), selected = if (showModels) 1 else 0, onSelect = { showModels = it == 1 })
                 }
                 if (!showModels || modelsTab == null) {
                     RangeSelector(selected = rangeDays, onSelect = onSelectRange)
@@ -158,7 +163,7 @@ fun TrendsScreen(
 
                 days.isEmpty() -> item {
                     Text(
-                        text = "No data for this period.",
+                        text = stringResource(R.string.trends_no_data),
                         style = MaterialTheme.typography.bodyMedium,
                         color = OnSurfaceVariant,
                         modifier = Modifier
@@ -211,7 +216,7 @@ fun TrendsScreen(
 @Composable
 private fun RangeSelector(selected: Int, onSelect: (Int) -> Unit) {
     val options = listOf(7, 30)
-    Segmented(options = options.map { "$it days" }, selected = options.indexOf(selected), onSelect = { onSelect(options[it]) })
+    Segmented(options = options.map { pluralStringResource(R.plurals.days_count, it, it) }, selected = options.indexOf(selected), onSelect = { onSelect(options[it]) })
 }
 
 @Composable
@@ -276,10 +281,10 @@ private fun ErrorCard(message: String, onRetry: () -> Unit, onConnect: () -> Uni
                     contentColor = OnPrimary
                 )
             ) {
-                Text("Retry")
+                Text(stringResource(R.string.retry))
             }
             TextButton(onClick = onConnect) {
-                Text("Server settings", color = PrimaryColor)
+                Text(stringResource(R.string.trends_server_settings), color = PrimaryColor)
             }
         }
     }
@@ -319,13 +324,13 @@ private fun SectionSurface(content: @Composable ColumnScope.() -> Unit) {
 private fun FeedingRhythmSection(days: List<DayStats>, rangeDays: Int) {
     val hasFeeds = days.any { it.feedMarks.isNotEmpty() }
     Column {
-        SectionTitle("Feeding rhythm")
+        SectionTitle(stringResource(R.string.trends_feeding_rhythm))
         Spacer(modifier = Modifier.height(12.dp))
         SectionSurface {
             Column(modifier = Modifier.padding(16.dp)) {
                 if (!hasFeeds) {
                     Text(
-                        text = "No feeds logged in this period.",
+                        text = stringResource(R.string.trends_no_feeds),
                         style = MaterialTheme.typography.bodyMedium,
                         color = OnSurfaceVariant
                     )
@@ -353,9 +358,9 @@ private fun FeedingRhythmSection(days: List<DayStats>, rangeDays: Int) {
 @Composable
 private fun RhythmLegend() {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        LegendCapsule(color = NursingColor, label = "Nursing")
+        LegendCapsule(color = NursingColor, label = stringResource(R.string.history_legend_nursing))
         Spacer(modifier = Modifier.width(16.dp))
-        LegendCapsule(color = PrimaryColor, label = "Bottle")
+        LegendCapsule(color = PrimaryColor, label = stringResource(R.string.log_bottle))
         Spacer(modifier = Modifier.width(16.dp))
         Box(
             modifier = Modifier
@@ -366,7 +371,7 @@ private fun RhythmLegend() {
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(
-            text = "Longest gap",
+            text = stringResource(R.string.trends_longest_gap),
             style = MaterialTheme.typography.labelSmall,
             color = OnSurfaceVariant
         )
@@ -473,7 +478,7 @@ private fun RhythmChart(days: List<DayStats>) {
 
             // Day label in the gutter (every row for 7 days; today + weekly for 30 days).
             if (!dense || index % 7 == 0) {
-                val text = if (day.isToday) "Today" else day.label
+                val text = if (day.isToday) AppText.get(R.string.trends_today_chart) else day.label
                 val layout = textMeasurer.measure(
                     text = text,
                     style = if (day.isToday) todayLabelStyle else dayLabelStyle,
@@ -610,17 +615,22 @@ private fun rhythmCaption(days: List<DayStats>, rangeDays: Int): String? {
     val basis = averageBasis(days)
     val gaps = basis.map { it.longestGapMinutes }.filter { it > 0 }
     if (gaps.isEmpty()) return null
-    val period = if (rangeDays <= 7) "week" else "month"
+    val week = rangeDays <= 7
     val average = gaps.average().roundToInt()
-    val caption = StringBuilder("Longest stretch: ${formatDuration(average)} on average this $period")
+    val caption = StringBuilder(AppText.get(if (week) R.string.trends_longest_week else R.string.trends_longest_month, formatDuration(average)))
     if (gaps.size >= 6) {
         val half = gaps.size / 2
         val firstHalf = gaps.take(half).average()
         val secondHalf = gaps.takeLast(half).average()
         val diff = (secondHalf - firstHalf).roundToInt()
         if (abs(diff) >= 5) {
-            val direction = if (diff > 0) "up" else "down"
-            caption.append(", $direction ${formatDiff(abs(diff))} from the start of the $period")
+            val change = when {
+                diff > 0 && week -> R.string.trends_up_week
+                diff > 0 -> R.string.trends_up_month
+                week -> R.string.trends_down_week
+                else -> R.string.trends_down_month
+            }
+            caption.append(AppText.get(change, formatDiff(abs(diff))))
         }
     }
     caption.append('.')
@@ -700,7 +710,7 @@ private fun DayTimeChart(days: List<DayStats>, drawRow: DrawScope.(DayStats, Row
             val row = RowGeometry(index * (rowH + gapPx), rowH, areaLeft, areaRight)
             if (!dense || index % 7 == 0) {
                 val layout = textMeasurer.measure(
-                    text = if (day.isToday) "Today" else day.label,
+                    text = if (day.isToday) AppText.get(R.string.trends_today_chart) else day.label,
                     style = if (day.isToday) todayLabelStyle else dayLabelStyle,
                     maxLines = 1,
                     softWrap = false
@@ -745,14 +755,14 @@ private fun LegendDot(color: Color, label: String, ring: Color? = null) {
 @Composable
 private fun SleepRhythmSection(days: List<DayStats>, rangeDays: Int) {
     Column {
-        SectionTitle("Sleep rhythm")
+        SectionTitle(stringResource(R.string.trends_sleep_rhythm))
         Spacer(modifier = Modifier.height(12.dp))
         SectionSurface {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    LegendCapsule(color = NightSleepColor, label = "Night sleep")
+                    LegendCapsule(color = NightSleepColor, label = stringResource(R.string.dialog_night_sleep))
                     Spacer(modifier = Modifier.width(16.dp))
-                    LegendCapsule(color = NapColor, label = "Nap")
+                    LegendCapsule(color = NapColor, label = stringResource(R.string.nap))
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 DayTimeChart(days = days) { day, row ->
@@ -786,27 +796,27 @@ private fun SleepRhythmSection(days: List<DayStats>, rangeDays: Int) {
 private fun sleepCaption(days: List<DayStats>, rangeDays: Int): String? {
     val basis = averageBasis(days).filter { it.sleepMinutes > 0 }
     if (basis.isEmpty()) return null
-    val period = if (rangeDays <= 7) "week" else "month"
+    val week = rangeDays <= 7
     val average = basis.map { it.sleepMinutes }.average().roundToInt()
     val longest = basis.map { it.longestSleepMinutes }.filter { it > 0 }
-    val caption = StringBuilder("Sleep: ${formatDuration(average)} a day on average this $period")
-    if (longest.isNotEmpty()) caption.append(", longest stretch ${formatDuration(longest.average().roundToInt())}")
+    val caption = StringBuilder(AppText.get(if (week) R.string.trends_sleep_week else R.string.trends_sleep_month, formatDuration(average)))
+    if (longest.isNotEmpty()) caption.append(AppText.get(R.string.trends_sleep_longest, formatDuration(longest.average().roundToInt())))
     return caption.append('.').toString()
 }
 
 @Composable
 private fun DiaperRhythmSection(days: List<DayStats>) {
     Column {
-        SectionTitle("Diaper rhythm")
+        SectionTitle(stringResource(R.string.trends_diaper_rhythm))
         Spacer(modifier = Modifier.height(12.dp))
         SectionSurface {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    LegendDot(color = WetColor, label = "Wet")
+                    LegendDot(color = WetColor, label = stringResource(R.string.diaper_wet))
                     Spacer(modifier = Modifier.width(16.dp))
-                    LegendDot(color = DirtyColor, label = "Dirty")
+                    LegendDot(color = DirtyColor, label = stringResource(R.string.diaper_dirty))
                     Spacer(modifier = Modifier.width(16.dp))
-                    LegendDot(color = DirtyColor, label = "Both", ring = WetColor)
+                    LegendDot(color = DirtyColor, label = stringResource(R.string.diaper_both), ring = WetColor)
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 DayTimeChart(days = days) { day, row ->
@@ -859,28 +869,28 @@ private fun DailyNumbersSection(days: List<DayStats>, hidden: Set<TrackedItem> =
     val showBottle = days.any { it.bottleMl > 0 } && TrackedItem.BOTTLE !in hidden
     val metrics = buildList {
         if (TrackedItem.BREASTFEEDING !in hidden || TrackedItem.BOTTLE !in hidden) {
-            add(DailyMetric("Feeds", "per day", 1, PrimaryColor, null) { it.feeds.toFloat() })
+            add(DailyMetric(stringResource(R.string.trends_metric_feeds), stringResource(R.string.trends_unit_per_day), 1, PrimaryColor, null) { it.feeds.toFloat() })
         }
         if (TrackedItem.BREASTFEEDING !in hidden) {
-            add(DailyMetric("Nursing", "min/day", 0, PrimaryColor, null) { it.nursingMinutes.toFloat() })
+            add(DailyMetric(stringResource(R.string.history_legend_nursing), stringResource(R.string.trends_unit_min_day), 0, PrimaryColor, null) { it.nursingMinutes.toFloat() })
         }
         if (showBottle) {
-            add(DailyMetric("Bottle", "ml/day", 0, BottleColor, null) { it.bottleMl.toFloat() })
+            add(DailyMetric(stringResource(R.string.log_bottle), stringResource(R.string.trends_unit_ml_day), 0, BottleColor, null) { it.bottleMl.toFloat() })
         }
         if (TrackedItem.DIAPERS !in hidden) {
-            add(DailyMetric("Wet diapers", "per day", 1, DirtyColor, 6f) { it.wet.toFloat() })
-            add(DailyMetric("Dirty diapers", "per day", 1, DirtyColor, null) { it.dirty.toFloat() })
+            add(DailyMetric(stringResource(R.string.trends_metric_wet), stringResource(R.string.trends_unit_per_day), 1, DirtyColor, 6f) { it.wet.toFloat() })
+            add(DailyMetric(stringResource(R.string.trends_metric_dirty), stringResource(R.string.trends_unit_per_day), 1, DirtyColor, null) { it.dirty.toFloat() })
         }
         if (TrackedItem.SLEEP !in hidden && days.any { it.sleepMarks.isNotEmpty() }) {
-            add(DailyMetric("Sleep", "h/day", 1, NightSleepColor, null) { it.sleepMinutes / 60f })
-            add(DailyMetric("Naps", "per day", 1, NightSleepColor, null) { it.naps.toFloat() })
+            add(DailyMetric(stringResource(R.string.item_sleep), stringResource(R.string.trends_unit_h_day), 1, NightSleepColor, null) { it.sleepMinutes / 60f })
+            add(DailyMetric(stringResource(R.string.trends_metric_naps), stringResource(R.string.trends_unit_per_day), 1, NightSleepColor, null) { it.naps.toFloat() })
         }
     }
 
     if (metrics.isEmpty()) return
 
     Column {
-        SectionTitle("Daily numbers")
+        SectionTitle(stringResource(R.string.trends_daily_numbers))
         Spacer(modifier = Modifier.height(12.dp))
         SectionSurface {
             metrics.forEachIndexed { index, metric ->
@@ -1072,7 +1082,7 @@ private fun LeftRightSection(leftMinutes: Int, rightMinutes: Int) {
     val minutesStyle = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = TABULAR_NUMS)
 
     Column {
-        SectionTitle("Left and right")
+        SectionTitle(stringResource(R.string.trends_left_right))
         Spacer(modifier = Modifier.height(12.dp))
         SectionSurface {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -1106,7 +1116,7 @@ private fun LeftRightSection(leftMinutes: Int, rightMinutes: Int) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Left $leftPct%",
+                            text = stringResource(R.string.trends_left_pct, leftPct),
                             style = shareStyle,
                             fontWeight = FontWeight.SemiBold,
                             color = OnSurface
@@ -1119,7 +1129,7 @@ private fun LeftRightSection(leftMinutes: Int, rightMinutes: Int) {
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "Right $rightPct%",
+                            text = stringResource(R.string.trends_right_pct, rightPct),
                             style = shareStyle,
                             fontWeight = FontWeight.SemiBold,
                             color = OnSurface
@@ -1146,7 +1156,7 @@ private fun averageBasis(days: List<DayStats>): List<DayStats> = if (days.size >
 private fun formatNumber(value: Float, decimals: Int): String = if (decimals <= 0) {
     value.roundToInt().toString()
 } else {
-    String.format(Locale.US, "%.${decimals}f", value)
+    String.format(Locale.getDefault(), "%.${decimals}f", value)
 }
 
 /** 318 -> "5h 18m", 45 -> "45m", 300 -> "5h". */
@@ -1155,14 +1165,14 @@ private fun formatDuration(minutes: Int): String {
     val h = m / 60
     val r = m % 60
     return when {
-        h == 0 -> "${r}m"
-        r == 0 -> "${h}h"
-        else -> "${h}h ${r}m"
+        h == 0 -> AppText.get(R.string.duration_minutes, r)
+        r == 0 -> AppText.get(R.string.duration_hours, h)
+        else -> AppText.get(R.string.duration_hours_minutes_short, h, r)
     }
 }
 
 /** Size of a change: 22 -> "22 min", 75 -> "1h 15m". */
-private fun formatDiff(minutes: Int): String = if (minutes < 60) "$minutes min" else formatDuration(minutes)
+private fun formatDiff(minutes: Int): String = if (minutes < 60) AppText.get(R.string.amount_minutes, minutes) else formatDuration(minutes)
 
 // ---------------------------------------------------------------------------
 // Growth against the WHO Child Growth Standards
@@ -1199,7 +1209,7 @@ private fun GrowthSection(
     val points = growth.filter { it.kind == kind }.sortedBy { it.dateMillis }
     val ageNow = birthDate?.let { ageInDays(it, System.currentTimeMillis()) }
     Column {
-        SectionTitle("Growth")
+        SectionTitle(stringResource(R.string.item_growth))
         Spacer(modifier = Modifier.height(12.dp))
         SectionSurface {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -1212,7 +1222,7 @@ private fun GrowthSection(
                 when {
                     sex == null -> {
                         Text(
-                            text = "The WHO has separate charts for boys and girls. Pick one to compare with them.",
+                            text = stringResource(R.string.trends_pick_sex),
                             style = MaterialTheme.typography.bodyMedium,
                             color = OnSurfaceVariant
                         )
@@ -1225,7 +1235,7 @@ private fun GrowthSection(
                     }
 
                     birthDate == null || ageNow == null -> Text(
-                        text = "Add the birth date on the server to compare with the WHO charts.",
+                        text = stringResource(R.string.trends_need_birth_date),
                         style = MaterialTheme.typography.bodyMedium,
                         color = OnSurfaceVariant
                     )
@@ -1249,27 +1259,26 @@ private fun GrowthSection(
 
 private fun growthCaption(kind: GrowthKind, points: List<GrowthEvent>, birthDate: String, sex: BabySex): String {
     val latest = points.lastOrNull()
-        ?: return "No ${kind.label.lowercase()} measurements yet. Log them from the Log screen (Growth)."
+        ?: return AppText.get(R.string.trends_growth_none, kind.label.lowercase())
     val p = growthPercentile(latest, birthDate, sex)
-        ?: return "Latest: ${formatGrowth(kind, latest.value)} on ${shortDate(latest.dateMillis)}. The WHO charts here cover birth to 2 years."
+        ?: return AppText.get(R.string.trends_growth_latest_no_percentile, formatGrowth(kind, latest.value), shortDate(latest.dateMillis))
     val previous = points.dropLast(1).lastOrNull()?.let { prev ->
-        growthPercentile(prev, birthDate, sex)?.let { " (${ordinalPercentile(it)} on ${shortDate(prev.dateMillis)})" }
+        growthPercentile(prev, birthDate, sex)?.let { AppText.get(R.string.trends_growth_previous, ordinalPercentile(it), shortDate(prev.dateMillis)) }
     }.orEmpty()
-    return "Latest: ${formatGrowth(kind, latest.value)} on ${shortDate(latest.dateMillis)}, " +
-        "${ordinalPercentile(p)} percentile$previous. Tap a point to edit it."
+    return AppText.get(R.string.trends_growth_latest, formatGrowth(kind, latest.value), shortDate(latest.dateMillis), ordinalPercentile(p), previous)
 }
 
 @Composable
 private fun GrowthLegend() {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        LegendDot(color = PrimaryColor, label = "Baby")
+        LegendDot(color = PrimaryColor, label = stringResource(R.string.profile_baby))
         Spacer(modifier = Modifier.width(16.dp))
         LegendCapsule(color = ItemColors.soft(TrackedItem.GROWTH), label = "15th–85th")
         Spacer(modifier = Modifier.width(16.dp))
         LegendCapsule(color = ItemColors.soft(TrackedItem.GROWTH).copy(alpha = 0.45f), label = "3rd–97th")
     }
     Text(
-        text = "Middle line: WHO median (50th percentile)",
+        text = stringResource(R.string.trends_who_median, ordinal(50)),
         style = MaterialTheme.typography.labelSmall,
         color = OnSurfaceVariant,
         modifier = Modifier.padding(top = 4.dp)
@@ -1367,7 +1376,7 @@ private fun GrowthChart(
         for (m in 0..months.toInt() step every) {
             val x = px(m * DAYS_PER_MONTH)
             drawLine(grid, Offset(x, top), Offset(x, top + h), strokeWidth = 1f)
-            label(if (m == 0) "Birth" else "${m}m", x, top + h + bottom / 2f, centered = true)
+            label(if (m == 0) AppText.get(R.string.trends_birth) else AppText.get(R.string.trends_months_short, m), x, top + h + bottom / 2f, centered = true)
         }
 
         // Bands between the outer and inner percentile pairs

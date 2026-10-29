@@ -58,10 +58,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.R
 import com.example.data.model.BabyProfile
 import com.example.data.model.ServerConnectionConfig
 import com.example.ui.ScreenDestination
@@ -89,10 +91,10 @@ fun TopBabyHeader(
     unsentCount: Int = 0
 ) {
     val statusText = when {
-        !connectionConfig.isConnected -> "Offline"
-        connectionConfig.isDemoMode -> "Demo"
-        unsentCount > 0 -> "$unsentCount unsent"
-        else -> "Synced"
+        !connectionConfig.isConnected -> stringResource(R.string.status_offline)
+        connectionConfig.isDemoMode -> stringResource(R.string.status_demo)
+        unsentCount > 0 -> stringResource(R.string.status_unsent, unsentCount)
+        else -> stringResource(R.string.status_synced)
     }
     val statusColor = when {
         !connectionConfig.isConnected || connectionConfig.isDemoMode -> OutlineColor
@@ -190,14 +192,14 @@ fun AppBottomNav(
         ) {
             NavItem(
                 icon = Icons.Default.Home,
-                label = "Today",
+                label = stringResource(R.string.nav_today),
                 isSelected = currentScreen == ScreenDestination.TODAY_DASHBOARD,
                 onClick = { onNavigate(ScreenDestination.TODAY_DASHBOARD) }
             )
 
             NavItem(
                 icon = Icons.Default.QueryStats,
-                label = "Trends",
+                label = stringResource(R.string.nav_trends),
                 isSelected = currentScreen == ScreenDestination.TRENDS,
                 onClick = { onNavigate(ScreenDestination.TRENDS) }
             )
@@ -219,14 +221,14 @@ fun AppBottomNav(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Quick Log Action",
+                        contentDescription = stringResource(R.string.nav_log_desc),
                         tint = OnPrimary,
                         modifier = Modifier.size(28.dp)
                     )
                 }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Log",
+                    text = stringResource(R.string.nav_log),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold
@@ -235,14 +237,14 @@ fun AppBottomNav(
 
             NavItem(
                 icon = Icons.Default.CalendarMonth,
-                label = "History",
+                label = stringResource(R.string.nav_history),
                 isSelected = currentScreen == ScreenDestination.HISTORY,
                 onClick = { onNavigate(ScreenDestination.HISTORY) }
             )
 
             NavItem(
                 icon = if (hasSettings) Icons.Default.Settings else Icons.Default.AccountCircle,
-                label = if (hasSettings) "Settings" else "Login",
+                label = stringResource(if (hasSettings) R.string.nav_settings else R.string.nav_login),
                 isSelected = currentScreen == ScreenDestination.CONNECT_SERVER,
                 onClick = { onNavigate(ScreenDestination.CONNECT_SERVER) }
             )
@@ -320,7 +322,7 @@ fun ToastNotificationBar(
             }
             if (onUndo != null) {
                 TextButton(onClick = onUndo) {
-                    Text("Undo", color = InverseOnSurface, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.undo), color = InverseOnSurface, fontWeight = FontWeight.Bold)
                 }
             }
             IconButton(
@@ -329,7 +331,7 @@ fun ToastNotificationBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Dismiss",
+                    contentDescription = stringResource(R.string.dismiss),
                     tint = InverseOnSurface.copy(alpha = 0.7f),
                     modifier = Modifier.size(16.dp)
                 )

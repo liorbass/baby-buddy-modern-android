@@ -39,8 +39,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.data.model.SleepEvent
 import com.example.data.model.SleepTimerState
 import com.example.data.model.TimeFormat
@@ -110,17 +112,17 @@ fun SleepScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack, modifier = Modifier.clip(CircleShape).background(SurfaceContainerLow)) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Text("Sleep", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.item_sleep), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
 
         SleepPanel(timer, onStart, onSetStart, onNotesChange, onStop, onCancel, onLogPast)
 
         if (todaysSleeps.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Today", style = MaterialTheme.typography.titleSmall, color = OutlineColor)
+                Text(stringResource(R.string.today), style = MaterialTheme.typography.titleSmall, color = OutlineColor)
                 todaysSleeps.forEach { sleep ->
                     Row(
                         modifier = Modifier
@@ -138,7 +140,7 @@ fun SleepScreen(
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            "${formatMinutes(sleep.durationMinutes)} · ${if (sleep.isNap) "Nap" else "Night"}",
+                            stringResource(if (sleep.isNap) R.string.sleep_duration_nap else R.string.sleep_duration_night, formatMinutes(sleep.durationMinutes)),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -180,7 +182,7 @@ fun SleepPanel(
             ) {
                 Icon(Icons.Default.Bedtime, contentDescription = null, modifier = Modifier.size(22.dp))
                 Text(
-                    "Start sleep timer",
+                    stringResource(R.string.sleep_start_timer),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 10.dp)
@@ -223,16 +225,16 @@ private fun RunningSleep(
         ) {
             Text(elapsed((now - timer.startMillis) / 1000L), style = TimerDisplayStyle)
             Text(
-                "Asleep since ${TimeFormat.clock(timer.startMillis)}",
+                stringResource(R.string.sleep_asleep_since, TimeFormat.clock(timer.startMillis)),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            TimeField(label = "Fell asleep", millis = timer.startMillis, onChange = onSetStart)
+            TimeField(label = stringResource(R.string.fell_asleep), millis = timer.startMillis, onChange = onSetStart)
             NapToggle(isNap = isNap, onChange = { isNap = it })
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
-                label = { Text("Notes") },
+                label = { Text(stringResource(R.string.notes)) },
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -247,11 +249,11 @@ private fun RunningSleep(
                     .fillMaxWidth()
                     .height(56.dp)
             ) {
-                Text("Woke up · save", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.sleep_woke_up_save), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
             TextButton(onClick = { if (confirmDiscard) onCancel() else confirmDiscard = true }) {
                 Text(
-                    if (confirmDiscard) "Tap again to discard" else "Discard timer",
+                    stringResource(if (confirmDiscard) R.string.tap_again_to_discard else R.string.sleep_discard_timer),
                     color = if (confirmDiscard) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -271,11 +273,11 @@ private fun PastSleepForm(onLogPast: (start: Long, end: Long, isNap: Boolean, no
     val isNap = napChoice ?: isNapTime(fixedStart)
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Log a past sleep", style = MaterialTheme.typography.titleSmall, color = OutlineColor)
-        TimeField(label = "Fell asleep", millis = start, onChange = { start = it })
-        TimeField(label = "Woke up", millis = end, onChange = { end = it })
+        Text(stringResource(R.string.sleep_log_past), style = MaterialTheme.typography.titleSmall, color = OutlineColor)
+        TimeField(label = stringResource(R.string.fell_asleep), millis = start, onChange = { start = it })
+        TimeField(label = stringResource(R.string.woke_up), millis = end, onChange = { end = it })
         Text(
-            "Slept ${formatMinutes(((end - fixedStart) / 60_000L).toInt())}",
+            stringResource(R.string.sleep_slept, formatMinutes(((end - fixedStart) / 60_000L).toInt())),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 4.dp)
@@ -284,7 +286,7 @@ private fun PastSleepForm(onLogPast: (start: Long, end: Long, isNap: Boolean, no
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = { Text("Notes") },
+            label = { Text(stringResource(R.string.notes)) },
             shape = RoundedCornerShape(20.dp),
             modifier = Modifier.fillMaxWidth()
         )
@@ -298,7 +300,7 @@ private fun PastSleepForm(onLogPast: (start: Long, end: Long, isNap: Boolean, no
             shape = RoundedCornerShape(24.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Save sleep", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.sleep_save), fontWeight = FontWeight.Bold)
         }
     }
 }

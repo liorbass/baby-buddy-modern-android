@@ -26,13 +26,13 @@ object AppShortcuts {
             emptyList()
         } else {
             listOfNotNull(
-                shortcut(context, "feed_left", "Feed left", "Start or switch to the left side", R.drawable.ic_widget_feed, "ACTIVE_NURSING_TIMER", FEED_LEFT)
+                shortcut(context, "feed_left", context.getString(R.string.shortcut_feed_left), context.getString(R.string.shortcut_feed_left_desc), R.drawable.ic_widget_feed, "ACTIVE_NURSING_TIMER", FEED_LEFT)
                     .takeIf { TrackedItem.BREASTFEEDING !in hidden },
-                shortcut(context, "feed_right", "Feed right", "Start or switch to the right side", R.drawable.ic_widget_feed, "ACTIVE_NURSING_TIMER", FEED_RIGHT)
+                shortcut(context, "feed_right", context.getString(R.string.shortcut_feed_right), context.getString(R.string.shortcut_feed_right_desc), R.drawable.ic_widget_feed, "ACTIVE_NURSING_TIMER", FEED_RIGHT)
                     .takeIf { TrackedItem.BREASTFEEDING !in hidden },
-                shortcut(context, "diaper", "Diaper", "Log a diaper change", R.drawable.ic_widget_diaper, "LOG_DIAPER", null)
+                shortcut(context, "diaper", context.getString(R.string.shortcut_diaper), context.getString(R.string.shortcut_diaper_desc), R.drawable.ic_widget_diaper, "LOG_DIAPER", null)
                     .takeIf { TrackedItem.DIAPERS !in hidden },
-                shortcut(context, "sleep", "Sleep now", "Start the sleep timer", R.drawable.ic_widget_sleep, "SLEEP", START_SLEEP)
+                shortcut(context, "sleep", context.getString(R.string.shortcut_sleep), context.getString(R.string.shortcut_sleep_desc), R.drawable.ic_widget_sleep, "SLEEP", START_SLEEP)
                     .takeIf { TrackedItem.SLEEP !in hidden }
             )
         }

@@ -10,6 +10,7 @@ import android.widget.RemoteViews
 import com.example.MainActivity
 import com.example.R
 import com.example.data.ml.RhythmTarget
+import com.example.data.model.AppText
 import com.example.data.model.TimeFormat
 import com.example.data.repository.BabyBuddyRepository
 
@@ -27,7 +28,7 @@ class BabyBuddySummaryWidget : AppWidgetProvider() {
         val feedText = "${feeds.size}"
         val wetCount = diapers.count { it.type.name.contains("WET") || it.type.name.contains("BOTH") }
         val dirtyCount = diapers.count { it.type.name.contains("DIRTY") || it.type.name.contains("BOTH") }
-        val diaperText = "$wetCount wet · $dirtyCount dirty"
+        val diaperText = context.getString(R.string.widget_wet_dirty, wetCount, dirtyCount)
         val nextText = nextUpText(repo.modelNextTimes.value)
 
         for (appWidgetId in appWidgetIds) {
@@ -63,14 +64,14 @@ class BabyBuddySummaryWidget : AppWidgetProvider() {
             if (next.isEmpty()) return ""
             val parts = next.entries.sortedBy { it.value }.map { (target, at) ->
                 val what = when (target) {
-                    RhythmTarget.FEED_GAP -> "feed"
-                    RhythmTarget.DIAPER_GAP -> "diaper"
-                    RhythmTarget.SLEEP_LENGTH -> "wake-up"
-                    RhythmTarget.AWAKE_WINDOW -> "nap"
+                    RhythmTarget.FEED_GAP -> R.string.next_up_feed
+                    RhythmTarget.DIAPER_GAP -> R.string.next_up_diaper
+                    RhythmTarget.SLEEP_LENGTH -> R.string.next_up_wake_up
+                    RhythmTarget.AWAKE_WINDOW -> R.string.next_up_nap
                 }
-                "$what ~${TimeFormat.clock(at)}"
+                AppText.get(R.string.next_up_item, AppText.get(what), TimeFormat.clock(at))
             }
-            return "Next: " + parts.joinToString(" · ")
+            return AppText.get(R.string.next_up_line, parts.joinToString(" · "))
         }
     }
 }

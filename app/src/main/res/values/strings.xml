@@ -9,4 +9,848 @@
     <string name="tile_sleep_name">Sleep</string>
     <string name="tile_diaper_name">Diaper</string>
     <string name="widget_summary_desc">Today\'s feeds and diapers at a glance.</string>
+
+    <!-- Shared formats -->
+    <string name="duration_hours_minutes">%1$dh %2$02dm</string>
+    <string name="duration_minutes">%dm</string>
+    <string name="percentile_below">&lt;%s</string>
+    <string name="percentile_above">&gt;%s</string>
+    <string name="yesterday_at">Yesterday %s</string>
+    <string name="date_at">%1$s, %2$s</string>
+
+    <!-- Tracked items (Settings) -->
+    <string name="item_breastfeeding">Breastfeeding</string>
+    <string name="item_breastfeeding_desc">Left/Right timer, last side, nursing stats</string>
+    <string name="item_bottle">Bottle feeds</string>
+    <string name="item_bottle_desc">Formula and breast-milk bottles</string>
+    <string name="item_diapers">Diapers</string>
+    <string name="item_diapers_desc">Changes, wet/dirty counts, diaper rhythm</string>
+    <string name="item_sleep">Sleep</string>
+    <string name="item_sleep_desc">Sleep timer, naps, awake time, sleep rhythm</string>
+    <string name="item_pumping">Pumping</string>
+    <string name="item_pumping_desc">Pump sessions and amounts</string>
+    <string name="item_milk_stash">Milk stash</string>
+    <string name="item_milk_stash_desc">Stored breast milk on Today</string>
+    <string name="item_tummy_time">Tummy time</string>
+    <string name="item_tummy_time_desc">Sessions and the daily goal card</string>
+    <string name="item_quick_notes">Quick notes</string>
+    <string name="item_quick_notes_desc">One-tap tagged notes on Today</string>
+    <string name="item_bath">Baths</string>
+    <string name="item_bath_desc">Bath log and time since the last bath</string>
+    <string name="item_growth">Growth</string>
+    <string name="item_growth_desc">Weight, length and head circumference, with WHO charts in Trends</string>
+
+    <!-- Settings choices -->
+    <string name="start_side_opposite">Opposite of the last feed</string>
+    <string name="start_side_opposite_desc">Alternate sides: start where the last feed didn\'t end</string>
+    <string name="start_side_same">Same as the last feed</string>
+    <string name="start_side_same_desc">Start on the side the last feed ended on</string>
+    <string name="start_side_left">Always left</string>
+    <string name="start_side_left_desc">Start every feed on the left</string>
+    <string name="start_side_right">Always right</string>
+    <string name="start_side_right_desc">Start every feed on the right</string>
+    <string name="theme_by_time">By time of day</string>
+    <string name="theme_by_time_desc">Dark from 20:00 to 07:00</string>
+    <string name="theme_system">Same as phone</string>
+    <string name="theme_system_desc">Follows the phone\'s dark theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_light_desc">Always light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_dark_desc">Always dark</string>
+    <string name="sex_boy">Boy</string>
+    <string name="sex_girl">Girl</string>
+
+    <!-- Today: quick actions, cards, tiles -->
+    <string name="action_feeding">Feeding</string>
+    <string name="action_diaper">Diaper</string>
+    <string name="action_pump">Pump</string>
+    <string name="action_tummy_time">Tummy time</string>
+    <string name="action_sleep">Sleep</string>
+    <string name="action_bath">Bath</string>
+    <string name="card_last_feed">Last feed</string>
+    <string name="card_last_diaper">Last diaper</string>
+    <string name="card_wake_windows">Wake windows</string>
+    <string name="card_tummy_time">Tummy time</string>
+    <string name="card_temperature">Temperature</string>
+    <string name="card_notes">Notes</string>
+    <string name="card_growth">Growth</string>
+    <string name="card_category_feeding">Feeding</string>
+    <string name="card_category_diapers">Diapers</string>
+    <string name="card_category_sleep">Sleep</string>
+    <string name="card_category_activity">Activity</string>
+    <string name="card_category_health">Health</string>
+    <string name="card_category_family">Family</string>
+    <string name="tile_feeds">Feeds</string>
+    <string name="tile_diapers">Diapers</string>
+    <string name="tile_sleep">Sleep</string>
+    <string name="tile_wake_window">Wake window</string>
+    <string name="tile_pumped">Pumped</string>
+    <string name="tile_milk_stash">Milk stash</string>
+    <string name="tile_tummy_time">Tummy time</string>
+    <string name="tile_last_bath">Last bath</string>
+    <string name="wake_part_awake_for">Awake for</string>
+    <string name="wake_part_nap_due">Nap due</string>
+    <string name="wake_part_today_stats">Today\'s average</string>
+    <string name="wake_part_window_bars">Each window</string>
+    <string name="growth_weight">Weight</string>
+    <string name="growth_length">Length</string>
+    <string name="growth_head">Head circumference</string>
+    <string name="growth_head_short">Head</string>
+
+    <!-- History filters, Log entries, rhythm models -->
+    <string name="history_filter_all">All</string>
+    <string name="history_filter_feeds">Feeds</string>
+    <string name="history_filter_diapers">Diapers</string>
+    <string name="history_filter_pumping">Pumping</string>
+    <string name="history_filter_tummy">Tummy time</string>
+    <string name="history_filter_sleep">Sleep</string>
+    <string name="history_filter_bath">Baths</string>
+    <string name="history_filter_growth">Growth</string>
+    <string name="history_filter_notes">Notes</string>
+    <string name="log_breastfeeding">Breastfeeding</string>
+    <string name="log_bottle">Bottle</string>
+    <string name="log_diaper">Diaper</string>
+    <string name="log_sleep">Sleep</string>
+    <string name="log_pumping">Pumping</string>
+    <string name="log_bath">Bath</string>
+    <string name="log_growth">Growth</string>
+    <string name="rhythm_feed_gap">Next feed</string>
+    <string name="rhythm_feed_gap_desc">Minutes from one feed\'s start to the next</string>
+    <string name="rhythm_diaper_gap">Next diaper</string>
+    <string name="rhythm_diaper_gap_desc">Minutes from one change to the next</string>
+    <string name="rhythm_awake_window">Next sleep</string>
+    <string name="rhythm_awake_window_desc">Minutes awake between sleeps</string>
+    <string name="rhythm_sleep_length">Wake-up</string>
+    <string name="rhythm_sleep_length_desc">How long a sleep lasts</string>
+
+    <!-- Common words -->
+    <string name="side_left">Left</string>
+    <string name="side_right">Right</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+
+    <!-- Launcher shortcuts and home-screen widgets -->
+    <string name="shortcut_feed_left">Feed left</string>
+    <string name="shortcut_feed_left_desc">Start or switch to the left side</string>
+    <string name="shortcut_feed_right">Feed right</string>
+    <string name="shortcut_feed_right_desc">Start or switch to the right side</string>
+    <string name="shortcut_diaper">Diaper</string>
+    <string name="shortcut_diaper_desc">Log a diaper change</string>
+    <string name="shortcut_sleep">Sleep now</string>
+    <string name="shortcut_sleep_desc">Start the sleep timer</string>
+    <string name="widget_last_fed">Last fed %s</string>
+    <string name="widget_no_feeds_today">No feeds yet today</string>
+    <string name="widget_wet_dirty">%1$d wet · %2$d dirty</string>
+    <string name="next_up_feed">feed</string>
+    <string name="next_up_diaper">diaper</string>
+    <string name="next_up_wake_up">wake-up</string>
+    <string name="next_up_nap">nap</string>
+    <string name="next_up_item">%1$s ~%2$s</string>
+    <string name="next_up_line">Next: %s</string>
+    <string name="widget_last_side">Last: %s</string>
+    <string name="widget_paused_side">Paused · %s</string>
+    <string name="widget_on_side_started">On %1$s · started %2$s</string>
+    <string name="widget_last_ended_on">Last ended on %1$s · %2$s</string>
+    <string name="widget_tap_start">Tap Start to begin</string>
+    <string name="widget_start_side">Start %s</string>
+
+    <!-- Common words -->
+    <string name="end">End</string>
+    <string name="sleeping">Sleeping</string>
+    <string name="since_time">Since %s</string>
+    <string name="woke_up">Woke up</string>
+    <string name="sleep_saved">Sleep saved</string>
+    <string name="feed_paused">Feed paused</string>
+
+    <!-- Notifications, Quick Settings tiles, reminders -->
+    <string name="channel_feed_timer">Breastfeeding timer</string>
+    <string name="channel_next_up">What\'s next</string>
+    <string name="channel_sleep_timer">Sleep timer</string>
+    <string name="channel_reminders">Reminders</string>
+    <string name="feeding_left_side">Feeding · Left side</string>
+    <string name="feeding_right_side">Feeding · Right side</string>
+    <string name="pause_left">Pause left</string>
+    <string name="pause_right">Pause right</string>
+    <string name="feed_started_suffix">" · started %s"</string>
+    <string name="left_short_time">L %s</string>
+    <string name="right_short_time">R %s</string>
+    <string name="feed_paused_text">Total %1$s · L %2$s · R %3$s</string>
+    <string name="next_up_title_feed">Feed</string>
+    <string name="next_up_title_diaper">Diaper</string>
+    <string name="next_up_title_wake_up">Wake-up</string>
+    <string name="next_up_title_nap">Nap</string>
+    <string name="reminder_feed_due_in">Feed due in %s</string>
+    <string name="reminder_feed_due">Feed due</string>
+    <string name="reminder_feed_text">Last feed started %1$s ago, at %2$s</string>
+    <string name="reminder_diaper_due_in">Diaper change due in %s</string>
+    <string name="reminder_diaper_due">Diaper change due</string>
+    <string name="reminder_diaper_text">Last change %1$s ago, at %2$s</string>
+    <string name="reminder_wake_up_in">Wake-up time in %s</string>
+    <string name="reminder_asleep_for">Asleep for %s</string>
+    <string name="reminder_fell_asleep_at">Fell asleep at %s</string>
+    <string name="reminder_nap_in">Nap time in %s</string>
+    <string name="reminder_awake_for">Awake for %s</string>
+    <string name="reminder_woke_up_at">Woke up at %s</string>
+    <string name="reminder_woke_up_at_nap">Woke up at %s. Time for a nap?</string>
+    <string name="tile_open_app">Open the app</string>
+    <string name="tile_tap_to_resume">Tap to resume</string>
+    <string name="tile_feeding">Feeding</string>
+    <string name="tile_side_tap_to_pause">%s · tap to pause</string>
+    <string name="tile_since_tap_when_awake">Since %s · tap when awake</string>
+    <string name="tile_tap_when_asleep">Tap when asleep</string>
+    <string name="tile_log_a_change">Log a change</string>
+    <string name="timer_paused">Timer paused</string>
+    <string name="timer_running">Timer running</string>
+    <string name="switched_to_left">Switched to Left Side</string>
+    <string name="switched_to_right">Switched to Right Side</string>
+    <string name="tummy_time_logged_5">Tummy time logged: 5 min</string>
+    <string name="widget_added">Widget added</string>
+
+    <!-- Home-screen widget layouts -->
+    <string name="widget_summary_today">Today</string>
+    <string name="widget_summary_feeds">FEEDS</string>
+    <string name="widget_summary_diapers">DIAPERS</string>
+    <string name="widget_quick_feed">Feed</string>
+    <string name="widget_quick_diaper">Diaper</string>
+    <string name="widget_quick_tummy">Tummy</string>
+    <string name="widget_quick_tummy_desc">Tummy Time</string>
+    <string name="widget_timer_title">Breastfeeding</string>
+    <string name="widget_switch_side">Switch Side</string>
+    <string name="widget_pause_play">Pause/Play</string>
+    <string name="saved_to_offline_queue">Activity saved to local offline queue</string>
+
+    <!-- Toasts and status messages (view model) -->
+    <string name="error_load_history">Couldn\'t load history</string>
+    <string name="error_load_trends">Couldn\'t load trends</string>
+    <string name="error_load_entries">Couldn\'t load entries</string>
+    <plurals name="models_loading_days">
+        <item quantity="one">Loading %d day of entries</item>
+        <item quantity="other">Loading %d days of entries</item>
+    </plurals>
+    <string name="models_fitting">Fitting %s</string>
+    <string name="models_now_estimated_by">%1$s: now estimated by %2$s</string>
+    <string name="models_all_reset">All rhythms back to the default estimate</string>
+    <string name="models_reset">%s: back to the default estimate</string>
+    <string name="toast_bottle_logged_formula">Bottle logged: %d ml formula</string>
+    <string name="toast_bottle_logged_breast_milk">Bottle logged: %d ml breast milk</string>
+    <string name="toast_pumping_logged">Pumping logged: %d ml</string>
+    <string name="toast_pumping_updated">Pumping updated</string>
+    <string name="toast_pumping_deleted">Pumping deleted</string>
+    <string name="toast_feeding_updated">Feeding updated</string>
+    <string name="toast_feeding_deleted">Feeding deleted</string>
+    <string name="toast_diaper_updated">Diaper change updated</string>
+    <string name="toast_tummy_updated">Tummy time updated</string>
+    <string name="toast_tummy_deleted">Tummy time deleted</string>
+    <string name="toast_diaper_deleted">Diaper change deleted</string>
+    <string name="toast_undone">Undone</string>
+    <string name="toast_left_side_set">Left side set to %1$02d:%2$02d</string>
+    <string name="toast_right_side_set">Right side set to %1$02d:%2$02d</string>
+    <string name="toast_feed_start_set">Feed start set to %s</string>
+    <string name="toast_sleep_started">Sleep started</string>
+    <string name="toast_nap_saved">Nap saved: %s</string>
+    <string name="toast_sleep_saved">Sleep saved: %s</string>
+    <string name="toast_sleep_discarded">Sleep timer discarded</string>
+    <string name="toast_nap_logged">Nap logged: %s</string>
+    <string name="toast_sleep_logged">Sleep logged: %s</string>
+    <string name="toast_sleep_updated">Sleep updated</string>
+    <string name="toast_sleep_deleted">Sleep deleted</string>
+    <string name="toast_feed_ended">Feed ended</string>
+    <string name="toast_chime_on">Soft Chime: On</string>
+    <string name="toast_chime_muted">Soft Chime: Muted</string>
+    <string name="toast_feeding_saved">Feeding saved</string>
+    <string name="toast_diaper_saved_start_timer">Diaper saved! Starting nursing timer...</string>
+    <string name="toast_diaper_saved">Diaper saved</string>
+    <string name="toast_bottle_logged">Bottle logged</string>
+    <string name="toast_quick_pee">Pee diaper logged</string>
+    <string name="toast_quick_wet">Wet diaper logged</string>
+    <string name="toast_quick_poop">Poop diaper logged</string>
+    <string name="toast_quick_dirty">Dirty diaper logged</string>
+    <string name="toast_quick_both">Both diaper logged</string>
+    <string name="toast_connecting">Connecting to Baby Buddy...</string>
+    <string name="toast_connected">Connected successfully!</string>
+    <string name="toast_connection_failed">Connection failed: %s</string>
+    <string name="toast_logged_out">Logged out</string>
+    <string name="toast_demo_mode">Demo mode active with sample data</string>
+    <string name="toast_simulating_disconnected">Simulating disconnected state</string>
+    <string name="toast_server_connected">Server connected</string>
+    <string name="toast_card_added">%s added to Today</string>
+    <string name="toast_card_removed">%s removed from Today</string>
+    <string name="toast_card_removed_short">Removed %s</string>
+    <string name="toast_tummy_logged">Tummy time logged: %d min</string>
+    <string name="toast_temperature_logged">Temperature logged: %.1f°</string>
+    <string name="toast_growth_logged">Growth logged: %s</string>
+    <string name="toast_growth_updated">%s updated</string>
+    <string name="toast_growth_deleted">%s deleted</string>
+    <string name="toast_bath_logged">Bath logged</string>
+    <string name="toast_bath_updated">Bath updated</string>
+    <string name="toast_note_updated">Note updated</string>
+    <string name="toast_bath_deleted">Bath deleted</string>
+    <string name="toast_note_deleted">Note deleted</string>
+    <string name="toast_note_added">Note added</string>
+    <string name="toast_tagged_note_logged">%s logged</string>
+    <string name="toast_milk_stash_set">Milk stash set to %d ml</string>
+    <string name="toast_requesting_widget">Requesting to add widget to Home Screen...</string>
+    <string name="toast_widget_added_hint">Widget added! You can also long-press your home screen to add.</string>
+
+    <!-- Connection, sync and repository messages -->
+    <string name="connected_as">Connected as %s</string>
+    <string name="error_blocked_by_cloudflare">HTTP %d: blocked by Cloudflare. Add a Cloudflare Access service token.</string>
+    <string name="error_check_token">HTTP %d: check the API token</string>
+    <string name="error_check_token_and_cloudflare">HTTP %d: check the API token and Cloudflare Access token</string>
+    <string name="error_web_page_not_api">The server sent a web page instead of the API. If it\'s behind Cloudflare Access, add a service token.</string>
+    <string name="error_certificate_not_trusted">The server\'s certificate isn\'t trusted. If it\'s self-signed, turn on Allow self-signed certificates.</string>
+    <string name="error_connect_for_history">Connect to your Baby Buddy server to see history</string>
+    <string name="error_connect_for_trends">Connect to your Baby Buddy server to see trends</string>
+    <string name="error_not_connected">Not connected</string>
+    <string name="profile_my_baby">My Baby</string>
+    <string name="profile_baby">Baby</string>
+    <string name="profile_newborn">Newborn</string>
+    <plurals name="sync_discarded">
+        <item quantity="one">Discarded %d entry not yet saved to the server</item>
+        <item quantity="other">Discarded %d entries not yet saved to the server</item>
+    </plurals>
+    <string name="sync_proxy_rejected">A proxy in front of the server rejected %s, will retry</string>
+    <string name="sync_unreachable">Couldn\'t reach server, will keep retrying</string>
+    <plurals name="sync_token_rejected">
+        <item quantity="one">Server rejected the API token. Reconnect in Settings to send %d unsaved entry</item>
+        <item quantity="other">Server rejected the API token. Reconnect in Settings to send %d unsaved entries</item>
+    </plurals>
+    <string name="sync_could_not_save">Couldn\'t save %1$s: %2$s</string>
+    <string name="sync_server_rejected">Server rejected %1$s (HTTP %2$d) %3$s</string>
+    <string name="write_feeding">feeding</string>
+    <string name="write_diaper_change">diaper change</string>
+    <string name="write_pumping">pumping</string>
+    <string name="write_temperature">temperature</string>
+    <string name="write_note">note</string>
+    <string name="write_sleep">sleep</string>
+    <string name="write_tummy_time">tummy time</string>
+    <string name="write_edit">%s edit</string>
+    <string name="write_delete">%s delete</string>
+    <string name="age_days">%dd</string>
+    <string name="age_months_days">%1$dm %2$dd</string>
+    <string name="demo_mode">Demo mode</string>
+    <string name="synced_just_now">Synced just now</string>
+    <string name="synced_at">Synced %s</string>
+    <string name="connecting">Connecting…</string>
+    <string name="card_last_feed_desc">Time since, side</string>
+    <string name="card_last_diaper_desc">Time since, type</string>
+    <string name="card_wake_windows_desc">Awake for, today\'s windows</string>
+    <string name="card_tummy_time_desc">Daily goal</string>
+    <string name="card_temperature_desc">Readings</string>
+    <string name="card_notes_desc">Shared notes</string>
+    <string name="card_growth_desc">Weight, length, head</string>
+
+    <!-- Common words -->
+    <string name="undo">Undo</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="back">Back</string>
+    <string name="started">Started</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="tomorrow">Tomorrow</string>
+
+    <!-- Top bar, navigation, feed controls, pickers -->
+    <string name="status_offline">Offline</string>
+    <string name="status_demo">Demo</string>
+    <string name="status_unsent">%d unsent</string>
+    <string name="status_synced">Synced</string>
+    <string name="nav_today">Today</string>
+    <string name="nav_trends">Trends</string>
+    <string name="nav_log">Log</string>
+    <string name="nav_log_desc">Quick Log Action</string>
+    <string name="nav_history">History</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_login">Login</string>
+    <string name="feed_tap_side_to_start">Tap a side to start</string>
+    <string name="feed_paused_tap_side">Paused · tap a side to continue</string>
+    <string name="feed_feeding_on">Feeding on %s</string>
+    <string name="feed_since_previous">%1$s since the previous feed (%2$s)</string>
+    <string name="feed_start_note">Time added or removed goes to the side you started on.</string>
+    <string name="edit_side">Edit %s</string>
+    <string name="end_feed">End feed</string>
+    <string name="last_side">Last side</string>
+    <string name="type_instead">Type instead</string>
+    <string name="use_wheel">Use wheel</string>
+    <string name="earlier_today">Earlier today</string>
+    <string name="feed_left_right_minutes">L %1$dm · R %2$dm</string>
+
+    <!-- Common words -->
+    <string name="notes">Notes</string>
+    <string name="fell_asleep">Fell asleep</string>
+    <string name="tap_again_to_discard">Tap again to discard</string>
+
+    <!-- Sleep screen -->
+    <string name="sleep_duration_nap">%s · Nap</string>
+    <string name="sleep_duration_night">%s · Night</string>
+    <string name="sleep_start_timer">Start sleep timer</string>
+    <string name="sleep_asleep_since">Asleep since %s</string>
+    <string name="sleep_woke_up_save">Woke up · save</string>
+    <string name="sleep_discard_timer">Discard timer</string>
+    <string name="sleep_log_past">Log a past sleep</string>
+    <string name="sleep_slept">Slept %s</string>
+    <string name="sleep_save">Save sleep</string>
+
+    <!-- Common words -->
+    <string name="close">Close</string>
+    <string name="open">Open</string>
+    <string name="note_optional">Note (optional)</string>
+
+    <!-- Log screen -->
+    <string name="log_nothing">Nothing to log here. Turn items back on in Settings → Tracked items.</string>
+    <string name="log_feed_paused">Paused · %s</string>
+    <string name="log_feed_running">Running · %s</string>
+    <string name="log_feed_subtitle">Left / right timer</string>
+    <string name="log_bottle_subtitle">Breast milk or formula</string>
+    <string name="log_diaper_subtitle">Wet, dirty, both or dry</string>
+    <string name="log_sleep_subtitle">Timer or a past sleep</string>
+    <string name="log_pumping_subtitle">Amount and duration</string>
+    <string name="log_bath_subtitle">Time and note</string>
+    <string name="log_last_weight">Last weight: %s</string>
+
+    <!-- Diaper values (stored in English, shown translated) -->
+    <string name="diaper_amount_light">Light</string>
+    <string name="diaper_amount_medium">Medium</string>
+    <string name="diaper_amount_heavy">Heavy</string>
+    <string name="diaper_consistency_loose_long">Loose / Liquid</string>
+    <string name="diaper_consistency_seedy_long">Seedy / Mustard</string>
+    <string name="diaper_consistency_paste_long">Paste / Normal</string>
+    <string name="diaper_consistency_hard_long">Hard / Dry</string>
+    <string name="diaper_consistency_loose">Loose</string>
+    <string name="diaper_consistency_seedy">Seedy</string>
+    <string name="diaper_consistency_paste">Paste</string>
+    <string name="diaper_consistency_hard">Hard</string>
+    <string name="diaper_consistency_soft">Soft</string>
+    <string name="diaper_color_mustard">Mustard</string>
+    <string name="diaper_color_brown">Tan/Brown</string>
+    <string name="diaper_color_greenish">Greenish</string>
+    <string name="diaper_color_dark">Dark</string>
+    <string name="diaper_cream_barrier_long">Aquaphor / Barrier</string>
+    <string name="diaper_cream_zinc_long">Zinc Oxide Cream</string>
+    <string name="diaper_cream_powder_long">Baby Powder</string>
+    <string name="diaper_cream_barrier">Barrier</string>
+    <string name="diaper_cream_zinc">Zinc</string>
+    <string name="diaper_cream_powder">Powder</string>
+
+    <!-- Common words -->
+    <string name="save">Save</string>
+    <string name="time">Time</string>
+    <string name="now_at">Now · %s</string>
+    <string name="more_details">More details</string>
+    <string name="hide_details">Hide details</string>
+    <string name="show_details">Show details</string>
+
+    <!-- Diaper form -->
+    <string name="diaper_change">Diaper change</string>
+    <string name="diaper_wet">Wet</string>
+    <string name="diaper_dirty">Dirty</string>
+    <string name="diaper_both">Both</string>
+    <string name="diaper_dry">Dry</string>
+    <string name="diaper_amount">Amount</string>
+    <string name="diaper_consistency_optional">Consistency (optional)</string>
+    <string name="diaper_color">Color</string>
+    <string name="diaper_rash">Rash</string>
+    <string name="diaper_cream">Cream</string>
+    <string name="diaper_save_start_feed">Save &amp; start feed</string>
+
+    <!-- Common words -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="reset">Reset</string>
+    <string name="reset_all">Reset all</string>
+    <string name="in_duration">In %s</string>
+    <string name="duration_ago">%s ago</string>
+    <plurals name="days_count">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+
+    <!-- Trends: rhythm models tab -->
+    <string name="models_intro">Each rhythm gets its own model, chosen automatically: linear regression, boosted trees, a small neural net, nearest neighbours and the recent median by time of day are each tried with several settings and scored, next to the app\'s default estimate, on how well they predicted your latest entries. Save one to have it estimate reminders, Today and the widget; once a time passes, Today re-estimates it from how late the model has been before. Everything runs on this phone.</string>
+    <string name="models_train_on">Train on</string>
+    <string name="models_custom_range">Custom…</string>
+    <string name="models_fit_again">Fit again</string>
+    <string name="models_fit">Fit models</string>
+    <string name="models_pick_history">Pick how much history to learn from and tap Fit models. It takes a few seconds.</string>
+    <string name="models_fitted_on">Fitted on %1$s – %2$s at %3$s</string>
+    <string name="models_in_use_title">Estimates in use</string>
+    <string name="models_default_estimate">Default estimate</string>
+    <string name="models_saved_summary">%1$s (%2$s) · ±%3$s · fitted %4$s</string>
+    <plurals name="models_examples">
+        <item quantity="one">%d example</item>
+        <item quantity="other">%d examples</item>
+    </plurals>
+    <string name="models_not_enough">Not enough entries yet: %1$d of the %2$d needed. Try a longer range.</string>
+    <string name="models_best">Best: %1$s (%2$s), typically off by %3$s.</string>
+    <string name="models_default_off_better">The default estimate (%1$s) is off by %2$s: %3$d%% better.</string>
+    <string name="models_default_off_same">The default estimate (%1$s) is off by %2$s, so the default is as good here.</string>
+    <string name="models_tried">Models tried (typical error)</string>
+    <string name="models_in_use_now">In use now: %1$s, ±%2$s (fitted %3$s). This fit\'s %4$s: ±%5$s.</string>
+    <string name="models_in_use">In use</string>
+    <string name="models_save_version">Save this version</string>
+    <string name="models_use">Use %s</string>
+    <string name="models_reset_default">Reset to default</string>
+    <string name="models_what_matters">What matters most (%s)</string>
+    <string name="models_importance_note">How much worse the predictions get when that input is scrambled.</string>
+    <string name="models_actual_vs_predicted">Latest entries: actual vs predicted</string>
+    <string name="models_actual">Actual</string>
+    <string name="models_predicted">Predicted</string>
+    <string name="models_next_feed_around">Next feed around %s</string>
+    <string name="models_next_change_around">Next change around %s</string>
+    <string name="models_wake_up_around">Wake-up around %s</string>
+    <string name="models_ready_to_sleep_around">Ready to sleep around %s</string>
+
+    <!-- Common words -->
+    <string name="nap">Nap</string>
+    <string name="note">Note</string>
+    <string name="amount_ml">%d ml</string>
+    <string name="amount_minutes">%d min</string>
+    <string name="previous_week">Previous week</string>
+    <string name="next_week">Next week</string>
+    <string name="last_7_days">Last 7 days</string>
+    <plurals name="feeds_count">
+        <item quantity="one">%d feed</item>
+        <item quantity="other">%d feeds</item>
+    </plurals>
+    <plurals name="diapers_count">
+        <item quantity="one">%d diaper</item>
+        <item quantity="other">%d diapers</item>
+    </plurals>
+    <plurals name="baths_count">
+        <item quantity="one">%d bath</item>
+        <item quantity="other">%d baths</item>
+    </plurals>
+    <plurals name="measurements_count">
+        <item quantity="one">%d measurement</item>
+        <item quantity="other">%d measurements</item>
+    </plurals>
+    <plurals name="notes_count">
+        <item quantity="one">%d note</item>
+        <item quantity="other">%d notes</item>
+    </plurals>
+
+    <!-- History list -->
+    <string name="history_amount">Amount: %s</string>
+    <string name="history_ml_formula">%d ml formula</string>
+    <string name="history_ml_breast_milk">%d ml breast milk</string>
+    <string name="history_minutes_sides">%1$d min · %2$s</string>
+    <string name="history_ml_minutes">%1$d ml · %2$d min</string>
+    <string name="history_sleep_until">%1$s · until %2$s</string>
+    <string name="history_min_nursing">%d min nursing</string>
+    <string name="history_ml_bottle">%d ml bottle</string>
+    <string name="history_asleep">%s asleep</string>
+    <string name="history_empty_all">Nothing logged these 7 days.</string>
+    <string name="history_empty_growth">No growth measurements yet.</string>
+    <string name="history_empty_filter">No %s logged these 7 days.</string>
+
+    <!-- Common words -->
+    <string name="add">Add</string>
+
+    <!-- Today cards -->
+    <string name="cards_remove">Remove card</string>
+    <string name="cards_tummy_progress">%1$d of %2$d min</string>
+    <string name="cards_plus_minutes">+%d min</string>
+    <string name="cards_no_readings">No readings today</string>
+    <string name="cards_no_measurements">No measurements yet</string>
+    <string name="cards_percentile">%s percentile</string>
+    <string name="cards_choose_sex">Choose boy or girl in Settings → You to see WHO percentiles.</string>
+    <string name="cards_log_growth">Log growth</string>
+    <string name="cards_no_notes">No notes yet</string>
+    <string name="cards_add_note">Add a note</string>
+    <string name="cards_asleep_for">Asleep for</string>
+    <string name="cards_since_awake_before">since %1$s · awake %2$s before</string>
+    <string name="cards_since">since %s</string>
+    <string name="cards_no_sleep">No sleep logged yet</string>
+    <string name="cards_nap_due_in">Nap due ~%1$s · in %2$s</string>
+    <string name="cards_nap_due_over">Nap due ~%1$s · %2$s over</string>
+    <string name="cards_wake_today_stats">Today: %1$d · average %2$s · longest %3$s</string>
+
+    <!-- Common words -->
+    <string name="off">Off</string>
+
+    <!-- Login and certificate -->
+    <string name="cert_changed_title">Server certificate changed</string>
+    <string name="cert_trust_title">Trust this certificate?</string>
+    <string name="cert_changed_text">The server\'s certificate isn\'t the one you trusted before. That\'s expected if you renewed it; otherwise someone may be intercepting the connection.</string>
+    <string name="cert_unknown_text">The server\'s certificate isn\'t signed by a known authority. Check that this SHA-256 fingerprint matches your server\'s certificate before trusting it.</string>
+    <string name="cert_trust">Trust</string>
+    <string name="login_server_url">Server URL</string>
+    <string name="login_api_token">API token</string>
+    <string name="login_hide_token">Hide token</string>
+    <string name="login_show_token">Show token</string>
+    <string name="login_token_hint">Find it in Baby Buddy under your user settings → API key.</string>
+    <string name="login_self_signed">Allow self-signed certificates</string>
+    <string name="login_self_signed_desc">You confirm the server\'s certificate once; only that one is trusted</string>
+    <string name="login_cloudflare">Behind Cloudflare Access</string>
+    <string name="login_cloudflare_desc">Sends a service token so the app skips the Cloudflare login</string>
+    <string name="login_hide_secret">Hide secret</string>
+    <string name="login_show_secret">Show secret</string>
+    <string name="login_cloudflare_hint">Create one in Cloudflare Zero Trust → Access → Service Auth, and add a Service Auth policy to the app.</string>
+    <string name="login_enter_url_token">Enter a server URL and API token</string>
+    <string name="login_enter_cloudflare">Enter both the Cloudflare client ID and secret</string>
+    <string name="login_reconnect">Reconnect</string>
+    <string name="login_connect">Connect</string>
+    <string name="login_try_demo">Try Demo Mode with Sample Data</string>
+    <string name="login_intro">Connect to your Baby Buddy server to start.</string>
+    <string name="login_no_server">No server yet? Try the demo with sample data →</string>
+    <string name="login_what_is_open">What is Baby Buddy? ▴</string>
+    <string name="login_what_is_closed">What is Baby Buddy? ▾</string>
+    <string name="login_what_is_text">Baby Buddy is a free, open-source web app for tracking a baby\'s feeds, sleep, diapers and growth. You host it yourself (on a home server, NAS or cloud machine), so your data stays with you.</string>
+    <string name="login_what_is_companion">This app is an unofficial phone companion for it: it connects to your Baby Buddy server and keeps everything there, so the whole family shares the same log.</string>
+    <string name="login_set_up_server">Set up a server: Baby Buddy on GitHub →</string>
+
+    <!-- Settings -->
+    <string name="settings_open_section">Open %s</string>
+    <string name="settings_no_browser">No browser to open %s</string>
+    <string name="settings_connection">Server connection</string>
+    <string name="settings_you">You</string>
+    <string name="settings_tracked">Tracked items</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_about">About</string>
+    <string name="settings_connected_to">Connected · %s</string>
+    <string name="settings_disconnect">Disconnect</string>
+    <string name="settings_add_your_name">Add your name</string>
+    <string name="settings_your_name">Your name</string>
+    <string name="settings_your_name_desc">Added to everything you log, so others see who logged it</string>
+    <string name="settings_growth_charts">Growth charts</string>
+    <string name="settings_growth_charts_desc">The WHO publishes separate charts for boys and girls. Used only for the growth percentiles on this phone.</string>
+    <string name="settings_start_side">Breastfeed start side</string>
+    <string name="settings_start_side_desc">Which side the timer widget and the Quick Settings tile start on. In the app you pick the side yourself.</string>
+    <string name="settings_tracking_everything">Tracking everything</string>
+    <string name="settings_hidden">Hidden: %s</string>
+    <string name="settings_tracked_desc">Turn off what you don\'t track. It\'s hidden from Today, quick actions, History, Trends and reminders on this phone; nothing is deleted from the server.</string>
+    <string name="settings_appearance_24h">%s · 24-hour clock</string>
+    <string name="settings_appearance_12h">%s · 12-hour clock</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_24h">24-hour clock</string>
+    <string name="settings_24h_on">Times show as 19:06</string>
+    <string name="settings_24h_off">Times show as 7:06 PM</string>
+    <string name="settings_models_tab">Models tab in Trends</string>
+    <string name="settings_models_tab_desc">Fits a model to each rhythm on this phone and predicts the next feed, change, nap and wake-up</string>
+    <string name="settings_summary_lock_screen">Lock-screen timers</string>
+    <string name="settings_summary_next_up">what\'s next</string>
+    <string name="settings_summary_feed">feed reminder</string>
+    <string name="settings_summary_awake">awake reminder</string>
+    <string name="settings_summary_sleep">sleep reminder</string>
+    <string name="settings_summary_diaper">diaper reminder</string>
+    <string name="settings_lock_screen_timers">Timers on lock screen</string>
+    <string name="settings_lock_screen_timers_desc">Feed Left/Right/End buttons and the sleep timer while they run</string>
+    <string name="settings_next_up">What\'s next on lock screen</string>
+    <string name="settings_next_up_desc">A silent notification with the next feed, diaper change and nap (from the reminders or a saved model) while no timer runs</string>
+    <string name="settings_model_timed">When the model saved in Trends → Models expects it; the time below is the fallback</string>
+    <string name="settings_remind_after">Remind after</string>
+    <string name="settings_feed_reminder">Feed reminder</string>
+    <string name="settings_feed_reminder_on">When %s have passed since the last feed started</string>
+    <string name="settings_feed_reminder_off">Notify when the next feed is due</string>
+    <string name="settings_feed_reminder_note">Time since the last feed started (hh:mm)</string>
+    <string name="settings_awake_reminder">Awake reminder</string>
+    <string name="settings_awake_reminder_on">When the baby has been awake %s</string>
+    <string name="settings_awake_reminder_off">Notify when it\'s been a while since the last sleep</string>
+    <string name="settings_awake_reminder_note">Time awake since the last sleep ended (hh:mm)</string>
+    <string name="settings_sleep_reminder">Sleep reminder</string>
+    <string name="settings_sleep_reminder_on">When a timed sleep has lasted %s</string>
+    <string name="settings_sleep_reminder_off">Notify when the baby has been asleep a long time</string>
+    <string name="settings_sleep_reminder_note">Time asleep, counted from the start of the sleep timer (hh:mm)</string>
+    <string name="settings_diaper_reminder">Diaper reminder</string>
+    <string name="settings_diaper_reminder_on">When %s have passed since the last change</string>
+    <string name="settings_diaper_reminder_off">Notify when the next diaper change is due</string>
+    <string name="settings_diaper_reminder_note">Time since the last diaper change (hh:mm)</string>
+    <string name="settings_heads_up">Heads-up before</string>
+    <string name="settings_heads_up_on">Also notify %s before each reminder is due</string>
+    <string name="settings_heads_up_off">Only when a reminder is due</string>
+    <string name="settings_reminders_note">Reminders check the server first, so a feed, change or sleep logged on another phone counts.</string>
+    <string name="about_summary">Version %1$s · built %2$s</string>
+    <string name="about_version">Version</string>
+    <string name="about_build">Build</string>
+    <string name="about_git">Git tag / commit</string>
+    <string name="about_build_date">Build date</string>
+    <string name="about_app_id">App ID</string>
+    <string name="about_source">Source code, issues and releases on GitHub →</string>
+    <string name="about_server">Baby Buddy, the server this app works with →</string>
+
+    <!-- Customize Today -->
+    <string name="customize_title">Customize Today</string>
+    <string name="customize_subtitle">Cards and home-screen widgets</string>
+    <string name="customize_tab_cards">Dashboard Cards</string>
+    <string name="customize_active">%d active</string>
+    <string name="customize_tab_home">Phone Home Screen</string>
+    <string name="customize_cards_hint">Turn cards on or off for your Today view.</string>
+    <string name="customize_summary_tiles">Summary tiles</string>
+    <string name="customize_summary_tiles_desc">The \"Today\" grid of totals. Items you don\'t track stay hidden.</string>
+    <string name="customize_show">Show</string>
+    <string name="customize_added">Added</string>
+    <string name="customize_home_title">📱 Android Home Screen Widgets</string>
+    <string name="customize_home_desc">Add these widgets directly to your phone\'s home screen for rapid 1-tap logging and live timer controls without opening the app.</string>
+    <string name="customize_quick_title">1-Tap Quick Logger Widget</string>
+    <string name="customize_quick_size">4 × 1 Standard</string>
+    <string name="customize_quick_desc">Feed, Diaper and Tummy time buttons.</string>
+    <string name="customize_preview_baby">Baby Leo • 3m 12d</string>
+    <string name="customize_preview_last_fed">Last fed 45m ago</string>
+    <string name="customize_timer_title">Live Active Nursing Timer Widget</string>
+    <string name="customize_timer_size">4 × 2 Full Controls</string>
+    <string name="customize_timer_desc">Real-time stopwatch with Left/Right breakdown and Pause/Switch buttons.</string>
+    <string name="customize_preview_timer">🤱 LIVE NURSING TIMER</string>
+    <string name="customize_preview_right_active">Right Breast Active</string>
+    <string name="customize_summary_title">Today At-a-Glance Summary Widget</string>
+    <string name="customize_tip_title">💡 Manual Installation Tip</string>
+    <string name="customize_tip_text">If your launcher doesn\'t support 1-tap pinning, touch &amp; hold any empty spot on your Android home screen, tap \'Widgets\', scroll to \'Baby Buddy\', and drag it into position.</string>
+    <string name="customize_add_to_home">Add to Android Home Screen</string>
+    <string name="card_last_feed_long">When the last feed started, how long ago, and the last side.</string>
+    <string name="card_last_diaper_long">When the last diaper change was, how long ago, and its type.</string>
+    <string name="card_wake_windows_long">How long the baby has been awake, when the next nap is due, and today\'s wake windows.</string>
+    <string name="card_tummy_time_long">Log tummy time towards a daily goal.</string>
+    <string name="card_temperature_long">Log and see temperature readings.</string>
+    <string name="card_notes_long">Shared notes like baths and routines.</string>
+    <string name="card_growth_long">Latest weight, length and head size with WHO percentiles.</string>
+
+    <!-- History calendar -->
+    <string name="retry">Retry</string>
+    <string name="history_show_list">Show list</string>
+    <string name="history_show_calendar">Show calendar</string>
+    <string name="history_legend_nursing">Nursing</string>
+
+    <!-- Common words -->
+    <string name="date">Date</string>
+    <string name="duration">Duration</string>
+    <string name="delete">Delete</string>
+    <string name="tap_again_to_delete">Tap again to delete</string>
+
+    <!-- Entry dialogs -->
+    <string name="dialog_growth_last">Last: %1$s on %2$s</string>
+    <string name="dialog_edit_named">Edit %s</string>
+    <string name="dialog_logged_by">Logged by %s</string>
+    <string name="dialog_edit_bath">Edit bath</string>
+    <string name="dialog_edit_note">Edit note</string>
+    <string name="dialog_side_title">%s side</string>
+    <string name="dialog_side_note">Set how long this side has been fed. The timer keeps counting from here.</string>
+    <string name="dialog_milk_stash_note">How much pumped milk is stored now? Pumping adds to it and breast-milk bottles take from it. Shared with every phone.</string>
+    <string name="dialog_stored_milk">Stored milk</string>
+    <string name="dialog_note_placeholder">e.g. Vitamin D, bath, fussy evening</string>
+    <string name="dialog_tags">Tags</string>
+    <string name="dialog_night_sleep">Night sleep</string>
+    <string name="dialog_edit_sleep">Edit sleep</string>
+    <string name="dialog_minutes">Minutes</string>
+    <string name="dialog_quick_actions">Quick actions</string>
+    <string name="dialog_quick_actions_note">Pick the buttons at the top of Today and their order.</string>
+    <string name="dialog_move_up">Move %s up</string>
+    <string name="dialog_move_down">Move %s down</string>
+    <string name="dialog_edit_feeding">Edit feeding</string>
+    <string name="dialog_edit_diaper">Edit diaper</string>
+    <string name="dialog_skin_care">Skin care</string>
+    <string name="dialog_edit_tummy">Edit tummy time</string>
+    <string name="dialog_edit_pumping">Edit pumping</string>
+    <string name="dialog_breast_milk">Breast milk</string>
+    <string name="dialog_formula">Formula</string>
+    <string name="dialog_change_label">Change %s</string>
+
+    <!-- Shared formats -->
+    <string name="duration_hours">%dh</string>
+    <string name="duration_hours_minutes_short">%1$dh %2$dm</string>
+
+    <!-- Trends charts -->
+    <string name="trends_charts">Charts</string>
+    <string name="trends_models">Models</string>
+    <string name="trends_no_data">No data for this period.</string>
+    <string name="trends_server_settings">Server settings</string>
+    <string name="trends_feeding_rhythm">Feeding rhythm</string>
+    <string name="trends_no_feeds">No feeds logged in this period.</string>
+    <string name="trends_longest_gap">Longest gap</string>
+    <string name="trends_longest_week">Longest stretch: %s on average this week</string>
+    <string name="trends_longest_month">Longest stretch: %s on average this month</string>
+    <string name="trends_up_week">, up %s from the start of the week</string>
+    <string name="trends_up_month">, up %s from the start of the month</string>
+    <string name="trends_down_week">, down %s from the start of the week</string>
+    <string name="trends_down_month">, down %s from the start of the month</string>
+    <string name="trends_sleep_rhythm">Sleep rhythm</string>
+    <string name="trends_sleep_week">Sleep: %s a day on average this week</string>
+    <string name="trends_sleep_month">Sleep: %s a day on average this month</string>
+    <string name="trends_sleep_longest">, longest stretch %s</string>
+    <string name="trends_diaper_rhythm">Diaper rhythm</string>
+    <string name="trends_metric_feeds">Feeds</string>
+    <string name="trends_metric_wet">Wet diapers</string>
+    <string name="trends_metric_dirty">Dirty diapers</string>
+    <string name="trends_metric_naps">Naps</string>
+    <string name="trends_unit_per_day">per day</string>
+    <string name="trends_unit_min_day">min/day</string>
+    <string name="trends_unit_ml_day">ml/day</string>
+    <string name="trends_unit_h_day">h/day</string>
+    <string name="trends_daily_numbers">Daily numbers</string>
+    <string name="trends_left_right">Left and right</string>
+    <string name="trends_left_pct">Left %d%%</string>
+    <string name="trends_right_pct">Right %d%%</string>
+    <string name="trends_pick_sex">The WHO has separate charts for boys and girls. Pick one to compare with them.</string>
+    <string name="trends_need_birth_date">Add the birth date on the server to compare with the WHO charts.</string>
+    <string name="trends_growth_none">No %s measurements yet. Log them from the Log screen (Growth).</string>
+    <string name="trends_growth_latest_no_percentile">Latest: %1$s on %2$s. The WHO charts here cover birth to 2 years.</string>
+    <string name="trends_growth_previous">" (%1$s on %2$s)"</string>
+    <string name="trends_growth_latest">Latest: %1$s on %2$s, %3$s percentile%4$s. Tap a point to edit it.</string>
+    <string name="trends_who_median">Middle line: WHO median (%s percentile)</string>
+    <string name="trends_birth">Birth</string>
+    <string name="trends_months_short">%dm</string>
+
+    <!-- Common words -->
+    <string name="none_yet">None yet</string>
+    <string name="just_now">Just now</string>
+    <string name="ago_minutes">%dm ago</string>
+    <string name="ago_hours_minutes">%1$dh %2$dm ago</string>
+    <string name="ago_days_hours">%1$dd %2$dh ago</string>
+    <plurals name="days_ago">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+    <plurals name="naps_count">
+        <item quantity="one">%d nap</item>
+        <item quantity="other">%d naps</item>
+    </plurals>
+    <plurals name="sessions_count">
+        <item quantity="one">%d session</item>
+        <item quantity="other">%d sessions</item>
+    </plurals>
+
+    <!-- Today screen -->
+    <string name="today_formula">formula</string>
+    <string name="today_breast_milk">breast milk</string>
+    <string name="today_solid_food">Solid food</string>
+    <string name="today_handoff_wet">wet</string>
+    <string name="today_handoff_dirty">dirty</string>
+    <string name="today_handoff_both">wet + dirty</string>
+    <string name="today_handoff_dry">dry</string>
+    <string name="today_handoff_diaper">Diaper · %s</string>
+    <string name="today_handoff_nap">Nap · %s</string>
+    <string name="today_handoff_sleep">Sleep · %s</string>
+    <string name="today_handoff_title">While you were away</string>
+    <string name="today_handoff_more">+%d more in History</string>
+    <string name="today_last_bottle_formula">Bottle · %d ml formula</string>
+    <string name="today_last_bottle_breast_milk">Bottle · %d ml breast milk</string>
+    <string name="today_last_breastfeed">Breastfeed · %d min</string>
+    <string name="today_last_breast">Breast · %s</string>
+    <string name="today_side_minutes">%1$s %2$dm</string>
+    <string name="today_add_quick_actions">Add quick actions</string>
+    <string name="today_edit_quick_actions">Edit quick actions</string>
+    <string name="today_nursing_and_bottle">%1$d min · %2$d ml</string>
+    <string name="today_sleeping_now">Sleeping now</string>
+    <string name="today_asleep">Asleep</string>
+    <string name="today_none_ended">None ended today</string>
+    <string name="today_wake_avg">Avg %1$s · %2$d today</string>
+    <string name="today_set">Set</string>
+    <string name="today_tap_to_enter">Tap to enter amount</string>
+    <string name="today_tap_to_correct">Tap to correct</string>
+    <string name="today_tap_to_log_bath">Tap to log a bath</string>
+    <string name="today_in">in %s</string>
+    <string name="today_due_ago">due %s ago</string>
+    <string name="today_logged_today">Logged today</string>
+    <string name="today_last_pump">Last pump</string>
+    <string name="today_none_today">None today</string>
+    <string name="today_time_between_feeds">Time between feeds</string>
+    <string name="today_same_as_last_week">About the same as last week</string>
+    <string name="today_longer_than_last_week">%s longer than last week</string>
+    <string name="today_shorter_than_last_week">%s shorter than last week</string>
+
+    <!-- Today side chips -->
+    <string name="side_left_short">L</string>
+    <string name="side_right_short">R</string>
+    <string name="side_chip_last">last</string>
+
+    <!-- Trends charts (row label) -->
+    <string name="trends_today_chart">Today</string>
 </resources>

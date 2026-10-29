@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import com.example.MainActivity
+import com.example.R
 import com.example.data.model.BreastSide
 import com.example.data.model.DiaperEvent
 import com.example.data.model.DiaperType
@@ -27,7 +28,7 @@ class WidgetActionReceiver : BroadcastReceiver() {
                 val isPaused = repo.liveTimerState.value.isPaused
                 Toast.makeText(
                     context,
-                    if (isPaused) "Timer paused" else "Timer running",
+                    context.getString(if (isPaused) R.string.timer_paused else R.string.timer_running),
                     Toast.LENGTH_SHORT
                 ).show()
                 WidgetManagerHelper.updateAllWidgets(context)
@@ -38,7 +39,7 @@ class WidgetActionReceiver : BroadcastReceiver() {
                 val activeSide = repo.liveTimerState.value.activeBreast
                 Toast.makeText(
                     context,
-                    "Switched to ${if (activeSide == BreastSide.LEFT) "Left Side" else "Right Side"}",
+                    context.getString(if (activeSide == BreastSide.LEFT) R.string.switched_to_left else R.string.switched_to_right),
                     Toast.LENGTH_SHORT
                 ).show()
                 WidgetManagerHelper.updateAllWidgets(context)
@@ -46,7 +47,7 @@ class WidgetActionReceiver : BroadcastReceiver() {
 
             ACTION_QUICK_TUMMY -> {
                 repo.addTummyTimeMinutes(5)
-                Toast.makeText(context, "Tummy time logged: 5 min", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.tummy_time_logged_5), Toast.LENGTH_SHORT).show()
                 WidgetManagerHelper.updateAllWidgets(context)
             }
 
@@ -68,11 +69,11 @@ class WidgetActionReceiver : BroadcastReceiver() {
 
             ACTION_STOP_SLEEP -> {
                 repo.stopSleep()
-                Toast.makeText(context, "Sleep saved", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.sleep_saved), Toast.LENGTH_SHORT).show()
             }
 
             ACTION_WIDGET_PINNED -> {
-                Toast.makeText(context, "Widget added", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.widget_added), Toast.LENGTH_LONG).show()
             }
         }
     }

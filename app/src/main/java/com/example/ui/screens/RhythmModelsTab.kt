@@ -42,8 +42,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.data.ml.AutoMl
 import com.example.data.ml.RhythmModel
 import com.example.data.ml.RhythmTarget
@@ -52,6 +55,7 @@ import com.example.data.ml.Score
 import com.example.data.model.TimeFormat
 import com.example.data.model.TrackedItem
 import com.example.data.model.formatMinutes
+import com.example.data.model.localDatePattern
 import com.example.ui.MainViewModel.ModelsState
 import com.example.ui.theme.ItemColors
 import com.example.ui.theme.OnPrimary
@@ -95,7 +99,7 @@ private fun localDayStart(utcMillis: Long): Long {
 /** "17 Oct", or "17 Oct 2025" outside this year. */
 private fun dayLabel(millis: Long): String {
     val sameYear = Calendar.getInstance().apply { timeInMillis = millis }.get(Calendar.YEAR) == Calendar.getInstance().get(Calendar.YEAR)
-    return SimpleDateFormat(if (sameYear) "d MMM" else "d MMM yyyy", Locale.getDefault()).format(Date(millis))
+    return SimpleDateFormat(localDatePattern(if (sameYear) "dMMM" else "dMMMyyyy"), Locale.getDefault()).format(Date(millis))
 }
 
 /**
@@ -147,9 +151,9 @@ fun RhythmModelsTab(
                         days = null
                         picking = false
                     }
-                ) { Text("OK") }
+                ) { Text(stringResource(R.string.ok)) }
             },
-            dismissButton = { TextButton(onClick = { picking = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { picking = false }) { Text(stringResource(R.string.cancel)) } }
         ) {
             DateRangePicker(state = pickerState, modifier = Modifier.weight(1f))
         }
@@ -157,22 +161,18 @@ fun RhythmModelsTab(
     val shown = RhythmTarget.entries.filterNot { it.hidden(hiddenItems) }
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
-            "Each rhythm gets its own model, chosen automatically: linear regression, boosted trees, a small " +
-                "neural net, nearest neighbours and the recent median by time of day are each tried with several " +
-                "settings and scored, next to the app's default estimate, on how well they predicted your latest " +
-                "entries. Save one to have it estimate reminders, Today and the widget; once a time passes, Today " +
-                "re-estimates it from how late the model has been before. Everything runs on this phone.",
+            stringResource(R.string.models_intro),
             style = MaterialTheme.typography.bodySmall,
             color = OnSurfaceVariant
         )
         EstimatesInUse(shown, used, onReset)
-        Text("Train on", style = MaterialTheme.typography.labelLarge, color = OnSurface)
+        Text(stringResource(R.string.models_train_on), style = MaterialTheme.typography.labelLarge, color = OnSurface)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(30, 60, 90, 180).forEach { option ->
-                Chip("$option days", selected = days == option) { days = option }
+                Chip(pluralStringResource(R.plurals.days_count, option, option), selected = days == option) { days = option }
             }
             Chip(
-                if (days == null && customFrom != null) "${dayLabel(customFrom!!)} – ${dayLabel(customTo!! - day)}" else "Custom…",
+                if (days == null && customFrom != null) "${dayLabel(customFrom!!)} – ${dayLabel(customTo!! - day)}" else stringResource(R.string.models_custom_range),
                 selected = days == null
             ) { picking = true }
         }
@@ -182,11 +182,11 @@ fun RhythmModelsTab(
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor, contentColor = OnPrimary),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (state is ModelsState.Ready) "Fit again" else "Fit models")
+            Text(stringResource(if (state is ModelsState.Ready) R.string.models_fit_again else R.string.models_fit))
         }
         when (state) {
             ModelsState.Idle -> Text(
-                "Pick how much history to learn from and tap Fit models. It takes a few seconds.",
+                stringResource(R.string.models_pick_history),
                 style = MaterialTheme.typography.bodyMedium,
                 color = OnSurfaceVariant
             )
@@ -200,7 +200,7 @@ fun RhythmModelsTab(
 
             is ModelsState.Ready -> {
                 Text(
-                    "Fitted on ${dayLabel(state.fromMillis)} – ${dayLabel(state.toMillis - 1)} at ${TimeFormat.clock(state.trainedAt)}",
+                    stringResource(R.string.models_fitted_on, dayLabel(state.fromMillis), dayLabel(state.toMillis - 1), TimeFormat.clock(state.trainedAt)),
                     style = MaterialTheme.typography.labelMedium,
                     color = OnSurfaceVariant
                 )
@@ -237,9 +237,9 @@ private fun EstimatesInUse(targets: List<RhythmTarget>, used: Map<RhythmTarget, 
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Estimates in use", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = OnSurface, modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.models_in_use_title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = OnSurface, modifier = Modifier.weight(1f))
             if (targets.any { it in used }) {
-                TextButton(onClick = { onReset(null) }) { Text("Reset all", color = PrimaryColor) }
+                TextButton(onClick = { onReset(null) }) { Text(stringResource(R.string.reset_all), color = PrimaryColor) }
             }
         }
         targets.forEach { target ->
@@ -251,16 +251,16 @@ private fun EstimatesInUse(targets: List<RhythmTarget>, used: Map<RhythmTarget, 
                     Text(target.title, style = MaterialTheme.typography.bodyMedium, color = OnSurface)
                     Text(
                         if (saved == null) {
-                            "Default estimate"
+                            stringResource(R.string.models_default_estimate)
                         } else {
-                            "${saved.family} (${saved.settings}) · ±${formatMinutes(saved.mae.roundToInt())} · fitted ${dayLabel(saved.trainedAt)}"
+                            stringResource(R.string.models_saved_summary, saved.family, saved.settings, formatMinutes(saved.mae.roundToInt()), dayLabel(saved.trainedAt))
                         },
                         style = MaterialTheme.typography.labelSmall,
                         color = OnSurfaceVariant
                     )
                 }
                 if (saved != null) {
-                    TextButton(onClick = { onReset(target) }) { Text("Reset", color = PrimaryColor) }
+                    TextButton(onClick = { onReset(target) }) { Text(stringResource(R.string.reset), color = PrimaryColor) }
                 }
             }
         }
@@ -285,12 +285,12 @@ private fun ModelCard(model: RhythmModel, saved: SavedRhythmModel?, trainedAt: L
             Spacer(Modifier.width(8.dp))
             Text(model.target.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = OnSurface)
             Spacer(Modifier.weight(1f))
-            Text("${model.samples} examples", style = MaterialTheme.typography.labelMedium, color = OnSurfaceVariant)
+            Text(pluralStringResource(R.plurals.models_examples, model.samples, model.samples), style = MaterialTheme.typography.labelMedium, color = OnSurfaceVariant)
         }
         val result = model.result
         if (result == null) {
             Text(
-                "Not enough entries yet: ${model.samples} of the ${AutoMl.MIN_ROWS} needed. Try a longer range.",
+                stringResource(R.string.models_not_enough, model.samples, AutoMl.MIN_ROWS),
                 style = MaterialTheme.typography.bodyMedium,
                 color = OnSurfaceVariant
             )
@@ -300,19 +300,18 @@ private fun ModelCard(model: RhythmModel, saved: SavedRhythmModel?, trainedAt: L
         Prediction(model)
         val reference = result.default ?: result.baseline
         Text(
-            "Best: ${result.best.family} (${result.best.settings}), typically off by ${formatMinutes(result.best.mae.roundToInt())}. " +
-                "The default estimate (${reference.settings}) is off by ${formatMinutes(reference.mae.roundToInt())}" +
+            stringResource(R.string.models_best, result.best.family, result.best.settings, formatMinutes(result.best.mae.roundToInt())) + " " +
                 if (result.best.mae < reference.mae) {
-                    ": ${((1 - result.best.mae / reference.mae) * 100).roundToInt()}% better."
+                    stringResource(R.string.models_default_off_better, reference.settings, formatMinutes(reference.mae.roundToInt()), ((1 - result.best.mae / reference.mae) * 100).roundToInt())
                 } else {
-                    ", so the default is as good here."
+                    stringResource(R.string.models_default_off_same, reference.settings, formatMinutes(reference.mae.roundToInt()))
                 },
             style = MaterialTheme.typography.bodySmall,
             color = OnSurfaceVariant
         )
         // Leaderboard: each family's best settings; tap one to save it instead of the best
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Models tried (typical error)", style = MaterialTheme.typography.labelLarge, color = OnSurface)
+            Text(stringResource(R.string.models_tried), style = MaterialTheme.typography.labelLarge, color = OnSurface)
             val worst = result.leaderboard.maxOf { it.mae }.coerceAtLeast(1.0)
             result.leaderboard.forEach { score ->
                 val isSelected = score == selected
@@ -332,7 +331,7 @@ private fun ModelCard(model: RhythmModel, saved: SavedRhythmModel?, trainedAt: L
                     )
                     Column(Modifier.weight(1f).padding(start = 6.dp)) {
                         Text(
-                            if (score.reference) "Default estimate" else score.family,
+                            if (score.reference) stringResource(R.string.models_default_estimate) else score.family,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (score == result.best) FontWeight.Bold else FontWeight.Normal,
                             color = OnSurface
@@ -364,8 +363,7 @@ private fun ModelCard(model: RhythmModel, saved: SavedRhythmModel?, trainedAt: L
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             if (saved != null && !isSaved) {
                 Text(
-                    "In use now: ${saved.family}, ±${formatMinutes(saved.mae.roundToInt())} (fitted ${dayLabel(saved.trainedAt)}). " +
-                        "This fit's ${selected.family.lowercase()}: ±${formatMinutes(selected.mae.roundToInt())}.",
+                    stringResource(R.string.models_in_use_now, saved.family, formatMinutes(saved.mae.roundToInt()), dayLabel(saved.trainedAt), selected.family.lowercase(), formatMinutes(selected.mae.roundToInt())),
                     style = MaterialTheme.typography.bodySmall,
                     color = OnSurfaceVariant
                 )
@@ -378,14 +376,14 @@ private fun ModelCard(model: RhythmModel, saved: SavedRhythmModel?, trainedAt: L
                 ) {
                     Text(
                         when {
-                            isSaved -> "In use"
-                            saved != null -> "Save this version"
-                            else -> "Use ${selected.family.lowercase()}"
+                            isSaved -> stringResource(R.string.models_in_use)
+                            saved != null -> stringResource(R.string.models_save_version)
+                            else -> stringResource(R.string.models_use, selected.family.lowercase())
                         }
                     )
                 }
                 if (saved != null) {
-                    TextButton(onClick = onReset) { Text("Reset to default", color = PrimaryColor) }
+                    TextButton(onClick = onReset) { Text(stringResource(R.string.models_reset_default), color = PrimaryColor) }
                 }
             }
         }
@@ -393,7 +391,7 @@ private fun ModelCard(model: RhythmModel, saved: SavedRhythmModel?, trainedAt: L
         val important = result.importance.filter { it.second > 0.05 }.take(5)
         if (important.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("What matters most (${result.best.family.lowercase()})", style = MaterialTheme.typography.labelLarge, color = OnSurface)
+                Text(stringResource(R.string.models_what_matters, result.best.family.lowercase()), style = MaterialTheme.typography.labelLarge, color = OnSurface)
                 val top = important.first().second
                 important.forEach { (name, gain) ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -408,7 +406,7 @@ private fun ModelCard(model: RhythmModel, saved: SavedRhythmModel?, trainedAt: L
                     }
                 }
                 Text(
-                    "How much worse the predictions get when that input is scrambled.",
+                    stringResource(R.string.models_importance_note),
                     style = MaterialTheme.typography.labelSmall,
                     color = OnSurfaceVariant
                 )
@@ -416,11 +414,11 @@ private fun ModelCard(model: RhythmModel, saved: SavedRhythmModel?, trainedAt: L
         }
         if (result.lastFold.size >= 3) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Latest entries: actual vs predicted", style = MaterialTheme.typography.labelLarge, color = OnSurface)
+                Text(stringResource(R.string.models_actual_vs_predicted), style = MaterialTheme.typography.labelLarge, color = OnSurface)
                 ActualVsPredicted(result.lastFold, actualColor = soft, predictedColor = tint)
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    LegendSwatch(soft, "Actual")
-                    LegendSwatch(tint, "Predicted")
+                    LegendSwatch(soft, stringResource(R.string.models_actual))
+                    LegendSwatch(tint, stringResource(R.string.models_predicted))
                 }
             }
         }
@@ -434,15 +432,15 @@ private fun Prediction(model: RhythmModel) {
     val at = anchor + (minutes * 60_000).toLong()
     val untilMinutes = ((at - System.currentTimeMillis()) / 60_000L).toInt()
     val headline = when (model.target) {
-        RhythmTarget.FEED_GAP -> "Next feed around ${TimeFormat.clock(at)}"
-        RhythmTarget.DIAPER_GAP -> "Next change around ${TimeFormat.clock(at)}"
-        RhythmTarget.SLEEP_LENGTH -> "Wake-up around ${TimeFormat.clock(at)}"
-        RhythmTarget.AWAKE_WINDOW -> "Ready to sleep around ${TimeFormat.clock(at)}"
+        RhythmTarget.FEED_GAP -> stringResource(R.string.models_next_feed_around, TimeFormat.clock(at))
+        RhythmTarget.DIAPER_GAP -> stringResource(R.string.models_next_change_around, TimeFormat.clock(at))
+        RhythmTarget.SLEEP_LENGTH -> stringResource(R.string.models_wake_up_around, TimeFormat.clock(at))
+        RhythmTarget.AWAKE_WINDOW -> stringResource(R.string.models_ready_to_sleep_around, TimeFormat.clock(at))
     }
     Column {
         Text(headline, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = OnSurface)
         Text(
-            if (untilMinutes >= 0) "In ${formatMinutes(untilMinutes)}" else "${formatMinutes(-untilMinutes)} ago",
+            if (untilMinutes >= 0) stringResource(R.string.in_duration, formatMinutes(untilMinutes)) else stringResource(R.string.duration_ago, formatMinutes(-untilMinutes)),
             style = MaterialTheme.typography.bodyMedium,
             color = if (untilMinutes >= 0) SecondaryColor else OnSurfaceVariant
         )

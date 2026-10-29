@@ -19,7 +19,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Today"
+            android:text="@string/widget_summary_today"
             android:textColor="@color/bb_primary"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -51,7 +51,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="FEEDS"
+                android:text="@string/widget_summary_feeds"
                 android:textColor="@color/bb_primary"
                 android:textSize="10sp"
                 android:textStyle="bold" />
@@ -78,7 +78,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="DIAPERS"
+                android:text="@string/widget_summary_diapers"
                 android:textColor="@color/bb_diaper"
                 android:textSize="10sp"
                 android:textStyle="bold" />

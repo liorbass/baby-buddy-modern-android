@@ -41,7 +41,6 @@ object Reminders {
     private val KINDS = listOf(KIND_FEED, KIND_AWAKE, KIND_SLEEP, KIND_DIAPER)
 
     private const val CHANNEL_ID = "reminders"
-    private const val CHANNEL_NAME = "Reminders"
     private const val PREFS = "reminders"
     private const val MISSED_GRACE_MS = 2 * 60 * 60_000L // a reminder missed by more than this is skipped
     private const val EARLY_ALARM_SLACK_MS = 60_000L // an alarm a little early still counts as on time
@@ -148,17 +147,17 @@ object Reminders {
         val minutes = ((now - anchor) / 60_000L).toInt()
         val inMinutes = formatMinutes(((dueAt - now + 59_999L) / 60_000L).toInt())
         val (title, text) = when (kind) {
-            KIND_FEED -> (if (early) "Feed due in $inMinutes" else "Feed due") to
-                "Last feed started ${formatMinutes(minutes)} ago, at ${TimeFormat.clock(anchor)}"
+            KIND_FEED -> (if (early) context.getString(R.string.reminder_feed_due_in, inMinutes) else context.getString(R.string.reminder_feed_due)) to
+                context.getString(R.string.reminder_feed_text, formatMinutes(minutes), TimeFormat.clock(anchor))
 
-            KIND_DIAPER -> (if (early) "Diaper change due in $inMinutes" else "Diaper change due") to
-                "Last change ${formatMinutes(minutes)} ago, at ${TimeFormat.clock(anchor)}"
+            KIND_DIAPER -> (if (early) context.getString(R.string.reminder_diaper_due_in, inMinutes) else context.getString(R.string.reminder_diaper_due)) to
+                context.getString(R.string.reminder_diaper_text, formatMinutes(minutes), TimeFormat.clock(anchor))
 
-            KIND_SLEEP -> (if (early) "Wake-up time in $inMinutes" else "Asleep for ${formatMinutes(minutes)}") to
-                "Fell asleep at ${TimeFormat.clock(anchor)}"
+            KIND_SLEEP -> (if (early) context.getString(R.string.reminder_wake_up_in, inMinutes) else context.getString(R.string.reminder_asleep_for, formatMinutes(minutes))) to
+                context.getString(R.string.reminder_fell_asleep_at, TimeFormat.clock(anchor))
 
-            else -> (if (early) "Nap time in $inMinutes" else "Awake for ${formatMinutes(minutes)}") to
-                "Woke up at ${TimeFormat.clock(anchor)}" + if (early) "" else ". Time for a nap?"
+            else -> (if (early) context.getString(R.string.reminder_nap_in, inMinutes) else context.getString(R.string.reminder_awake_for, formatMinutes(minutes))) to
+                context.getString(if (early) R.string.reminder_woke_up_at else R.string.reminder_woke_up_at_nap, TimeFormat.clock(anchor))
         }
         val open = PendingIntent.getActivity(
             context,
@@ -208,7 +207,7 @@ object Reminders {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (manager.getNotificationChannel(CHANNEL_ID) != null) return
-        manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT))
+        manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, context.getString(R.string.channel_reminders), NotificationManager.IMPORTANCE_DEFAULT))
     }
 }
 

@@ -87,6 +87,11 @@ android {
     compose = true
     buildConfig = true
   }
+  // Lists the app's languages (the values-* folders) for the per-app language setting on Android 13+;
+  // the default strings in values/ are English (res/resources.properties)
+  androidResources {
+    generateLocaleConfig = true
+  }
   testOptions {
     unitTests {
       isIncludeAndroidResources = true

@@ -18,7 +18,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Breastfeeding"
+            android:text="@string/widget_timer_title"
             android:textColor="@color/bb_primary"
             android:textSize="12sp"
             android:textStyle="bold" />
@@ -86,7 +86,7 @@
             <ImageView
                 android:layout_width="16dp"
                 android:layout_height="16dp"
-                android:contentDescription="Switch Side"
+                android:contentDescription="@string/widget_switch_side"
                 android:src="@drawable/ic_widget_swap" />
 
             <TextView
@@ -94,7 +94,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:text="Switch Side"
+                android:text="@string/widget_switch_side"
                 android:textColor="@color/bb_on_surface"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -116,7 +116,7 @@
                 android:id="@+id/iv_pause_play_icon"
                 android:layout_width="16dp"
                 android:layout_height="16dp"
-                android:contentDescription="Pause/Play"
+                android:contentDescription="@string/widget_pause_play"
                 android:src="@drawable/ic_widget_pause" />
 
             <TextView
@@ -124,7 +124,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:text="Pause"
+                android:text="@string/pause"
                 android:textColor="@color/bb_on_primary"
                 android:textSize="12sp"
                 android:textStyle="bold" />

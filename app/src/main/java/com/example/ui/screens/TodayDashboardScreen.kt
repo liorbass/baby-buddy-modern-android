@@ -62,10 +62,14 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.ml.RhythmTarget
+import com.example.data.model.AppText
 import com.example.data.model.BabySex
 import com.example.data.model.BreastSide
 import com.example.data.model.DashboardWidgetConfig
@@ -99,6 +103,7 @@ import com.example.data.model.WakeWindowPart
 import com.example.data.model.averageMinutes
 import com.example.data.model.completedWakeWindows
 import com.example.data.model.dayAndTime
+import com.example.data.model.diaperTypeLabel
 import com.example.data.model.formatMinutes
 import com.example.ui.HistoryFilter
 import com.example.ui.ScreenDestination
@@ -436,9 +441,9 @@ fun TodayDashboardScreen(
             // Left out when the Wake windows card already shows them
             val wakeCardShows = { part: WakeWindowPart -> showWakeWindows && part !in hiddenWakeParts }
             val otherNext = listOfNotNull(
-                modelNext[RhythmTarget.DIAPER_GAP]?.let { "Next diaper" to it },
-                modelNext[RhythmTarget.AWAKE_WINDOW]?.takeUnless { wakeCardShows(WakeWindowPart.NAP_DUE) }?.let { "Next sleep" to it },
-                modelNext[RhythmTarget.SLEEP_LENGTH]?.let { "Wake-up" to it }
+                modelNext[RhythmTarget.DIAPER_GAP]?.let { AppText.get(R.string.rhythm_diaper_gap) to it },
+                modelNext[RhythmTarget.AWAKE_WINDOW]?.takeUnless { wakeCardShows(WakeWindowPart.NAP_DUE) }?.let { AppText.get(R.string.rhythm_awake_window) to it },
+                modelNext[RhythmTarget.SLEEP_LENGTH]?.let { AppText.get(R.string.rhythm_sleep_length) to it }
             )
             val nextUpAwakeSince = awakeSince.takeUnless { wakeCardShows(WakeWindowPart.AWAKE_FOR) }
             if (nextUpAwakeSince != null || nextFeedAt != null || otherNext.isNotEmpty()) {
@@ -539,7 +544,7 @@ fun TodayDashboardScreen(
                     ) {
                         Icon(Icons.Default.Widgets, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Customize Today", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(R.string.customize_title), style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }
@@ -596,9 +601,9 @@ private fun SleepingBanner(startMillis: Long, onClick: () -> Unit) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Bedtime, contentDescription = null, tint = PrimaryColor, modifier = Modifier.size(24.dp))
             Column(modifier = Modifier.weight(1f).padding(start = 14.dp)) {
-                Text("Sleeping", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.sleeping), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(
-                    "Since ${TimeFormat.clock(startMillis)} · tap when awake",
+                    stringResource(R.string.tile_since_tap_when_awake, TimeFormat.clock(startMillis)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -620,28 +625,28 @@ private fun HandoffCard(summary: HandoffSummary, onOpen: () -> Unit, onDismiss: 
         summary.feedings.map { f ->
             val text = when (f.type) {
                 FeedType.NURSING -> listOfNotNull(
-                    "Breastfeed",
-                    "L ${formatMinutes(f.leftDurationMinutes)}".takeIf { f.leftDurationSec > 0 },
-                    "R ${formatMinutes(f.rightDurationMinutes)}".takeIf { f.rightDurationSec > 0 }
+                    stringResource(R.string.tile_feed_name),
+                    stringResource(R.string.left_short_time, formatMinutes(f.leftDurationMinutes)).takeIf { f.leftDurationSec > 0 },
+                    stringResource(R.string.right_short_time, formatMinutes(f.rightDurationMinutes)).takeIf { f.rightDurationSec > 0 }
                 ).joinToString(" · ")
 
-                FeedType.BOTTLE -> listOfNotNull("Bottle", f.amountMl?.let { "$it ml" }, if (f.bottleFormula) "formula" else "breast milk").joinToString(" · ")
+                FeedType.BOTTLE -> listOfNotNull(stringResource(R.string.log_bottle), f.amountMl?.let { stringResource(R.string.amount_ml, it) }, stringResource(if (f.bottleFormula) R.string.today_formula else R.string.today_breast_milk)).joinToString(" · ")
 
-                FeedType.SOLID -> "Solid food"
+                FeedType.SOLID -> stringResource(R.string.today_solid_food)
             }
             Line(f.timeMillis, if (f.type == FeedType.NURSING) TrackedItem.BREASTFEEDING else TrackedItem.BOTTLE, text, f.caregiver)
         } +
             summary.diapers.map { d ->
                 val kind = when (d.type) {
-                    DiaperType.WET -> "wet"
-                    DiaperType.DIRTY -> "dirty"
-                    DiaperType.BOTH -> "wet + dirty"
-                    DiaperType.DRY -> "dry"
+                    DiaperType.WET -> stringResource(R.string.today_handoff_wet)
+                    DiaperType.DIRTY -> stringResource(R.string.today_handoff_dirty)
+                    DiaperType.BOTH -> stringResource(R.string.today_handoff_both)
+                    DiaperType.DRY -> stringResource(R.string.today_handoff_dry)
                 }
-                Line(d.timeMillis, TrackedItem.DIAPERS, "Diaper · $kind", d.caregiver)
+                Line(d.timeMillis, TrackedItem.DIAPERS, stringResource(R.string.today_handoff_diaper, kind), d.caregiver)
             } +
             summary.sleeps.map { s ->
-                Line(s.timeMillis, TrackedItem.SLEEP, "${if (s.isNap) "Nap" else "Sleep"} · ${formatMinutes(s.durationMinutes)}", s.caregiver)
+                Line(s.timeMillis, TrackedItem.SLEEP, stringResource(if (s.isNap) R.string.today_handoff_nap else R.string.today_handoff_sleep, formatMinutes(s.durationMinutes)), s.caregiver)
             }
         ).sortedBy { it.at }
     val shown = 6
@@ -654,10 +659,10 @@ private fun HandoffCard(summary: HandoffSummary, onOpen: () -> Unit, onDismiss: 
         Column(modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 4.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f).padding(top = 8.dp)) {
-                    Text("While you were away", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.today_handoff_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text(
                         listOfNotNull(
-                            "Since ${dayAndTime(summary.sinceMillis, TimeFormat.clock(summary.sinceMillis))}",
+                            stringResource(R.string.since_time, dayAndTime(summary.sinceMillis, TimeFormat.clock(summary.sinceMillis))),
                             summary.caregivers.takeIf { it.isNotEmpty() }?.joinToString(", ")
                         ).joinToString(" · "),
                         style = MaterialTheme.typography.bodySmall,
@@ -665,7 +670,7 @@ private fun HandoffCard(summary: HandoffSummary, onOpen: () -> Unit, onDismiss: 
                     )
                 }
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Dismiss", tint = OutlineColor)
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.dismiss), tint = OutlineColor)
                 }
             }
             lines.take(shown).forEach { line ->
@@ -686,7 +691,7 @@ private fun HandoffCard(summary: HandoffSummary, onOpen: () -> Unit, onDismiss: 
                 }
             }
             if (lines.size > shown) {
-                Text("+${lines.size - shown} more in History", style = MaterialTheme.typography.bodySmall, color = OutlineColor)
+                Text(stringResource(R.string.today_handoff_more, lines.size - shown), style = MaterialTheme.typography.bodySmall, color = OutlineColor)
             }
         }
     }
@@ -696,10 +701,10 @@ private fun HandoffCard(summary: HandoffSummary, onOpen: () -> Unit, onDismiss: 
 private fun sinceLabel(elapsedMillis: Long): String {
     val minutes = (elapsedMillis / 60_000L).coerceAtLeast(0)
     return when {
-        minutes < 1 -> "Just now"
-        minutes < 60 -> "${minutes}m ago"
-        minutes < 24 * 60 -> "${minutes / 60}h ${minutes % 60}m ago"
-        else -> "${minutes / (24 * 60)}d ${(minutes / 60) % 24}h ago"
+        minutes < 1 -> AppText.get(R.string.just_now)
+        minutes < 60 -> AppText.get(R.string.ago_minutes, minutes)
+        minutes < 24 * 60 -> AppText.get(R.string.ago_hours_minutes, minutes / 60, minutes % 60)
+        else -> AppText.get(R.string.ago_days_hours, minutes / (24 * 60), (minutes / 60) % 24)
     }
 }
 
@@ -739,7 +744,7 @@ private fun LastEntryCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(label, style = MaterialTheme.typography.labelLarge, color = OutlineColor, modifier = Modifier.weight(1f))
                 IconButton(onClick = onRemove, modifier = Modifier.size(20.dp)) {
-                    Icon(Icons.Default.Close, contentDescription = "Remove card", tint = OutlineColor, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cards_remove), tint = OutlineColor, modifier = Modifier.size(14.dp))
                 }
             }
             content()
@@ -761,9 +766,9 @@ private fun LastFeedCard(
     val lastNursing = lastBreastfeed ?: recentFeedings.firstOrNull { it.type == FeedType.NURSING }
     val lastSide = lastNursing?.lastSide
 
-    LastEntryCard(label = "Last feed", onClick = onClick, onRemove = onRemove, modifier = modifier) {
+    LastEntryCard(label = stringResource(R.string.card_last_feed), onClick = onClick, onRemove = onRemove, modifier = modifier) {
         if (lastFeed == null) {
-            Text("None yet", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.none_yet), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             return@LastEntryCard
         }
         Text(
@@ -781,9 +786,9 @@ private fun LastFeedCard(
         )
         Text(
             text = if (lastFeed.amountMl != null) {
-                "Bottle · ${lastFeed.amountMl} ml ${if (lastFeed.bottleFormula) "formula" else "breast milk"}"
+                stringResource(if (lastFeed.bottleFormula) R.string.today_last_bottle_formula else R.string.today_last_bottle_breast_milk, lastFeed.amountMl)
             } else {
-                "Breastfeed · ${lastFeed.totalDurationMinutes} min"
+                stringResource(R.string.today_last_breastfeed, lastFeed.totalDurationMinutes)
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -792,14 +797,14 @@ private fun LastFeedCard(
             Spacer(modifier = Modifier.height(6.dp))
             if (lastNursing.id != lastFeed.id) {
                 Text(
-                    "Breast · ${dayAndTime(lastNursing.timeMillis, lastNursing.timeFormatted)}",
+                    stringResource(R.string.today_last_breast, dayAndTime(lastNursing.timeMillis, lastNursing.timeFormatted)),
                     style = MaterialTheme.typography.labelSmall,
                     color = OutlineColor
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                SideChip("L", lastNursing.leftDurationMinutes, lastSide == BreastSide.LEFT, Modifier.weight(1f))
-                SideChip("R", lastNursing.rightDurationMinutes, lastSide == BreastSide.RIGHT, Modifier.weight(1f))
+                SideChip(stringResource(R.string.side_left_short), lastNursing.leftDurationMinutes, lastSide == BreastSide.LEFT, Modifier.weight(1f))
+                SideChip(stringResource(R.string.side_right_short), lastNursing.rightDurationMinutes, lastSide == BreastSide.RIGHT, Modifier.weight(1f))
             }
         }
     }
@@ -808,9 +813,9 @@ private fun LastFeedCard(
 @Composable
 private fun LastDiaperCard(lastDiaper: DiaperEvent?, onClick: () -> Unit, onRemove: () -> Unit, modifier: Modifier = Modifier) {
     val diaper = lastDiaper
-    LastEntryCard(label = "Last diaper", onClick = onClick, onRemove = onRemove, modifier = modifier) {
+    LastEntryCard(label = stringResource(R.string.card_last_diaper), onClick = onClick, onRemove = onRemove, modifier = modifier) {
         if (diaper == null) {
-            Text("None yet", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.none_yet), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             return@LastEntryCard
         }
         Text(dayAndTime(diaper.timeMillis, diaper.timeFormatted), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -822,7 +827,7 @@ private fun LastDiaperCard(lastDiaper: DiaperEvent?, onClick: () -> Unit, onRemo
             color = PrimaryColor
         )
         Text(
-            diaper.type.name.lowercase().replaceFirstChar { it.uppercase() },
+            diaperTypeLabel(diaper.type),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -843,13 +848,13 @@ private fun SideChip(label: String, minutes: Int, isLast: Boolean, modifier: Mod
             .padding(vertical = 6.dp)
     ) {
         Text(
-            text = "$label ${minutes}m",
+            text = stringResource(R.string.today_side_minutes, label, minutes),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
             color = if (isLast) OnPrimary else MaterialTheme.colorScheme.onSurface
         )
         if (isLast) {
-            Text("last", style = MaterialTheme.typography.labelSmall, color = OnPrimary.copy(alpha = 0.85f))
+            Text(stringResource(R.string.side_chip_last), style = MaterialTheme.typography.labelSmall, color = OnPrimary.copy(alpha = 0.85f))
         }
     }
 }
@@ -866,7 +871,7 @@ private fun QuickActionsRow(
     ) {
         if (actions.isEmpty()) {
             Text(
-                "Add quick actions",
+                stringResource(R.string.today_add_quick_actions),
                 style = MaterialTheme.typography.bodyMedium,
                 color = OutlineColor,
                 modifier = Modifier.weight(1f).clickable(onClick = onEdit).padding(start = 8.dp)
@@ -901,7 +906,7 @@ private fun QuickActionsRow(
             }
         }
         IconButton(onClick = onEdit) {
-            Icon(Icons.Default.Edit, contentDescription = "Edit quick actions", tint = OutlineColor, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.today_edit_quick_actions), tint = OutlineColor, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -947,9 +952,9 @@ private fun bathAgo(millis: Long): String {
     // Rounded, so a daylight-saving day still counts as one day
     val days = Math.round((midnight(System.currentTimeMillis()) - midnight(millis)) / 86_400_000.0).toInt()
     return when {
-        days <= 0 -> "Today"
-        days == 1 -> "Yesterday"
-        else -> "$days days ago"
+        days <= 0 -> AppText.get(R.string.today)
+        days == 1 -> AppText.get(R.string.yesterday)
+        else -> AppText.plural(R.plurals.days_ago, days, days)
     }
 }
 
@@ -998,12 +1003,12 @@ private fun TodaySummaryGrid(
         if ((TrackedItem.BREASTFEEDING !in hidden || TrackedItem.BOTTLE !in hidden) && TodayTile.FEEDS !in hiddenTiles) {
             add { m ->
                 SummaryTile(
-                    label = "Feeds",
+                    label = stringResource(R.string.tile_feeds),
                     value = "${recentFeedings.size}",
                     detail = when {
-                        TrackedItem.BREASTFEEDING in hidden -> "$bottleMl ml"
-                        TrackedItem.BOTTLE in hidden || bottleMl == 0 -> "$nursingMinutes min nursing"
-                        else -> "$nursingMinutes min · $bottleMl ml"
+                        TrackedItem.BREASTFEEDING in hidden -> stringResource(R.string.amount_ml, bottleMl)
+                        TrackedItem.BOTTLE in hidden || bottleMl == 0 -> stringResource(R.string.history_min_nursing, nursingMinutes)
+                        else -> stringResource(R.string.today_nursing_and_bottle, nursingMinutes, bottleMl)
                     },
                     icon = null,
                     emoji = "🍼",
@@ -1017,9 +1022,9 @@ private fun TodaySummaryGrid(
         if (TrackedItem.DIAPERS !in hidden && TodayTile.DIAPERS !in hiddenTiles) {
             add { m ->
                 SummaryTile(
-                    label = "Diapers",
+                    label = stringResource(R.string.tile_diapers),
                     value = "${recentDiapers.size}",
-                    detail = "$wet wet · $dirty dirty",
+                    detail = stringResource(R.string.widget_wet_dirty, wet, dirty),
                     icon = Icons.Default.WaterDrop,
                     tint = ItemColors.tint(TrackedItem.DIAPERS),
                     background = ItemColors.soft(TrackedItem.DIAPERS),
@@ -1031,12 +1036,11 @@ private fun TodaySummaryGrid(
         if (TrackedItem.SLEEP !in hidden && TodayTile.SLEEP !in hiddenTiles) {
             add { m ->
                 SummaryTile(
-                    label = "Sleep",
+                    label = stringResource(R.string.tile_sleep),
                     value = formatMinutes(sleptMinutes.toInt()),
                     detail = when {
-                        sleepTimer.isRunning -> "Sleeping now"
-                        naps == 1 -> "1 nap"
-                        else -> "$naps naps"
+                        sleepTimer.isRunning -> stringResource(R.string.today_sleeping_now)
+                        else -> pluralStringResource(R.plurals.naps_count, naps, naps)
                     },
                     icon = Icons.Default.Bedtime,
                     tint = ItemColors.tint(TrackedItem.SLEEP),
@@ -1050,16 +1054,16 @@ private fun TodaySummaryGrid(
             add { m ->
                 val minuteNow = rememberMinuteClock()
                 SummaryTile(
-                    label = "Wake window",
+                    label = stringResource(R.string.tile_wake_window),
                     value = when {
-                        sleepTimer.isRunning -> "Asleep"
+                        sleepTimer.isRunning -> stringResource(R.string.today_asleep)
                         awakeSince != null -> formatMinutes(((minuteNow - awakeSince) / 60_000L).toInt().coerceAtLeast(0))
                         else -> "–"
                     },
                     detail = if (wakeWindows.isEmpty()) {
-                        "None ended today"
+                        stringResource(R.string.today_none_ended)
                     } else {
-                        "Avg ${formatMinutes(wakeWindows.averageMinutes())} · ${wakeWindows.size} today"
+                        stringResource(R.string.today_wake_avg, formatMinutes(wakeWindows.averageMinutes()), wakeWindows.size)
                     },
                     icon = Icons.Default.WbSunny,
                     tint = ItemColors.tint(TrackedItem.SLEEP),
@@ -1072,8 +1076,8 @@ private fun TodaySummaryGrid(
         if (TrackedItem.PUMPING !in hidden && TodayTile.PUMPED !in hiddenTiles) {
             add { m ->
                 SummaryTile(
-                    label = "Pumped",
-                    value = "${recentPumpings.sumOf { it.amountMl }} ml",
+                    label = stringResource(R.string.tile_pumped),
+                    value = stringResource(R.string.amount_ml, recentPumpings.sumOf { it.amountMl }),
                     detail = sessions(recentPumpings.size),
                     icon = Icons.Default.WaterDrop,
                     tint = ItemColors.tint(TrackedItem.PUMPING),
@@ -1086,9 +1090,9 @@ private fun TodaySummaryGrid(
         if (TrackedItem.MILK_STASH !in hidden && TodayTile.MILK_STASH !in hiddenTiles) {
             add { m ->
                 SummaryTile(
-                    label = "Milk stash",
-                    value = milkStash?.let { "$it ml" } ?: "Set",
-                    detail = if (milkStash == null) "Tap to enter amount" else "Tap to correct",
+                    label = stringResource(R.string.tile_milk_stash),
+                    value = milkStash?.let { stringResource(R.string.amount_ml, it) } ?: stringResource(R.string.today_set),
+                    detail = stringResource(if (milkStash == null) R.string.today_tap_to_enter else R.string.today_tap_to_correct),
                     icon = Icons.Default.Kitchen,
                     tint = ItemColors.tint(TrackedItem.MILK_STASH),
                     background = ItemColors.soft(TrackedItem.MILK_STASH),
@@ -1100,8 +1104,8 @@ private fun TodaySummaryGrid(
         if (TrackedItem.TUMMY_TIME !in hidden && TodayTile.TUMMY_TIME !in hiddenTiles) {
             add { m ->
                 SummaryTile(
-                    label = "Tummy time",
-                    value = "$tummyMinutes min",
+                    label = stringResource(R.string.tile_tummy_time),
+                    value = stringResource(R.string.amount_minutes, tummyMinutes),
                     detail = sessions(recentTummyTimes.size),
                     icon = Icons.Default.FitnessCenter,
                     tint = ItemColors.tint(TrackedItem.TUMMY_TIME),
@@ -1114,9 +1118,9 @@ private fun TodaySummaryGrid(
         if (TrackedItem.BATH !in hidden && TodayTile.BATH !in hiddenTiles) {
             add { m ->
                 SummaryTile(
-                    label = "Last bath",
-                    value = lastBathMillis?.let(::bathAgo) ?: "None yet",
-                    detail = lastBathMillis?.let { dayAndTime(it, TimeFormat.clock(it)) } ?: "Tap to log a bath",
+                    label = stringResource(R.string.tile_last_bath),
+                    value = lastBathMillis?.let(::bathAgo) ?: stringResource(R.string.none_yet),
+                    detail = lastBathMillis?.let { dayAndTime(it, TimeFormat.clock(it)) } ?: stringResource(R.string.today_tap_to_log_bath),
                     icon = Icons.Default.Bathtub,
                     tint = ItemColors.tint(TrackedItem.BATH),
                     background = ItemColors.soft(TrackedItem.BATH),
@@ -1130,7 +1134,7 @@ private fun TodaySummaryGrid(
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            "Today",
+            stringResource(R.string.today),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(start = 4.dp)
@@ -1145,7 +1149,7 @@ private fun TodaySummaryGrid(
 }
 
 /** "Awake for 1h 20m" and "Next feed around 14:30 · in 25m", updated every minute. */
-private fun sessions(count: Int) = if (count == 1) "1 session" else "$count sessions"
+private fun sessions(count: Int) = AppText.plural(R.plurals.sessions_count, count, count)
 
 @Composable
 private fun NextUpCard(awakeSince: Long?, nextFeedAt: Long?, onSleepClick: () -> Unit, modelNext: List<Pair<String, Long>> = emptyList()) {
@@ -1171,16 +1175,16 @@ private fun NextUpCard(awakeSince: Long?, nextFeedAt: Long?, onSleepClick: () ->
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable(onClick = onSleepClick)
                         ) {
-                            Text("Awake for", style = MaterialTheme.typography.labelLarge, color = OutlineColor)
+                            Text(stringResource(R.string.wake_part_awake_for), style = MaterialTheme.typography.labelLarge, color = OutlineColor)
                             Text(
                                 formatMinutes(((now - awakeSince) / 60_000L).toInt()),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
-                            Text("since ${TimeFormat.clock(awakeSince)}", style = MaterialTheme.typography.bodySmall, color = OutlineColor)
+                            Text(stringResource(R.string.cards_since, TimeFormat.clock(awakeSince)), style = MaterialTheme.typography.bodySmall, color = OutlineColor)
                         }
                     }
-                    if (nextFeedAt != null) NextAt("Next feed", nextFeedAt, now, Modifier.weight(1f))
+                    if (nextFeedAt != null) NextAt(stringResource(R.string.rhythm_feed_gap), nextFeedAt, now, Modifier.weight(1f))
                 }
             }
             // The other predictions of the models picked in Trends → Models
@@ -1207,7 +1211,7 @@ private fun NextAt(label: String, at: Long, now: Long, modifier: Modifier = Modi
             color = if (minutesLeft < 0) PrimaryColor else MaterialTheme.colorScheme.onSurface
         )
         Text(
-            if (minutesLeft >= 0) "in ${formatMinutes(minutesLeft)}" else "due ${formatMinutes(-minutesLeft)} ago",
+            if (minutesLeft >= 0) stringResource(R.string.today_in, formatMinutes(minutesLeft)) else stringResource(R.string.today_due_ago, formatMinutes(-minutesLeft)),
             style = MaterialTheme.typography.bodySmall,
             color = if (minutesLeft < 0) PrimaryColor else OutlineColor
         )
@@ -1224,7 +1228,7 @@ private fun QuickNotesCard(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
-            "Quick notes",
+            stringResource(R.string.item_quick_notes),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(start = 4.dp)
@@ -1249,7 +1253,7 @@ private fun QuickNotesCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (last != null) {
-                            Icon(Icons.Default.Check, contentDescription = "Logged today", tint = PrimaryColor, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Check, contentDescription = stringResource(R.string.today_logged_today), tint = PrimaryColor, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                         }
                         Text(
@@ -1280,7 +1284,7 @@ private fun QuickNotesCard(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, tint = PrimaryColor, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Note", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.note), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -1346,8 +1350,8 @@ private fun LastPumpCard(recentPumpings: List<PumpingEvent>) {
     ) {
         Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             LastEntryRow(
-                label = "Last pump",
-                value = pump?.let { listOfNotNull(it.timeFormatted, "${it.amountMl} ml", it.caregiver).joinToString(" · ") } ?: "None today"
+                label = stringResource(R.string.today_last_pump),
+                value = pump?.let { listOfNotNull(it.timeFormatted, stringResource(R.string.amount_ml, it.amountMl), it.caregiver).joinToString(" · ") } ?: stringResource(R.string.today_none_today)
             )
         }
     }
@@ -1361,7 +1365,7 @@ private fun LastEntryRow(label: String, value: String) {
     }
 }
 
-private fun formatMinutes(minutes: Int): String = if (minutes >= 60) "${minutes / 60}h ${minutes % 60}m" else "${minutes}m"
+private fun formatMinutes(minutes: Int): String = if (minutes >= 60) AppText.get(R.string.duration_hours_minutes_short, minutes / 60, minutes % 60) else AppText.get(R.string.duration_minutes, minutes)
 
 /** Average time between feeds this week, how it compares with last week, and a 7-day line. */
 @Composable
@@ -1379,13 +1383,13 @@ private fun FeedIntervalCard(stats: FeedIntervalStats) {
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text("Time between feeds", style = MaterialTheme.typography.bodyMedium, color = OutlineColor)
+                Text(stringResource(R.string.today_time_between_feeds), style = MaterialTheme.typography.bodyMedium, color = OutlineColor)
                 Text(formatMinutes(thisWeek), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 Text(
                     text = when {
-                        diff == null || kotlin.math.abs(diff) < 5 -> "About the same as last week"
-                        diff > 0 -> "${formatMinutes(diff)} longer than last week"
-                        else -> "${formatMinutes(-diff)} shorter than last week"
+                        diff == null || kotlin.math.abs(diff) < 5 -> stringResource(R.string.today_same_as_last_week)
+                        diff > 0 -> stringResource(R.string.today_longer_than_last_week, formatMinutes(diff))
+                        else -> stringResource(R.string.today_shorter_than_last_week, formatMinutes(-diff))
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

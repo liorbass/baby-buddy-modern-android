@@ -70,6 +70,7 @@ import androidx.compose.ui.unit.dp
 import com.example.BuildConfig
 import com.example.R
 import com.example.data.ml.RhythmTarget
+import com.example.data.model.AppText
 import com.example.data.model.BabySex
 import com.example.data.model.ReminderSettings
 import com.example.data.model.ServerConnectionConfig
@@ -124,7 +125,7 @@ private fun SettingsSection(
                     maxLines = 1
                 )
             }
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Open $title", tint = OutlineColor)
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.settings_open_section, title), tint = OutlineColor)
         }
     }
 }
@@ -147,7 +148,6 @@ private fun SwitchSetting(title: String, description: String, checked: Boolean, 
 private const val BABY_BUDDY_REPO = "https://github.com/babybuddy/babybuddy"
 private const val APP_REPO = "https://github.com/liorbass/baby-buddy-modern-android"
 
-private const val MODEL_TIMED = "When the model saved in Trends → Models expects it; the time below is the fallback"
 
 @Composable
 fun ConnectBackendScreen(
@@ -186,31 +186,31 @@ fun ConnectBackendScreen(
     certificatePrompt?.let { prompt ->
         AlertDialog(
             onDismissRequest = onDismissCertificate,
-            title = { Text(if (prompt.changed) "Server certificate changed" else "Trust this certificate?") },
+            title = { Text(stringResource(if (prompt.changed) R.string.cert_changed_title else R.string.cert_trust_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
                         if (prompt.changed) {
-                            "The server's certificate isn't the one you trusted before. That's expected if you renewed it; otherwise someone may be intercepting the connection."
+                            stringResource(R.string.cert_changed_text)
                         } else {
-                            "The server's certificate isn't signed by a known authority. Check that this SHA-256 fingerprint matches your server's certificate before trusting it."
+                            stringResource(R.string.cert_unknown_text)
                         }
                     )
                     Text(prompt.fingerprint, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                 }
             },
             confirmButton = {
-                TextButton(onClick = onTrustCertificate, modifier = Modifier.testTag("trust_cert_btn")) { Text("Trust", color = PrimaryColor) }
+                TextButton(onClick = onTrustCertificate, modifier = Modifier.testTag("trust_cert_btn")) { Text(stringResource(R.string.cert_trust), color = PrimaryColor) }
             },
             dismissButton = {
-                TextButton(onClick = onDismissCertificate) { Text("Cancel") }
+                TextButton(onClick = onDismissCertificate) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
 
     val isLoggedIn = config.isConnected && !config.isDemoMode
     val uriHandler = LocalUriHandler.current
-    val openLink: (String) -> Unit = { url -> runCatching { uriHandler.openUri(url) }.onFailure { onShowToast("No browser to open $url") } }
+    val openLink: (String) -> Unit = { url -> runCatching { uriHandler.openUri(url) }.onFailure { onShowToast(AppText.get(R.string.settings_no_browser, url)) } }
     // Demo mode gets the whole of Settings too, so every feature can be tried; its Server connection logs in for real
     val showSettings = config.isConnected
     var serverUrl by remember { mutableStateOf(config.serverUrl) }
@@ -226,12 +226,12 @@ fun ConnectBackendScreen(
     var openSection by rememberSaveable { mutableStateOf<String?>(null) }
     BackHandler(enabled = showSettings && openSection != null) { openSection = null }
     val sectionTitles = mapOf(
-        "connection" to "Server connection",
-        "you" to "You",
-        "tracked" to "Tracked items",
-        "appearance" to "Appearance",
-        "notifications" to "Notifications",
-        "about" to "About"
+        "connection" to stringResource(R.string.settings_connection),
+        "you" to stringResource(R.string.settings_you),
+        "tracked" to stringResource(R.string.settings_tracked),
+        "appearance" to stringResource(R.string.settings_appearance),
+        "notifications" to stringResource(R.string.settings_notifications),
+        "about" to stringResource(R.string.settings_about)
     )
 
     // Server URL, token, certificates, Cloudflare and the Connect button
@@ -241,7 +241,7 @@ fun ConnectBackendScreen(
             OutlinedTextField(
                 value = serverUrl,
                 onValueChange = { serverUrl = it },
-                label = { Text("Server URL") },
+                label = { Text(stringResource(R.string.login_server_url)) },
                 placeholder = { Text("https://babybuddy.example.com") },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
@@ -255,13 +255,13 @@ fun ConnectBackendScreen(
                 OutlinedTextField(
                     value = apiToken,
                     onValueChange = { apiToken = it },
-                    label = { Text("API token") },
+                    label = { Text(stringResource(R.string.login_api_token)) },
                     singleLine = true,
                     trailingIcon = {
                         IconButton(onClick = { tokenVisible = !tokenVisible }) {
                             Icon(
                                 imageVector = if (tokenVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = if (tokenVisible) "Hide token" else "Show token",
+                                contentDescription = stringResource(if (tokenVisible) R.string.login_hide_token else R.string.login_show_token),
                                 tint = OutlineColor
                             )
                         }
@@ -273,7 +273,7 @@ fun ConnectBackendScreen(
                         .testTag("api_token_input")
                 )
                 Text(
-                    "Find it in Baby Buddy under your user settings → API key.",
+                    stringResource(R.string.login_token_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -286,9 +286,9 @@ fun ConnectBackendScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Allow self-signed certificates", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.login_self_signed), style = MaterialTheme.typography.bodyLarge)
                     Text(
-                        "You confirm the server's certificate once; only that one is trusted",
+                        stringResource(R.string.login_self_signed_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -306,9 +306,9 @@ fun ConnectBackendScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Behind Cloudflare Access", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.login_cloudflare), style = MaterialTheme.typography.bodyLarge)
                     Text(
-                        "Sends a service token so the app skips the Cloudflare login",
+                        stringResource(R.string.login_cloudflare_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -345,7 +345,7 @@ fun ConnectBackendScreen(
                             IconButton(onClick = { cfSecretVisible = !cfSecretVisible }) {
                                 Icon(
                                     imageVector = if (cfSecretVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = if (cfSecretVisible) "Hide secret" else "Show secret",
+                                    contentDescription = stringResource(if (cfSecretVisible) R.string.login_hide_secret else R.string.login_show_secret),
                                     tint = OutlineColor
                                 )
                             }
@@ -355,7 +355,7 @@ fun ConnectBackendScreen(
                         modifier = Modifier.fillMaxWidth().testTag("cf_client_secret_input")
                     )
                     Text(
-                        "Create one in Cloudflare Zero Trust → Access → Service Auth, and add a Service Auth policy to the app.",
+                        stringResource(R.string.login_cloudflare_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 4.dp)
@@ -372,9 +372,9 @@ fun ConnectBackendScreen(
                 Button(
                     onClick = {
                         if (serverUrl.isBlank() || apiToken.isBlank()) {
-                            onShowToast("Enter a server URL and API token")
+                            onShowToast(AppText.get(R.string.login_enter_url_token))
                         } else if (showCloudflare && (cfClientId.isBlank() || cfClientSecret.isBlank())) {
-                            onShowToast("Enter both the Cloudflare client ID and secret")
+                            onShowToast(AppText.get(R.string.login_enter_cloudflare))
                         } else {
                             onTestConnect(serverUrl.trim(), apiToken.trim(), allowSelfSigned, cfClientId.trim(), cfClientSecret.trim())
                         }
@@ -387,7 +387,7 @@ fun ConnectBackendScreen(
                         .testTag("test_connect_btn")
                 ) {
                     Text(
-                        text = if (isLoggedIn) "Reconnect" else "Connect",
+                        text = stringResource(if (isLoggedIn) R.string.login_reconnect else R.string.login_connect),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -402,7 +402,7 @@ fun ConnectBackendScreen(
                         .testTag("demo_mode_btn")
                 ) {
                     Text(
-                        text = "Try Demo Mode with Sample Data",
+                        text = stringResource(R.string.login_try_demo),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Medium,
                         color = PrimaryColor
@@ -427,32 +427,31 @@ fun ConnectBackendScreen(
             ) {
                 Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
                 Text(
-                    "Connect to your Baby Buddy server to start.",
+                    stringResource(R.string.login_intro),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 // Up top as well as under the form, so it's seen before the server fields
                 TextButton(onClick = onEnterDemoMode, contentPadding = PaddingValues(0.dp), modifier = Modifier.testTag("demo_mode_link")) {
-                    Text("No server yet? Try the demo with sample data →", color = PrimaryColor, fontWeight = FontWeight.Medium)
+                    Text(stringResource(R.string.login_no_server), color = PrimaryColor, fontWeight = FontWeight.Medium)
                 }
                 var showWhatIs by rememberSaveable { mutableStateOf(false) }
                 TextButton(onClick = { showWhatIs = !showWhatIs }, contentPadding = PaddingValues(0.dp), modifier = Modifier.testTag("what_is_baby_buddy_link")) {
-                    Text(if (showWhatIs) "What is Baby Buddy? ▴" else "What is Baby Buddy? ▾", color = PrimaryColor, fontWeight = FontWeight.Medium)
+                    Text(stringResource(if (showWhatIs) R.string.login_what_is_open else R.string.login_what_is_closed), color = PrimaryColor, fontWeight = FontWeight.Medium)
                 }
                 AnimatedVisibility(visible = showWhatIs) {
                     Surface(color = SurfaceContainerLow, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
-                                "Baby Buddy is a free, open-source web app for tracking a baby's feeds, sleep, diapers and growth. " +
-                                    "You host it yourself (on a home server, NAS or cloud machine), so your data stays with you.",
+                                stringResource(R.string.login_what_is_text),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Text(
-                                "This app is an unofficial phone companion for it: it connects to your Baby Buddy server and keeps everything there, so the whole family shares the same log.",
+                                stringResource(R.string.login_what_is_companion),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             TextButton(onClick = { openLink(BABY_BUDDY_REPO) }, contentPadding = PaddingValues(0.dp)) {
-                                Text("Set up a server: Baby Buddy on GitHub →", color = PrimaryColor, fontWeight = FontWeight.Medium)
+                                Text(stringResource(R.string.login_set_up_server), color = PrimaryColor, fontWeight = FontWeight.Medium)
                             }
                         }
                     }
@@ -471,19 +470,19 @@ fun ConnectBackendScreen(
         ) {
             // Back closes an open category first, then leaves Settings
             IconButton(onClick = { if (openSection != null) openSection = null else onBack() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
             }
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = openSection?.let { sectionTitles[it] } ?: "Settings",
+                text = openSection?.let { sectionTitles[it] } ?: stringResource(R.string.nav_settings),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
         }
 
         SettingsSection(
-            title = "Server connection",
-            summary = "Connected · ${config.serverUrl}",
+            title = stringResource(R.string.settings_connection),
+            summary = stringResource(R.string.settings_connected_to, config.serverUrl),
             icon = Icons.Default.Cloud,
             expanded = openSection == "connection",
             hidden = openSection != null && openSection != "connection",
@@ -496,13 +495,13 @@ fun ConnectBackendScreen(
                     .fillMaxWidth()
                     .testTag("disconnect_btn")
             ) {
-                Text("Disconnect", color = MaterialTheme.colorScheme.error)
+                Text(stringResource(R.string.settings_disconnect), color = MaterialTheme.colorScheme.error)
             }
         }
 
         SettingsSection(
-            title = "You",
-            summary = caregiverName.ifBlank { "Add your name" },
+            title = stringResource(R.string.settings_you),
+            summary = caregiverName.ifBlank { stringResource(R.string.settings_add_your_name) },
             icon = Icons.Default.Person,
             expanded = openSection == "you",
             hidden = openSection != null && openSection != "you",
@@ -516,15 +515,15 @@ fun ConnectBackendScreen(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Your name") },
-                supportingText = { Text("Added to everything you log, so others see who logged it") },
+                label = { Text(stringResource(R.string.settings_your_name)) },
+                supportingText = { Text(stringResource(R.string.settings_your_name_desc)) },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
             )
-            Text("Growth charts", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+            Text(stringResource(R.string.settings_growth_charts), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
             Text(
-                "The WHO publishes separate charts for boys and girls. Used only for the growth percentiles on this phone.",
+                stringResource(R.string.settings_growth_charts_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -535,9 +534,9 @@ fun ConnectBackendScreen(
                 onSelect = { onBabySexChange(BabySex.entries[it]) }
             )
             if (TrackedItem.BREASTFEEDING !in hiddenItems) {
-                Text("Breastfeed start side", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+                Text(stringResource(R.string.settings_start_side), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
                 Text(
-                    "Which side the timer widget and the Quick Settings tile start on. In the app you pick the side yourself.",
+                    stringResource(R.string.settings_start_side_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -568,11 +567,11 @@ fun ConnectBackendScreen(
         }
 
         SettingsSection(
-            title = "Tracked items",
+            title = stringResource(R.string.settings_tracked),
             summary = if (hiddenItems.isEmpty()) {
-                "Tracking everything"
+                stringResource(R.string.settings_tracking_everything)
             } else {
-                "Hidden: " + TrackedItem.entries.filter { it in hiddenItems }.joinToString(", ") { it.label }
+                stringResource(R.string.settings_hidden, TrackedItem.entries.filter { it in hiddenItems }.joinToString(", ") { it.label })
             },
             icon = Icons.Default.Checklist,
             expanded = openSection == "tracked",
@@ -580,7 +579,7 @@ fun ConnectBackendScreen(
             onOpen = { openSection = "tracked" }
         ) {
             Text(
-                "Turn off what you don't track. It's hidden from Today, quick actions, History, Trends and reminders on this phone; nothing is deleted from the server.",
+                stringResource(R.string.settings_tracked_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -595,15 +594,15 @@ fun ConnectBackendScreen(
         }
 
         SettingsSection(
-            title = "Appearance",
-            summary = "${themeMode.label} · ${if (use24h) "24-hour" else "12-hour"} clock",
+            title = stringResource(R.string.settings_appearance),
+            summary = stringResource(if (use24h) R.string.settings_appearance_24h else R.string.settings_appearance_12h, themeMode.label),
             icon = Icons.Default.Palette,
             expanded = openSection == "appearance",
             hidden = openSection != null && openSection != "appearance",
             onOpen = { openSection = "appearance" }
         ) {
             Column {
-                Text("Theme", style = MaterialTheme.typography.labelLarge, color = OutlineColor)
+                Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.labelLarge, color = OutlineColor)
                 ThemeMode.entries.forEach { mode ->
                     Row(
                         modifier = Modifier
@@ -629,57 +628,57 @@ fun ConnectBackendScreen(
                 }
             }
             SwitchSetting(
-                title = "24-hour clock",
-                description = if (use24h) "Times show as 19:06" else "Times show as 7:06 PM",
+                title = stringResource(R.string.settings_24h),
+                description = stringResource(if (use24h) R.string.settings_24h_on else R.string.settings_24h_off),
                 checked = use24h,
                 onChange = onUse24hChange
             )
             SwitchSetting(
-                title = "Models tab in Trends",
-                description = "Fits a model to each rhythm on this phone and predicts the next feed, change, nap and wake-up",
+                title = stringResource(R.string.settings_models_tab),
+                description = stringResource(R.string.settings_models_tab_desc),
                 checked = modelsTab,
                 onChange = onModelsTabChange
             )
         }
 
         SettingsSection(
-            title = "Notifications",
+            title = stringResource(R.string.settings_notifications),
             summary = listOfNotNull(
-                "Lock-screen timers".takeIf { feedNotificationEnabled },
-                "what's next".takeIf { nextUpNotification },
-                "feed reminder".takeIf { reminders.feedAfterMinutes > 0 },
-                "awake reminder".takeIf { reminders.awakeAfterMinutes > 0 },
-                "sleep reminder".takeIf { reminders.sleepAfterMinutes > 0 },
-                "diaper reminder".takeIf { reminders.diaperAfterMinutes > 0 }
-            ).joinToString(" · ").replaceFirstChar(Char::uppercase).ifBlank { "Off" },
+                stringResource(R.string.settings_summary_lock_screen).takeIf { feedNotificationEnabled },
+                stringResource(R.string.settings_summary_next_up).takeIf { nextUpNotification },
+                stringResource(R.string.settings_summary_feed).takeIf { reminders.feedAfterMinutes > 0 },
+                stringResource(R.string.settings_summary_awake).takeIf { reminders.awakeAfterMinutes > 0 },
+                stringResource(R.string.settings_summary_sleep).takeIf { reminders.sleepAfterMinutes > 0 },
+                stringResource(R.string.settings_summary_diaper).takeIf { reminders.diaperAfterMinutes > 0 }
+            ).joinToString(" · ").replaceFirstChar(Char::uppercase).ifBlank { stringResource(R.string.off) },
             icon = Icons.Default.Notifications,
             expanded = openSection == "notifications",
             hidden = openSection != null && openSection != "notifications",
             onOpen = { openSection = "notifications" }
         ) {
             SwitchSetting(
-                title = "Timers on lock screen",
-                description = "Feed Left/Right/End buttons and the sleep timer while they run",
+                title = stringResource(R.string.settings_lock_screen_timers),
+                description = stringResource(R.string.settings_lock_screen_timers_desc),
                 checked = feedNotificationEnabled,
                 onChange = onFeedNotificationChange
             )
             SwitchSetting(
-                title = "What's next on lock screen",
-                description = "A silent notification with the next feed, diaper change and nap (from the reminders or a saved model) while no timer runs",
+                title = stringResource(R.string.settings_next_up),
+                description = stringResource(R.string.settings_next_up_desc),
                 checked = nextUpNotification,
                 onChange = onNextUpNotificationChange
             )
             if (TrackedItem.BREASTFEEDING !in hiddenItems || TrackedItem.BOTTLE !in hiddenItems) {
                 SwitchSetting(
-                    title = "Feed reminder",
+                    title = stringResource(R.string.settings_feed_reminder),
                     description = if (reminders.feedAfterMinutes > 0) {
                         if (RhythmTarget.FEED_GAP in modelTargets) {
-                            MODEL_TIMED
+                            stringResource(R.string.settings_model_timed)
                         } else {
-                            "When ${formatMinutes(reminders.feedAfterMinutes)} have passed since the last feed started"
+                            stringResource(R.string.settings_feed_reminder_on, formatMinutes(reminders.feedAfterMinutes))
                         }
                     } else {
-                        "Notify when the next feed is due"
+                        stringResource(R.string.settings_feed_reminder_off)
                     },
                     checked = reminders.feedAfterMinutes > 0,
                     onChange = { on -> onRemindersChange(reminders.copy(feedAfterMinutes = if (on) 180 else 0)) }
@@ -687,19 +686,19 @@ fun ConnectBackendScreen(
             }
             if (reminders.feedAfterMinutes > 0 && (TrackedItem.BREASTFEEDING !in hiddenItems || TrackedItem.BOTTLE !in hiddenItems)) {
                 DurationField(
-                    label = "Remind after",
+                    label = stringResource(R.string.settings_remind_after),
                     minutes = reminders.feedAfterMinutes,
                     onChange = { onRemindersChange(reminders.copy(feedAfterMinutes = it)) },
-                    dialogNote = "Time since the last feed started (hh:mm)"
+                    dialogNote = stringResource(R.string.settings_feed_reminder_note)
                 )
             }
             if (TrackedItem.SLEEP !in hiddenItems) {
                 SwitchSetting(
-                    title = "Awake reminder",
+                    title = stringResource(R.string.settings_awake_reminder),
                     description = if (reminders.awakeAfterMinutes > 0) {
-                        if (RhythmTarget.AWAKE_WINDOW in modelTargets) MODEL_TIMED else "When the baby has been awake ${formatMinutes(reminders.awakeAfterMinutes)}"
+                        if (RhythmTarget.AWAKE_WINDOW in modelTargets) stringResource(R.string.settings_model_timed) else stringResource(R.string.settings_awake_reminder_on, formatMinutes(reminders.awakeAfterMinutes))
                     } else {
-                        "Notify when it's been a while since the last sleep"
+                        stringResource(R.string.settings_awake_reminder_off)
                     },
                     checked = reminders.awakeAfterMinutes > 0,
                     onChange = { on -> onRemindersChange(reminders.copy(awakeAfterMinutes = if (on) 90 else 0)) }
@@ -707,19 +706,19 @@ fun ConnectBackendScreen(
             }
             if (reminders.awakeAfterMinutes > 0 && TrackedItem.SLEEP !in hiddenItems) {
                 DurationField(
-                    label = "Remind after",
+                    label = stringResource(R.string.settings_remind_after),
                     minutes = reminders.awakeAfterMinutes,
                     onChange = { onRemindersChange(reminders.copy(awakeAfterMinutes = it)) },
-                    dialogNote = "Time awake since the last sleep ended (hh:mm)"
+                    dialogNote = stringResource(R.string.settings_awake_reminder_note)
                 )
             }
             if (TrackedItem.SLEEP !in hiddenItems) {
                 SwitchSetting(
-                    title = "Sleep reminder",
+                    title = stringResource(R.string.settings_sleep_reminder),
                     description = if (reminders.sleepAfterMinutes > 0) {
-                        if (RhythmTarget.SLEEP_LENGTH in modelTargets) MODEL_TIMED else "When a timed sleep has lasted ${formatMinutes(reminders.sleepAfterMinutes)}"
+                        if (RhythmTarget.SLEEP_LENGTH in modelTargets) stringResource(R.string.settings_model_timed) else stringResource(R.string.settings_sleep_reminder_on, formatMinutes(reminders.sleepAfterMinutes))
                     } else {
-                        "Notify when the baby has been asleep a long time"
+                        stringResource(R.string.settings_sleep_reminder_off)
                     },
                     checked = reminders.sleepAfterMinutes > 0,
                     onChange = { on -> onRemindersChange(reminders.copy(sleepAfterMinutes = if (on) 120 else 0)) }
@@ -727,23 +726,23 @@ fun ConnectBackendScreen(
             }
             if (reminders.sleepAfterMinutes > 0 && TrackedItem.SLEEP !in hiddenItems) {
                 DurationField(
-                    label = "Remind after",
+                    label = stringResource(R.string.settings_remind_after),
                     minutes = reminders.sleepAfterMinutes,
                     onChange = { onRemindersChange(reminders.copy(sleepAfterMinutes = it)) },
-                    dialogNote = "Time asleep, counted from the start of the sleep timer (hh:mm)"
+                    dialogNote = stringResource(R.string.settings_sleep_reminder_note)
                 )
             }
             if (TrackedItem.DIAPERS !in hiddenItems) {
                 SwitchSetting(
-                    title = "Diaper reminder",
+                    title = stringResource(R.string.settings_diaper_reminder),
                     description = if (reminders.diaperAfterMinutes > 0) {
                         if (RhythmTarget.DIAPER_GAP in modelTargets) {
-                            MODEL_TIMED
+                            stringResource(R.string.settings_model_timed)
                         } else {
-                            "When ${formatMinutes(reminders.diaperAfterMinutes)} have passed since the last change"
+                            stringResource(R.string.settings_diaper_reminder_on, formatMinutes(reminders.diaperAfterMinutes))
                         }
                     } else {
-                        "Notify when the next diaper change is due"
+                        stringResource(R.string.settings_diaper_reminder_off)
                     },
                     checked = reminders.diaperAfterMinutes > 0,
                     onChange = { on -> onRemindersChange(reminders.copy(diaperAfterMinutes = if (on) 180 else 0)) }
@@ -751,23 +750,23 @@ fun ConnectBackendScreen(
             }
             if (reminders.diaperAfterMinutes > 0 && TrackedItem.DIAPERS !in hiddenItems) {
                 DurationField(
-                    label = "Remind after",
+                    label = stringResource(R.string.settings_remind_after),
                     minutes = reminders.diaperAfterMinutes,
                     onChange = { onRemindersChange(reminders.copy(diaperAfterMinutes = it)) },
-                    dialogNote = "Time since the last diaper change (hh:mm)"
+                    dialogNote = stringResource(R.string.settings_diaper_reminder_note)
                 )
             }
             if (reminders.anyOn) {
                 Text(
-                    "Heads-up before",
+                    stringResource(R.string.settings_heads_up),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     if (reminders.earlyMinutes > 0) {
-                        "Also notify ${formatMinutes(reminders.earlyMinutes)} before each reminder is due"
+                        stringResource(R.string.settings_heads_up_on, formatMinutes(reminders.earlyMinutes))
                     } else {
-                        "Only when a reminder is due"
+                        stringResource(R.string.settings_heads_up_off)
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -777,21 +776,21 @@ fun ConnectBackendScreen(
                         FilterChip(
                             selected = reminders.earlyMinutes == minutes,
                             onClick = { onRemindersChange(reminders.copy(earlyMinutes = minutes)) },
-                            label = { Text(if (minutes == 0) "Off" else formatMinutes(minutes)) }
+                            label = { Text(if (minutes == 0) stringResource(R.string.off) else formatMinutes(minutes)) }
                         )
                     }
                 }
             }
             Text(
-                "Reminders check the server first, so a feed, change or sleep logged on another phone counts.",
+                stringResource(R.string.settings_reminders_note),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         SettingsSection(
-            title = "About",
-            summary = "Version ${BuildConfig.VERSION_NAME} · built ${BuildConfig.BUILD_DATE}",
+            title = stringResource(R.string.settings_about),
+            summary = stringResource(R.string.about_summary, BuildConfig.VERSION_NAME, BuildConfig.BUILD_DATE),
             icon = Icons.Default.Info,
             expanded = openSection == "about",
             hidden = openSection != null && openSection != "about",
@@ -799,11 +798,11 @@ fun ConnectBackendScreen(
         ) {
             // What to quote in a bug report: the release, the exact commit and when it was built
             listOf(
-                "Version" to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                "Build" to BuildConfig.BUILD_TYPE,
-                "Git tag / commit" to BuildConfig.GIT_DESCRIBE,
-                "Build date" to BuildConfig.BUILD_DATE,
-                "App ID" to BuildConfig.APPLICATION_ID
+                stringResource(R.string.about_version) to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                stringResource(R.string.about_build) to BuildConfig.BUILD_TYPE,
+                stringResource(R.string.about_git) to BuildConfig.GIT_DESCRIBE,
+                stringResource(R.string.about_build_date) to BuildConfig.BUILD_DATE,
+                stringResource(R.string.about_app_id) to BuildConfig.APPLICATION_ID
             ).forEach { (label, value) ->
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
@@ -812,10 +811,10 @@ fun ConnectBackendScreen(
             }
             Column {
                 TextButton(onClick = { openLink(APP_REPO) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.testTag("app_repo_link")) {
-                    Text("Source code, issues and releases on GitHub →", color = PrimaryColor, fontWeight = FontWeight.Medium)
+                    Text(stringResource(R.string.about_source), color = PrimaryColor, fontWeight = FontWeight.Medium)
                 }
                 TextButton(onClick = { openLink(BABY_BUDDY_REPO) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.testTag("baby_buddy_repo_link")) {
-                    Text("Baby Buddy, the server this app works with →", color = PrimaryColor, fontWeight = FontWeight.Medium)
+                    Text(stringResource(R.string.about_server), color = PrimaryColor, fontWeight = FontWeight.Medium)
                 }
             }
         }

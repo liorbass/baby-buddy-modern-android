@@ -29,9 +29,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.R
+import com.example.data.model.AppText
 import com.example.data.model.BreastSide
 import com.example.data.model.FeedingEvent
 import com.example.data.model.LiveTimerState
@@ -43,7 +46,7 @@ import com.example.ui.theme.OutlineColor
 import com.example.ui.theme.PrimaryColor
 import com.example.ui.theme.TimerDisplayStyle
 
-private fun sideName(side: BreastSide) = if (side == BreastSide.LEFT) "Left" else "Right"
+private fun sideName(side: BreastSide) = AppText.get(if (side == BreastSide.LEFT) R.string.side_left else R.string.side_right)
 
 private fun clock(totalSeconds: Int): String = String.format("%02d:%02d", totalSeconds / 60, totalSeconds % 60)
 
@@ -92,16 +95,16 @@ fun BreastSideControls(
             Text(
                 text = when {
                     !hasFeed && lastFeed != null && lastSide != null ->
-                        "Last ended on ${sideName(lastSide)} · ${dayAndTime(lastFeed.timeMillis, lastFeed.timeFormatted)}"
+                        stringResource(R.string.widget_last_ended_on, sideName(lastSide), dayAndTime(lastFeed.timeMillis, lastFeed.timeFormatted))
 
-                    !hasFeed -> "Tap a side to start"
+                    !hasFeed -> stringResource(R.string.feed_tap_side_to_start)
 
-                    state.isPaused -> "Paused · tap a side to continue"
+                    state.isPaused -> stringResource(R.string.feed_paused_tap_side)
 
                     // The start time has its own field when it's editable
-                    onSetStart != null -> "Feeding on ${sideName(state.activeBreast)}"
+                    onSetStart != null -> stringResource(R.string.feed_feeding_on, sideName(state.activeBreast))
 
-                    else -> "On ${sideName(state.activeBreast)} · started ${state.sessionStartedTime}"
+                    else -> stringResource(R.string.widget_on_side_started, sideName(state.activeBreast), state.sessionStartedTime)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -110,7 +113,7 @@ fun BreastSideControls(
         if (hasFeed && previousFeedMillis != null) {
             val gapMinutes = ((state.sessionStartMillis - previousFeedMillis) / 60_000L).toInt()
             Text(
-                "${formatMinutes(gapMinutes)} since the previous feed (${TimeFormat.clock(previousFeedMillis)})",
+                stringResource(R.string.feed_since_previous, formatMinutes(gapMinutes), TimeFormat.clock(previousFeedMillis)),
                 style = MaterialTheme.typography.labelSmall,
                 color = OutlineColor
             )
@@ -118,7 +121,7 @@ fun BreastSideControls(
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
             SideButton(
-                label = "Left",
+                label = stringResource(R.string.side_left),
                 seconds = state.leftSeconds,
                 running = hasFeed && !state.isPaused && state.activeBreast == BreastSide.LEFT,
                 isLast = lastSide == BreastSide.LEFT,
@@ -127,7 +130,7 @@ fun BreastSideControls(
                 modifier = Modifier.weight(1f)
             )
             SideButton(
-                label = "Right",
+                label = stringResource(R.string.side_right),
                 seconds = state.rightSeconds,
                 running = hasFeed && !state.isPaused && state.activeBreast == BreastSide.RIGHT,
                 isLast = lastSide == BreastSide.RIGHT,
@@ -139,10 +142,10 @@ fun BreastSideControls(
 
         if (hasFeed && onSetStart != null) {
             TimeField(
-                label = "Started",
+                label = stringResource(R.string.started),
                 millis = state.sessionStartMillis,
                 onChange = onSetStart,
-                dialogNote = "Time added or removed goes to the side you started on."
+                dialogNote = stringResource(R.string.feed_start_note)
             )
         }
 
@@ -152,7 +155,7 @@ fun BreastSideControls(
                     TextButton(onClick = { editingSide = side }, modifier = Modifier.weight(1f)) {
                         Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp), tint = OutlineColor)
                         Text(
-                            "Edit ${sideName(side)}",
+                            stringResource(R.string.edit_side, sideName(side)),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(start = 6.dp)
                         )
@@ -163,7 +166,7 @@ fun BreastSideControls(
 
         if (hasFeed) {
             TextButton(onClick = onEndFeed) {
-                Text("End feed", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.end_feed), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -192,7 +195,7 @@ private fun SideButton(
         )
         Column(horizontalAlignment = Alignment.Start, modifier = Modifier.padding(start = 8.dp)) {
             Text(label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text(if (isLast) "Last side" else clock(seconds), style = MaterialTheme.typography.labelMedium)
+            Text(if (isLast) stringResource(R.string.last_side) else clock(seconds), style = MaterialTheme.typography.labelMedium)
         }
     }
     if (running) {

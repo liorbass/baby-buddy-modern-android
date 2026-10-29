@@ -3,12 +3,14 @@ package com.example.ui
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.R
 import com.example.data.api.UntrustedCertificateException
 import com.example.data.ml.RhythmModel
 import com.example.data.ml.RhythmTarget
 import com.example.data.ml.SavedRhythmModel
 import com.example.data.ml.Score
 import com.example.data.ml.trainRhythmModels
+import com.example.data.model.AppText
 import com.example.data.model.BATH_TAG
 import com.example.data.model.BabyProfile
 import com.example.data.model.BabySex
@@ -75,16 +77,18 @@ enum class ScreenDestination {
 }
 
 /** Which entries the History list shows. */
-enum class HistoryFilter(val label: String) {
-    ALL("All"),
-    FEEDS("Feeds"),
-    DIAPERS("Diapers"),
-    PUMPING("Pumping"),
-    TUMMY("Tummy time"),
-    SLEEP("Sleep"),
-    BATH("Baths"),
-    GROWTH("Growth"), // every measurement, not just the week's
-    NOTES("Notes")
+enum class HistoryFilter(private val labelRes: Int) {
+    ALL(R.string.history_filter_all),
+    FEEDS(R.string.history_filter_feeds),
+    DIAPERS(R.string.history_filter_diapers),
+    PUMPING(R.string.history_filter_pumping),
+    TUMMY(R.string.history_filter_tummy),
+    SLEEP(R.string.history_filter_sleep),
+    BATH(R.string.history_filter_bath),
+    GROWTH(R.string.history_filter_growth), // every measurement, not just the week's
+    NOTES(R.string.history_filter_notes);
+
+    val label: String get() = AppText.get(labelRes)
 }
 
 data class UiNotification(
@@ -206,7 +210,7 @@ class MainViewModel(
             _historyError.value = null
             repository.loadHistory(_historyLastDay.value)
                 .onSuccess { _historyLoaded.value = it }
-                .onFailure { _historyError.value = it.localizedMessage ?: "Couldn't load history" }
+                .onFailure { _historyError.value = it.localizedMessage ?: AppText.get(R.string.error_load_history) }
             _historyLoading.value = false
         }
     }
@@ -238,7 +242,7 @@ class MainViewModel(
             _trendsError.value = null
             repository.loadTrends(days)
                 .onSuccess { _trendsDays.value = it }
-                .onFailure { _trendsError.value = it.localizedMessage ?: "Couldn't load trends" }
+                .onFailure { _trendsError.value = it.localizedMessage ?: AppText.get(R.string.error_load_trends) }
             _trendsLoading.value = false
         }
     }
@@ -271,9 +275,9 @@ class MainViewModel(
         modelsJob?.cancel()
         modelsJob = viewModelScope.launch {
             val days = ((toMillis - fromMillis) / 86_400_000L).coerceAtLeast(1)
-            _modelsState.value = ModelsState.Training("Loading $days days of entries", 0f)
+            _modelsState.value = ModelsState.Training(AppText.plural(R.plurals.models_loading_days, days.toInt(), days), 0f)
             val events = repository.loadRhythmEvents(fromMillis, toMillis, repository.babyProfile.value.birthDate).getOrElse {
-                _modelsState.value = ModelsState.Failed(it.localizedMessage ?: "Couldn't load entries")
+                _modelsState.value = ModelsState.Failed(it.localizedMessage ?: AppText.get(R.string.error_load_entries))
                 return@launch
             }
             val targets = RhythmTarget.entries.size
@@ -286,7 +290,7 @@ class MainViewModel(
             )
             val models = withContext(Dispatchers.Default) {
                 trainRhythmModels(events, defaults) { target, fraction ->
-                    _modelsState.value = ModelsState.Training("Fitting ${target.title.lowercase()}", (target.ordinal + fraction) / targets)
+                    _modelsState.value = ModelsState.Training(AppText.get(R.string.models_fitting, target.title.lowercase()), (target.ordinal + fraction) / targets)
                 }
             }
             _modelsState.value = ModelsState.Ready(models, fromMillis, toMillis, System.currentTimeMillis())
@@ -310,14 +314,14 @@ class MainViewModel(
                 residuals = score.residuals
             )
             repository.setUsedModel(model.target, saved)
-            showToast("${model.target.title}: now estimated by ${score.family.lowercase()}")
+            showToast(AppText.get(R.string.models_now_estimated_by, model.target.title, score.family.lowercase()))
         }
     }
 
     /** Back to the default estimate (the fixed interval / weekly average) for [target], or for every rhythm. */
     fun resetModel(target: RhythmTarget? = null) {
         (if (target == null) RhythmTarget.entries else listOf(target)).forEach { repository.setUsedModel(it, null) }
-        showToast(if (target == null) "All rhythms back to the default estimate" else "${target.title}: back to the default estimate")
+        showToast(if (target == null) AppText.get(R.string.models_all_reset) else AppText.get(R.string.models_reset, target.title))
     }
 
     // Widgets State
@@ -390,24 +394,24 @@ class MainViewModel(
 
     fun logBottle(ml: Int, formula: Boolean, notes: String = "", timeMillis: Long? = null) {
         val id = repository.logBottle(ml, formula, timeMs = timeMillis ?: System.currentTimeMillis(), notes = notes)
-        showToast("Bottle logged: $ml ml ${if (formula) "formula" else "breast milk"}", undo = { repository.deleteFeeding(id) })
+        showToast(AppText.get(if (formula) R.string.toast_bottle_logged_formula else R.string.toast_bottle_logged_breast_milk, ml), undo = { repository.deleteFeeding(id) })
     }
 
     fun logPumping(ml: Int, minutes: Int, notes: String, startMillis: Long? = null) {
         val id = repository.logPumping(ml, minutes, notes, startMillis)
-        showToast("Pumping logged: $ml ml", undo = { repository.deletePumping(id) })
+        showToast(AppText.get(R.string.toast_pumping_logged, ml), undo = { repository.deletePumping(id) })
     }
 
     fun updatePumping(pumping: PumpingEvent) {
         repository.updatePumping(pumping)
         patchHistory { d -> d.copy(pumpings = d.pumpings.map { if (it.id == pumping.id) pumping else it }) }
-        showToast("Pumping updated")
+        showToast(AppText.get(R.string.toast_pumping_updated))
     }
 
     fun deletePumping(id: Long) {
         repository.deletePumping(id)
         patchHistory { d -> d.copy(pumpings = d.pumpings.filterNot { it.id == id }) }
-        showToast("Pumping deleted")
+        showToast(AppText.get(R.string.toast_pumping_deleted))
     }
 
     fun setLiveFeedNotes(notes: String) = repository.setLiveFeedNotes(notes)
@@ -417,37 +421,37 @@ class MainViewModel(
     fun updateFeeding(feeding: FeedingEvent) {
         repository.updateFeeding(feeding)
         patchHistory { d -> d.copy(feedings = d.feedings.map { if (it.id == feeding.id) feeding else it }) }
-        showToast("Feeding updated")
+        showToast(AppText.get(R.string.toast_feeding_updated))
     }
 
     fun deleteFeeding(id: Long) {
         repository.deleteFeeding(id)
         patchHistory { d -> d.copy(feedings = d.feedings.filterNot { it.id == id }) }
-        showToast("Feeding deleted")
+        showToast(AppText.get(R.string.toast_feeding_deleted))
     }
 
     fun updateDiaper(diaper: DiaperEvent) {
         repository.updateDiaper(diaper)
         patchHistory { d -> d.copy(diapers = d.diapers.map { if (it.id == diaper.id) diaper else it }) }
-        showToast("Diaper change updated")
+        showToast(AppText.get(R.string.toast_diaper_updated))
     }
 
     fun updateTummyTime(tummyTime: TummyTimeEvent) {
         repository.updateTummyTime(tummyTime)
         patchHistory { d -> d.copy(tummyTimes = d.tummyTimes.map { if (it.id == tummyTime.id) tummyTime else it }) }
-        showToast("Tummy time updated")
+        showToast(AppText.get(R.string.toast_tummy_updated))
     }
 
     fun deleteTummyTime(id: Long) {
         repository.deleteTummyTime(id)
         patchHistory { d -> d.copy(tummyTimes = d.tummyTimes.filterNot { it.id == id }) }
-        showToast("Tummy time deleted")
+        showToast(AppText.get(R.string.toast_tummy_deleted))
     }
 
     fun deleteDiaper(id: Long) {
         repository.deleteDiaper(id)
         patchHistory { d -> d.copy(diapers = d.diapers.filterNot { it.id == id }) }
-        showToast("Diaper change deleted")
+        showToast(AppText.get(R.string.toast_diaper_deleted))
     }
 
     fun showToast(message: String, isSuccess: Boolean = true, undo: (() -> Unit)? = null) {
@@ -465,7 +469,7 @@ class MainViewModel(
         val undo = _notification.value?.undo ?: return
         _notification.value = null
         undo()
-        showToast("Undone")
+        showToast(AppText.get(R.string.toast_undone))
     }
 
     fun dismissToast() {
@@ -481,18 +485,18 @@ class MainViewModel(
 
     fun setSideSeconds(side: BreastSide, seconds: Int) {
         repository.setSideSeconds(side, seconds)
-        showToast("${if (side == BreastSide.LEFT) "Left" else "Right"} side set to %02d:%02d".format(seconds / 60, seconds % 60))
+        showToast(AppText.get(if (side == BreastSide.LEFT) R.string.toast_left_side_set else R.string.toast_right_side_set, seconds / 60, seconds % 60))
     }
 
     fun setFeedStart(millis: Long) {
         repository.setFeedStart(millis)
-        showToast("Feed start set to ${TimeFormat.clock(repository.liveTimerState.value.sessionStartMillis)}")
+        showToast(AppText.get(R.string.toast_feed_start_set, TimeFormat.clock(repository.liveTimerState.value.sessionStartMillis)))
     }
 
     // Sleep
     fun startSleep() {
         repository.startSleep()
-        showToast("Sleep started")
+        showToast(AppText.get(R.string.toast_sleep_started))
     }
 
     fun setSleepStart(millis: Long) = repository.setSleepStart(millis)
@@ -503,18 +507,18 @@ class MainViewModel(
         val start = sleepTimer.value.startMillis
         val id = repository.stopSleep(isNap = isNap) ?: return
         val minutes = ((System.currentTimeMillis() - start) / 60_000L).toInt()
-        showToast("${if (isNap) "Nap" else "Sleep"} saved: ${formatMinutes(minutes)}", undo = { repository.deleteSleep(id) })
+        showToast(AppText.get(if (isNap) R.string.toast_nap_saved else R.string.toast_sleep_saved, formatMinutes(minutes)), undo = { repository.deleteSleep(id) })
     }
 
     fun cancelSleep() {
         repository.cancelSleep()
-        showToast("Sleep timer discarded")
+        showToast(AppText.get(R.string.toast_sleep_discarded))
     }
 
     fun logSleep(startMillis: Long, endMillis: Long, isNap: Boolean, notes: String) {
         val id = repository.logSleep(startMillis, endMillis, isNap, notes)
         showToast(
-            "${if (isNap) "Nap" else "Sleep"} logged: ${formatMinutes(((endMillis - startMillis) / 60_000L).toInt())}",
+            AppText.get(if (isNap) R.string.toast_nap_logged else R.string.toast_sleep_logged, formatMinutes(((endMillis - startMillis) / 60_000L).toInt())),
             undo = { repository.deleteSleep(id) }
         )
     }
@@ -522,18 +526,18 @@ class MainViewModel(
     fun updateSleep(sleep: SleepEvent) {
         repository.updateSleep(sleep)
         patchHistory { d -> d.copy(sleeps = d.sleeps.map { if (it.id == sleep.id) sleep else it }) }
-        showToast("Sleep updated")
+        showToast(AppText.get(R.string.toast_sleep_updated))
     }
 
     fun deleteSleep(id: Long) {
         repository.deleteSleep(id)
         patchHistory { d -> d.copy(sleeps = d.sleeps.filterNot { it.id == id }) }
-        showToast("Sleep deleted")
+        showToast(AppText.get(R.string.toast_sleep_deleted))
     }
 
     fun endFeed() {
         repository.endFeed()
-        showToast("Feed ended")
+        showToast(AppText.get(R.string.toast_feed_ended))
     }
 
     fun switchSide() {
@@ -547,7 +551,7 @@ class MainViewModel(
     fun toggleChime() {
         repository.toggleChime()
         val active = liveTimerState.value.softChimeEnabled
-        showToast(if (active) "Soft Chime: On" else "Soft Chime: Muted")
+        showToast(AppText.get(if (active) R.string.toast_chime_on else R.string.toast_chime_muted))
     }
 
     fun toggleObservationTag(tag: String) {
@@ -564,7 +568,7 @@ class MainViewModel(
         notes: String = ""
     ) {
         repository.finishAndSaveNursingSession(supplementOz, supplementType, notes)
-        showToast("Feeding saved")
+        showToast(AppText.get(R.string.toast_feeding_saved))
         navigateTo(ScreenDestination.TODAY_DASHBOARD)
     }
 
@@ -592,10 +596,10 @@ class MainViewModel(
         val id = repository.addDiaperLog(event, timeMillis ?: System.currentTimeMillis())
 
         if (startNursingAfter) {
-            showToast("Diaper saved! Starting nursing timer...")
+            showToast(AppText.get(R.string.toast_diaper_saved_start_timer))
             navigateTo(ScreenDestination.ACTIVE_NURSING_TIMER)
         } else {
-            showToast("Diaper saved", undo = { repository.deleteDiaper(id) })
+            showToast(AppText.get(R.string.toast_diaper_saved), undo = { repository.deleteDiaper(id) })
             navigateTo(ScreenDestination.TODAY_DASHBOARD)
         }
     }
@@ -604,7 +608,17 @@ class MainViewModel(
         val id = repository.addQuickLog(category, amount, note) ?: return
         val isBottle = category.equals("bottle", ignoreCase = true)
         showToast(
-            if (isBottle) "Bottle logged" else "${category.replaceFirstChar { it.uppercase() }} diaper logged",
+            if (isBottle) {
+                AppText.get(R.string.toast_bottle_logged)
+            } else {
+                when (category.lowercase()) {
+                    "pee" -> AppText.get(R.string.toast_quick_pee)
+                    "wet" -> AppText.get(R.string.toast_quick_wet)
+                    "poop" -> AppText.get(R.string.toast_quick_poop)
+                    "dirty" -> AppText.get(R.string.toast_quick_dirty)
+                    else -> AppText.get(R.string.toast_quick_both)
+                }
+            },
             undo = { if (isBottle) repository.deleteFeeding(id) else repository.deleteDiaper(id) }
         )
     }
@@ -628,18 +642,18 @@ class MainViewModel(
 
     private fun connect(url: String, token: String, allowSelfSigned: Boolean, cfClientId: String, cfClientSecret: String, pin: String) {
         viewModelScope.launch {
-            showToast("Connecting to Baby Buddy...", isSuccess = true)
+            showToast(AppText.get(R.string.toast_connecting), isSuccess = true)
             val result = repository.testConnection(url, token, allowSelfSigned, cfClientId, cfClientSecret, pin)
             val untrusted = result.exceptionOrNull() as? UntrustedCertificateException
             if (result.isSuccess) {
-                showToast(result.getOrDefault("Connected successfully!"))
+                showToast(result.getOrDefault(AppText.get(R.string.toast_connected)))
                 navigateTo(ScreenDestination.TODAY_DASHBOARD)
                 refresh()
             } else if (untrusted != null) {
                 _notification.value = null
                 _certificatePrompt.value = CertificatePrompt(url, token, cfClientId, cfClientSecret, untrusted.fingerprint, changed = pin.isNotBlank())
             } else {
-                showToast("Connection failed: ${result.exceptionOrNull()?.localizedMessage}", isSuccess = false)
+                showToast(AppText.get(R.string.toast_connection_failed, result.exceptionOrNull()?.localizedMessage.toString()), isSuccess = false)
             }
         }
     }
@@ -647,21 +661,21 @@ class MainViewModel(
     fun disconnectServer() {
         repository.disconnect()
         navigateTo(ScreenDestination.TODAY_DASHBOARD) // the login screen shows until reconnected
-        showToast("Logged out")
+        showToast(AppText.get(R.string.toast_logged_out))
     }
 
     fun enterDemoMode() {
         repository.enterDemoMode()
         navigateTo(ScreenDestination.TODAY_DASHBOARD)
-        showToast("Demo mode active with sample data")
+        showToast(AppText.get(R.string.toast_demo_mode))
     }
 
     fun toggleServerDisconnectedSimulation(disconnected: Boolean) {
         repository.toggleServerDisconnectedView(disconnected)
         if (disconnected) {
-            showToast("Simulating disconnected state", isSuccess = false)
+            showToast(AppText.get(R.string.toast_simulating_disconnected), isSuccess = false)
         } else {
-            showToast("Server connected")
+            showToast(AppText.get(R.string.toast_server_connected))
         }
     }
 
@@ -674,30 +688,30 @@ class MainViewModel(
         repository.toggleWidget(type)
         val isNowEnabled = repository.dashboardWidgets.value.find { it.type == type }?.isEnabled == true
         if (isNowEnabled) {
-            showToast("${type.displayName} added to Today")
+            showToast(AppText.get(R.string.toast_card_added, type.displayName))
         } else {
-            showToast("${type.displayName} removed from Today")
+            showToast(AppText.get(R.string.toast_card_removed, type.displayName))
         }
     }
 
     fun addDashboardWidget(type: DashboardWidgetType) {
         repository.addWidget(type)
-        showToast("${type.displayName} added to Today")
+        showToast(AppText.get(R.string.toast_card_added, type.displayName))
     }
 
     fun removeDashboardWidget(type: DashboardWidgetType) {
         repository.removeWidget(type)
-        showToast("Removed ${type.displayName}")
+        showToast(AppText.get(R.string.toast_card_removed_short, type.displayName))
     }
 
     fun addTummyTimeMinutes(minutes: Int) {
         val id = repository.addTummyTimeMinutes(minutes)
-        showToast("Tummy time logged: $minutes min", undo = { repository.deleteTummyTime(id) })
+        showToast(AppText.get(R.string.toast_tummy_logged, minutes), undo = { repository.deleteTummyTime(id) })
     }
 
     fun logTemperature(value: Double, notes: String = "") {
         val id = repository.logTemperature(value, notes)
-        showToast("Temperature logged: ${"%.1f".format(value)}°", undo = { repository.deleteTemperature(id) })
+        showToast(AppText.get(R.string.toast_temperature_logged, value), undo = { repository.deleteTemperature(id) })
     }
 
     /** Logs the measurements taken together (any of weight, length, head) as one entry each. */
@@ -705,18 +719,18 @@ class MainViewModel(
         if (values.isEmpty()) return
         val ids = values.map { (kind, value) -> kind to repository.logGrowth(kind, value, dateMillis ?: System.currentTimeMillis(), notes) }
         val text = values.entries.joinToString(", ") { (kind, value) -> formatGrowth(kind, value) }
-        showToast("Growth logged: $text", undo = { ids.forEach { (kind, id) -> repository.deleteGrowth(kind, id) } })
+        showToast(AppText.get(R.string.toast_growth_logged, text), undo = { ids.forEach { (kind, id) -> repository.deleteGrowth(kind, id) } })
     }
 
     /** Saves a changed measurement (from History or the Trends chart). */
     fun updateGrowth(event: GrowthEvent) {
         repository.updateGrowth(event)
-        showToast("${event.kind.label} updated")
+        showToast(AppText.get(R.string.toast_growth_updated, event.kind.label))
     }
 
     fun deleteGrowth(event: GrowthEvent) {
         repository.deleteGrowth(event.kind, event.id)
-        showToast("${event.kind.label} deleted")
+        showToast(AppText.get(R.string.toast_growth_deleted, event.kind.label))
     }
 
     // Baths (notes tagged "bath")
@@ -724,7 +738,7 @@ class MainViewModel(
 
     fun logBath(timeMillis: Long?, notes: String) {
         val id = repository.logBath(timeMillis ?: System.currentTimeMillis(), notes)
-        showToast("Bath logged", undo = { repository.deleteNote(id) })
+        showToast(AppText.get(R.string.toast_bath_logged), undo = { repository.deleteNote(id) })
     }
 
     /** Saves a changed note or bath from History. */
@@ -736,18 +750,18 @@ class MainViewModel(
                 notes = d.notes.map { if (it.id == note.id) note else it }
             )
         }
-        showToast(if (BATH_TAG in note.tags) "Bath updated" else "Note updated")
+        showToast(AppText.get(if (BATH_TAG in note.tags) R.string.toast_bath_updated else R.string.toast_note_updated))
     }
 
     fun deleteNoteEntry(note: NoteEvent) {
         repository.deleteNoteEvent(note)
         patchHistory { d -> d.copy(baths = d.baths.filterNot { it.id == note.id }, notes = d.notes.filterNot { it.id == note.id }) }
-        showToast(if (BATH_TAG in note.tags) "Bath deleted" else "Note deleted")
+        showToast(AppText.get(if (BATH_TAG in note.tags) R.string.toast_bath_deleted else R.string.toast_note_deleted))
     }
 
     fun addNote(text: String, tags: List<String> = emptyList()) {
         val id = repository.addNote(text, tags)
-        showToast(if (tags.isEmpty()) "Note added" else "${text.trim()} logged", undo = { repository.deleteNote(id) })
+        showToast(if (tags.isEmpty()) AppText.get(R.string.toast_note_added) else AppText.get(R.string.toast_tagged_note_logged, text.trim()), undo = { repository.deleteNote(id) })
     }
 
     // Quick notes, milk stash, reminders
@@ -766,7 +780,7 @@ class MainViewModel(
 
     fun setMilkStash(ml: Int) {
         val id = repository.setMilkStash(ml)
-        showToast("Milk stash set to $ml ml", undo = { repository.undoMilkStash(id) })
+        showToast(AppText.get(R.string.toast_milk_stash_set, ml), undo = { repository.undoMilkStash(id) })
     }
 
     /** Picks up feeds/sleeps started or ended on other phones; called every few seconds while the app is open. */
@@ -783,9 +797,9 @@ class MainViewModel(
         }
         val sent = WidgetManagerHelper.pinWidget(context, providerClass)
         if (sent) {
-            showToast("Requesting to add widget to Home Screen...", isSuccess = true)
+            showToast(AppText.get(R.string.toast_requesting_widget), isSuccess = true)
         } else {
-            showToast("Widget added! You can also long-press your home screen to add.", isSuccess = true)
+            showToast(AppText.get(R.string.toast_widget_added_hint), isSuccess = true)
         }
     }
 }

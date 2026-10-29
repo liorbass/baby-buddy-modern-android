@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.R
@@ -72,14 +73,14 @@ import com.example.ui.theme.SurfaceContainerLowest
 import kotlinx.coroutines.delay
 
 /** The entries on the Log screen; tapping one opens its form in place. */
-private enum class LogEntry(val label: String, val item: TrackedItem) {
-    BREASTFEED("Breastfeeding", TrackedItem.BREASTFEEDING),
-    BOTTLE("Bottle", TrackedItem.BOTTLE),
-    DIAPER("Diaper", TrackedItem.DIAPERS),
-    SLEEP("Sleep", TrackedItem.SLEEP),
-    PUMP("Pumping", TrackedItem.PUMPING),
-    BATH("Bath", TrackedItem.BATH),
-    GROWTH("Growth", TrackedItem.GROWTH)
+private enum class LogEntry(val labelRes: Int, val item: TrackedItem) {
+    BREASTFEED(R.string.log_breastfeeding, TrackedItem.BREASTFEEDING),
+    BOTTLE(R.string.log_bottle, TrackedItem.BOTTLE),
+    DIAPER(R.string.log_diaper, TrackedItem.DIAPERS),
+    SLEEP(R.string.log_sleep, TrackedItem.SLEEP),
+    PUMP(R.string.log_pumping, TrackedItem.PUMPING),
+    BATH(R.string.log_bath, TrackedItem.BATH),
+    GROWTH(R.string.log_growth, TrackedItem.GROWTH)
 }
 
 @Composable
@@ -145,18 +146,18 @@ fun QuickLogModal(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Log", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.nav_log), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             IconButton(
                 onClick = onClose,
                 modifier = Modifier.size(36.dp).clip(CircleShape).background(SurfaceContainer)
             ) {
-                Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close), modifier = Modifier.size(18.dp))
             }
         }
 
         if (entries.isEmpty()) {
             Text(
-                "Nothing to log here. Turn items back on in Settings → Tracked items.",
+                stringResource(R.string.log_nothing),
                 style = MaterialTheme.typography.bodyMedium,
                 color = OnSurfaceVariant
             )
@@ -166,11 +167,11 @@ fun QuickLogModal(
             val expanded = open == entry.name
             when (entry) {
                 LogEntry.BREASTFEED -> LogSection(
-                    label = entry.label,
+                    label = stringResource(entry.labelRes),
                     subtitle = when {
-                        liveTimerState.isRunning && liveTimerState.isPaused -> "Paused · ${clockText(liveTimerState.totalSeconds)}"
-                        liveTimerState.isRunning -> "Running · ${clockText(liveTimerState.totalSeconds)}"
-                        else -> "Left / right timer"
+                        liveTimerState.isRunning && liveTimerState.isPaused -> stringResource(R.string.log_feed_paused, clockText(liveTimerState.totalSeconds))
+                        liveTimerState.isRunning -> stringResource(R.string.log_feed_running, clockText(liveTimerState.totalSeconds))
+                        else -> stringResource(R.string.log_feed_subtitle)
                     },
                     icon = painterResource(R.drawable.ic_widget_feed),
                     tint = ItemColors.tint(entry.item),
@@ -192,8 +193,8 @@ fun QuickLogModal(
                 }
 
                 LogEntry.BOTTLE -> LogSection(
-                    label = entry.label,
-                    subtitle = "Breast milk or formula",
+                    label = stringResource(entry.labelRes),
+                    subtitle = stringResource(R.string.log_bottle_subtitle),
                     icon = rememberVectorPainter(Icons.Default.LocalDrink),
                     tint = ItemColors.tint(entry.item),
                     expanded = expanded,
@@ -211,8 +212,8 @@ fun QuickLogModal(
                 }
 
                 LogEntry.DIAPER -> LogSection(
-                    label = entry.label,
-                    subtitle = "Wet, dirty, both or dry",
+                    label = stringResource(entry.labelRes),
+                    subtitle = stringResource(R.string.log_diaper_subtitle),
                     icon = painterResource(R.drawable.ic_widget_diaper),
                     tint = ItemColors.tint(entry.item),
                     expanded = expanded,
@@ -227,8 +228,8 @@ fun QuickLogModal(
                 }
 
                 LogEntry.SLEEP -> LogSection(
-                    label = entry.label,
-                    subtitle = if (sleepTimer.isRunning) "Asleep since ${TimeFormat.clock(sleepTimer.startMillis)}" else "Timer or a past sleep",
+                    label = stringResource(entry.labelRes),
+                    subtitle = if (sleepTimer.isRunning) stringResource(R.string.sleep_asleep_since, TimeFormat.clock(sleepTimer.startMillis)) else stringResource(R.string.log_sleep_subtitle),
                     icon = rememberVectorPainter(Icons.Default.Bedtime),
                     tint = ItemColors.tint(entry.item),
                     expanded = expanded,
@@ -251,8 +252,8 @@ fun QuickLogModal(
                 }
 
                 LogEntry.PUMP -> LogSection(
-                    label = entry.label,
-                    subtitle = "Amount and duration",
+                    label = stringResource(entry.labelRes),
+                    subtitle = stringResource(R.string.log_pumping_subtitle),
                     icon = rememberVectorPainter(Icons.Default.WaterDrop),
                     tint = ItemColors.tint(entry.item),
                     expanded = expanded,
@@ -270,8 +271,8 @@ fun QuickLogModal(
                 }
 
                 LogEntry.BATH -> LogSection(
-                    label = entry.label,
-                    subtitle = "Time and note",
+                    label = stringResource(entry.labelRes),
+                    subtitle = stringResource(R.string.log_bath_subtitle),
                     icon = rememberVectorPainter(Icons.Default.Bathtub),
                     tint = ItemColors.tint(entry.item),
                     expanded = expanded,
@@ -287,9 +288,9 @@ fun QuickLogModal(
                 }
 
                 LogEntry.GROWTH -> LogSection(
-                    label = entry.label,
-                    subtitle = latestGrowth(growth)[GrowthKind.WEIGHT]?.let { "Last weight: ${formatGrowth(GrowthKind.WEIGHT, it.value)}" }
-                        ?: "Weight, length, head",
+                    label = stringResource(entry.labelRes),
+                    subtitle = latestGrowth(growth)[GrowthKind.WEIGHT]?.let { stringResource(R.string.log_last_weight, formatGrowth(GrowthKind.WEIGHT, it.value)) }
+                        ?: stringResource(R.string.card_growth_desc),
                     icon = rememberVectorPainter(Icons.Default.MonitorWeight),
                     tint = ItemColors.tint(entry.item),
                     expanded = expanded,
@@ -351,7 +352,7 @@ private fun LogSection(
                 }
                 Icon(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (expanded) "Close" else "Open",
+                    contentDescription = stringResource(if (expanded) R.string.close else R.string.open),
                     tint = OnSurfaceVariant
                 )
             }
@@ -402,7 +403,7 @@ private fun FeedPanel(
             OutlinedTextField(
                 value = note,
                 onValueChange = { note = it },
-                placeholder = { Text("Note (optional)") },
+                placeholder = { Text(stringResource(R.string.note_optional)) },
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
             )

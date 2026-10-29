@@ -57,14 +57,14 @@
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:contentDescription="Feed"
+                android:contentDescription="@string/widget_quick_feed"
                 android:src="@drawable/ic_widget_feed" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:text="Feed"
+                android:text="@string/widget_quick_feed"
                 android:textColor="@color/bb_primary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -86,14 +86,14 @@
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:contentDescription="Diaper"
+                android:contentDescription="@string/widget_quick_diaper"
                 android:src="@drawable/ic_widget_diaper" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:text="Diaper"
+                android:text="@string/widget_quick_diaper"
                 android:textColor="@color/bb_diaper"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -114,14 +114,14 @@
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:contentDescription="Tummy Time"
+                android:contentDescription="@string/widget_quick_tummy_desc"
                 android:src="@drawable/ic_widget_tummy" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:text="Tummy"
+                android:text="@string/widget_quick_tummy"
                 android:textColor="@color/bb_primary_container"
                 android:textSize="13sp"
                 android:textStyle="bold" />

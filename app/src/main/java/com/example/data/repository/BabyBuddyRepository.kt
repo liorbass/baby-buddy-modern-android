@@ -3,6 +3,7 @@ package com.example.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.runtime.snapshotFlow
+import com.example.R
 import com.example.data.api.BabyBuddyApiClient
 import com.example.data.api.BabyBuddyApiService
 import com.example.data.api.BabyBuddyChangeDto
@@ -22,6 +23,7 @@ import com.example.data.ml.RhythmTarget
 import com.example.data.ml.SavedRhythmModel
 import com.example.data.ml.predictRhythms
 import com.example.data.ml.trainRhythmModels
+import com.example.data.model.AppText
 import com.example.data.model.BATH_NOTE_TEXT
 import com.example.data.model.BATH_TAG
 import com.example.data.model.BabyProfile
@@ -484,13 +486,13 @@ class BabyBuddyRepository {
             isConnected = true,
             isDemoMode = true,
             detectedChildName = "Sam",
-            lastSyncFormatted = "Demo mode"
+            lastSyncFormatted = AppText.get(R.string.demo_mode)
         )
         _babyProfile.value = BabyProfile(
             name = "Sam",
             shortName = "Sam",
             birthDate = "2026-01-10",
-            ageFormatted = "9m 3d"
+            ageFormatted = AppText.get(R.string.age_months_days, 9, 3)
         )
         loadDemoData()
         // Show every feature: growth charts, reminders and the rhythm models (fitted on the demo data and in use)
@@ -587,8 +589,8 @@ class BabyBuddyRepository {
             if (response.isSuccessful) {
                 val children = response.body()?.results ?: emptyList()
                 val detectedChild = children.firstOrNull()
-                val detectedName = detectedChild?.let { "${it.firstName} ${it.lastName}".trim() } ?: "Baby"
-                val detectedShort = detectedChild?.firstName ?: "Baby"
+                val detectedName = detectedChild?.let { "${it.firstName} ${it.lastName}".trim() } ?: AppText.get(R.string.profile_baby)
+                val detectedShort = detectedChild?.firstName ?: AppText.get(R.string.profile_baby)
 
                 _babyProfile.update {
                     it.copy(
@@ -610,7 +612,7 @@ class BabyBuddyRepository {
                         cfClientId = cfClientId,
                         cfClientSecret = cfClientSecret,
                         detectedChildName = detectedName,
-                        lastSyncFormatted = "Synced just now"
+                        lastSyncFormatted = AppText.get(R.string.synced_just_now)
                     )
                 }
                 _isServerDisconnectedView.value = false
@@ -636,15 +638,15 @@ class BabyBuddyRepository {
                 pollSharedTimers()
                 loadMilkStash()
 
-                Result.success("Connected as $detectedShort")
+                Result.success(AppText.get(R.string.connected_as, detectedShort))
             } else if (response.code() == 401 || response.code() == 403) {
                 val behindCloudflare = response.headers()["cf-ray"] != null
                 Result.failure(
                     Exception(
                         if (behindCloudflare && cfClientId.isBlank()) {
-                            "HTTP ${response.code()}: blocked by Cloudflare. Add a Cloudflare Access service token."
+                            AppText.get(R.string.error_blocked_by_cloudflare, response.code())
                         } else {
-                            "HTTP ${response.code()}: check the API token" + if (behindCloudflare) " and Cloudflare Access token" else ""
+                            AppText.get(if (behindCloudflare) R.string.error_check_token_and_cloudflare else R.string.error_check_token, response.code())
                         }
                     )
                 )
@@ -652,9 +654,9 @@ class BabyBuddyRepository {
                 Result.failure(Exception("HTTP ${response.code()}: ${response.message()}"))
             }
         } catch (e: com.squareup.moshi.JsonDataException) {
-            Result.failure(Exception("The server sent a web page instead of the API. If it's behind Cloudflare Access, add a service token."))
+            Result.failure(Exception(AppText.get(R.string.error_web_page_not_api)))
         } catch (e: com.squareup.moshi.JsonEncodingException) {
-            Result.failure(Exception("The server sent a web page instead of the API. If it's behind Cloudflare Access, add a service token."))
+            Result.failure(Exception(AppText.get(R.string.error_web_page_not_api)))
         } catch (e: Exception) {
             // OkHttp wraps the trust manager's verdict in an SSLHandshakeException; surface it so the user can trust the certificate
             val untrusted = e.findInChain { it is UntrustedCertificateException }
@@ -663,7 +665,7 @@ class BabyBuddyRepository {
                     untrusted != null -> untrusted
 
                     !allowSelfSigned && e.findInChain { it is java.security.cert.CertPathValidatorException } != null ->
-                        Exception("The server's certificate isn't trusted. If it's self-signed, turn on Allow self-signed certificates.")
+                        Exception(AppText.get(R.string.error_certificate_not_trusted))
 
                     else -> e
                 }
@@ -762,7 +764,7 @@ class BabyBuddyRepository {
             }
         }
         val syncedAt = System.currentTimeMillis()
-        _connectionConfig.update { it.copy(lastSyncFormatted = "Synced ${formatClock(syncedAt)}", lastSyncMillis = syncedAt) }
+        _connectionConfig.update { it.copy(lastSyncFormatted = AppText.get(R.string.synced_at, formatClock(syncedAt)), lastSyncMillis = syncedAt) }
     }
 
     /**
@@ -1044,7 +1046,7 @@ class BabyBuddyRepository {
         val api = remoteApi
         val child = remoteChildId
         if (api == null || child == null) {
-            return@withContext Result.failure(IllegalStateException("Connect to your Baby Buddy server to see history"))
+            return@withContext Result.failure(IllegalStateException(AppText.get(R.string.error_connect_for_history)))
         }
         try {
             val rangeEnd = Calendar.getInstance().apply {
@@ -1205,7 +1207,7 @@ class BabyBuddyRepository {
                 allDemoSleeps.filter { it.timeMillis < to }
             )
         }
-        check(api != null && child != null) { "Connect to your Baby Buddy server to see trends" }
+        check(api != null && child != null) { AppText.get(R.string.error_connect_for_trends) }
         val until = toMillis?.let(::isoUtc)
         val fetchFrom = fromMillis - 24 * 60 * 60_000L
         val feeds = allPages("feedings") { api.getFeedings(remoteAuthHeader, child, since = isoUtc(fetchFrom), until = until, limit = PAGE, offset = it) }
@@ -1351,7 +1353,7 @@ class BabyBuddyRepository {
         val api = remoteApi
         val child = remoteChildId
         if (!isDemo && (api == null || child == null)) {
-            return@withContext Result.failure(IllegalStateException("Connect to your Baby Buddy server to see trends"))
+            return@withContext Result.failure(IllegalStateException(AppText.get(R.string.error_connect_for_trends)))
         }
         try {
             val firstDay = Calendar.getInstance().apply {
@@ -1451,7 +1453,7 @@ class BabyBuddyRepository {
         if (months < 0) return null
         b.add(Calendar.MONTH, months)
         val days = ((now.timeInMillis - b.timeInMillis) / 86_400_000L).toInt()
-        return if (months == 0) "${days}d" else "${months}m ${days}d"
+        return if (months == 0) AppText.get(R.string.age_days, days) else AppText.get(R.string.age_months_days, months, days)
     }
 
     private fun formatServerTime(isoString: String): String {
@@ -1487,7 +1489,7 @@ class BabyBuddyRepository {
         prefs?.edit()?.remove(PREF_AWAY_SINCE)?.apply()
         // Saved rhythm models learned this child's (or the demo's) rhythm
         RhythmTarget.entries.forEach { setUsedModel(it, null) }
-        _babyProfile.value = BabyProfile(name = "My Baby", shortName = "Baby", ageFormatted = "Newborn")
+        _babyProfile.value = BabyProfile(name = AppText.get(R.string.profile_my_baby), shortName = AppText.get(R.string.profile_baby), ageFormatted = AppText.get(R.string.profile_newborn))
         stopAndResetTimer()
     }
 
@@ -2370,7 +2372,7 @@ class BabyBuddyRepository {
         // Unsent entries belong to the server being left
         synchronized(pendingWrites) {
             if (pendingWrites.isNotEmpty()) {
-                _syncErrors.tryEmit("Discarded ${pendingWrites.size} entries not yet saved to the server")
+                _syncErrors.tryEmit(AppText.plural(R.plurals.sync_discarded, pendingWrites.size, pendingWrites.size))
             }
             pendingWrites.clear()
             queueChanged()
@@ -2520,7 +2522,7 @@ class BabyBuddyRepository {
                         }
                         if (attempts == 1) {
                             _syncErrors.tryEmit(
-                                if (result == WriteResult.PROXY_RETRY) "A proxy in front of the server rejected ${describe(write)}, will retry" else "Couldn't reach server, will keep retrying"
+                                if (result == WriteResult.PROXY_RETRY) AppText.get(R.string.sync_proxy_rejected, describe(write)) else AppText.get(R.string.sync_unreachable)
                             )
                         }
                         // 5s, 10s, 20s ... capped at 5 min
@@ -2528,7 +2530,7 @@ class BabyBuddyRepository {
                     }
 
                     WriteResult.NEEDS_LOGIN -> {
-                        _syncErrors.tryEmit("Server rejected the API token. Reconnect in Settings to send ${_pendingWriteCount.value} unsaved entries")
+                        _syncErrors.tryEmit(AppText.plural(R.plurals.sync_token_rejected, _pendingWriteCount.value, _pendingWriteCount.value))
                         break
                     }
                 }
@@ -2568,7 +2570,7 @@ class BabyBuddyRepository {
         } catch (e: IOException) {
             WriteResult.RETRY
         } catch (e: Exception) {
-            _syncErrors.tryEmit("Couldn't save ${describe(write)}: ${e.localizedMessage}")
+            _syncErrors.tryEmit(AppText.get(R.string.sync_could_not_save, describe(write), "${e.localizedMessage}"))
             WriteResult.REJECTED
         }
     }
@@ -2591,7 +2593,7 @@ class BabyBuddyRepository {
                 WriteResult.PROXY_RETRY
             } else {
                 // Validation errors won't fix themselves on retry
-                _syncErrors.tryEmit("Server rejected ${describe(write)} (HTTP ${response.code()}) ${detail.take(160)}".trim())
+                _syncErrors.tryEmit(AppText.get(R.string.sync_server_rejected, describe(write), response.code(), detail.take(160)).trim())
                 WriteResult.REJECTED
             }
         }
@@ -2605,18 +2607,18 @@ class BabyBuddyRepository {
 
     private fun describe(write: QueuedWrite): String {
         val what = when (write.endpoint) {
-            ENDPOINT_FEEDINGS -> "feeding"
-            ENDPOINT_CHANGES -> "diaper change"
-            ENDPOINT_PUMPING -> "pumping"
-            ENDPOINT_TEMPERATURE -> "temperature"
-            ENDPOINT_NOTES -> "note"
-            ENDPOINT_SLEEP -> "sleep"
+            ENDPOINT_FEEDINGS -> AppText.get(R.string.write_feeding)
+            ENDPOINT_CHANGES -> AppText.get(R.string.write_diaper_change)
+            ENDPOINT_PUMPING -> AppText.get(R.string.write_pumping)
+            ENDPOINT_TEMPERATURE -> AppText.get(R.string.write_temperature)
+            ENDPOINT_NOTES -> AppText.get(R.string.write_note)
+            ENDPOINT_SLEEP -> AppText.get(R.string.write_sleep)
             in GROWTH_ENDPOINTS -> GrowthKind.forEndpoint(write.endpoint)!!.label.lowercase()
-            else -> "tummy time"
+            else -> AppText.get(R.string.write_tummy_time)
         }
         return when (write.action) {
-            QueuedWrite.ACTION_UPDATE -> "$what edit"
-            QueuedWrite.ACTION_DELETE -> "$what delete"
+            QueuedWrite.ACTION_UPDATE -> AppText.get(R.string.write_edit, what)
+            QueuedWrite.ACTION_DELETE -> AppText.get(R.string.write_delete, what)
             else -> what
         }
     }
@@ -2880,13 +2882,13 @@ class BabyBuddyRepository {
                 isConnected = true,
                 isDemoMode = true,
                 detectedChildName = "Sam",
-                lastSyncFormatted = "Demo mode"
+                lastSyncFormatted = AppText.get(R.string.demo_mode)
             )
             _babyProfile.value = BabyProfile(
                 name = "Sam",
                 shortName = "Sam",
                 birthDate = "2026-01-10",
-                ageFormatted = "9m 3d"
+                ageFormatted = AppText.get(R.string.age_months_days, 9, 3)
             )
             loadDemoData()
             return true
@@ -2914,7 +2916,7 @@ class BabyBuddyRepository {
                 isConnected = true,
                 isDemoMode = false,
                 detectedChildName = p.getString(PREF_CHILD_NAME, "").orEmpty(),
-                lastSyncFormatted = "Connecting…"
+                lastSyncFormatted = AppText.get(R.string.connecting)
             )
         }
         p.getString(PREF_CHILD_NAME, null)?.let { name ->
@@ -3001,13 +3003,13 @@ class BabyBuddyRepository {
 
     companion object {
         fun defaultDashboardWidgets() = listOf(
-            DashboardWidgetConfig(DashboardWidgetType.LAST_FEED, "Last feed", "Time since, side", isEnabled = true),
-            DashboardWidgetConfig(DashboardWidgetType.LAST_DIAPER, "Last diaper", "Time since, type", isEnabled = true),
-            DashboardWidgetConfig(DashboardWidgetType.WAKE_WINDOWS, "Wake windows", "Awake for, today's windows", isEnabled = true),
-            DashboardWidgetConfig(DashboardWidgetType.TUMMY_TIME_GOAL, "Tummy time", "Daily goal", isEnabled = false),
-            DashboardWidgetConfig(DashboardWidgetType.HEALTH_VITALS, "Temperature", "Readings", isEnabled = false),
-            DashboardWidgetConfig(DashboardWidgetType.CAREGIVER_NOTES, "Notes", "Shared notes", isEnabled = false),
-            DashboardWidgetConfig(DashboardWidgetType.GROWTH, "Growth", "Weight, length, head", isEnabled = false)
+            DashboardWidgetConfig(DashboardWidgetType.LAST_FEED, DashboardWidgetType.LAST_FEED.displayName, AppText.get(R.string.card_last_feed_desc), isEnabled = true),
+            DashboardWidgetConfig(DashboardWidgetType.LAST_DIAPER, DashboardWidgetType.LAST_DIAPER.displayName, AppText.get(R.string.card_last_diaper_desc), isEnabled = true),
+            DashboardWidgetConfig(DashboardWidgetType.WAKE_WINDOWS, DashboardWidgetType.WAKE_WINDOWS.displayName, AppText.get(R.string.card_wake_windows_desc), isEnabled = true),
+            DashboardWidgetConfig(DashboardWidgetType.TUMMY_TIME_GOAL, DashboardWidgetType.TUMMY_TIME_GOAL.displayName, AppText.get(R.string.card_tummy_time_desc), isEnabled = false),
+            DashboardWidgetConfig(DashboardWidgetType.HEALTH_VITALS, DashboardWidgetType.HEALTH_VITALS.displayName, AppText.get(R.string.card_temperature_desc), isEnabled = false),
+            DashboardWidgetConfig(DashboardWidgetType.CAREGIVER_NOTES, DashboardWidgetType.CAREGIVER_NOTES.displayName, AppText.get(R.string.card_notes_desc), isEnabled = false),
+            DashboardWidgetConfig(DashboardWidgetType.GROWTH, DashboardWidgetType.GROWTH.displayName, AppText.get(R.string.card_growth_desc), isEnabled = false)
         )
 
         val instance: BabyBuddyRepository by lazy { BabyBuddyRepository() }
@@ -3139,7 +3141,7 @@ class BabyBuddyRepository {
         }
         val api = remoteApi
         val child = remoteChildId
-        if (api == null || child == null) return@withContext Result.failure(IllegalStateException("Not connected"))
+        if (api == null || child == null) return@withContext Result.failure(IllegalStateException(AppText.get(R.string.error_not_connected)))
         try {
             val todayStart = startOfTodayMillis()
             val day = 86_400_000L

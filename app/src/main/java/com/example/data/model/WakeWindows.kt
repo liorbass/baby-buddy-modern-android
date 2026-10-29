@@ -1,11 +1,15 @@
 package com.example.data.model
 
+import com.example.R
+
 /** The parts of the Wake windows card; which show is chosen in Customize Today. */
-enum class WakeWindowPart(val label: String) {
-    AWAKE_FOR("Awake for"),
-    NAP_DUE("Nap due"),
-    TODAY_STATS("Today's average"),
-    WINDOW_BARS("Each window")
+enum class WakeWindowPart(private val labelRes: Int) {
+    AWAKE_FOR(R.string.wake_part_awake_for),
+    NAP_DUE(R.string.wake_part_nap_due),
+    TODAY_STATS(R.string.wake_part_today_stats),
+    WINDOW_BARS(R.string.wake_part_window_bars);
+
+    val label: String get() = AppText.get(labelRes)
 }
 
 /** Time awake between two sleeps (the Wake windows card on Today). */

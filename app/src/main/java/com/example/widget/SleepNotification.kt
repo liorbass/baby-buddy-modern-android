@@ -21,7 +21,6 @@ import com.example.data.model.TimeFormat
 object SleepNotification {
 
     private const val CHANNEL_ID = "sleep_timer"
-    private const val CHANNEL_NAME = "Sleep timer"
     const val NOTIFICATION_ID = 4202
 
     private const val REQUEST_CONTENT = 4220
@@ -52,8 +51,8 @@ object SleepNotification {
         // The start never changes while it runs, so the system chronometer can count on its own
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_widget_sleep)
-            .setContentTitle("Sleeping")
-            .setContentText("Since ${TimeFormat.clock(state.startMillis)}")
+            .setContentTitle(context.getString(R.string.sleeping))
+            .setContentText(context.getString(R.string.since_time, TimeFormat.clock(state.startMillis)))
             .setUsesChronometer(true)
             .setWhen(state.startMillis)
             .setShowWhen(true)
@@ -64,7 +63,7 @@ object SleepNotification {
             .setCategory(NotificationCompat.CATEGORY_STOPWATCH)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(contentIntent(context))
-            .addAction(0, "Woke up", stopIntent(context))
+            .addAction(0, context.getString(R.string.woke_up), stopIntent(context))
             .build()
     }
 
@@ -72,7 +71,7 @@ object SleepNotification {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (manager.getNotificationChannel(CHANNEL_ID) != null) return
-        val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW).apply {
+        val channel = NotificationChannel(CHANNEL_ID, context.getString(R.string.channel_sleep_timer), NotificationManager.IMPORTANCE_LOW).apply {
             setShowBadge(false)
             lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
         }

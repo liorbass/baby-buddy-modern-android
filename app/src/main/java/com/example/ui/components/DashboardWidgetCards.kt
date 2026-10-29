@@ -37,11 +37,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.data.model.BabySex
 import com.example.data.model.GrowthEvent
 import com.example.data.model.GrowthKind
@@ -97,7 +99,7 @@ private fun WidgetCardShell(
                 IconButton(onClick = onRemoveWidget, modifier = Modifier.size(32.dp)) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Remove card",
+                        contentDescription = stringResource(R.string.cards_remove),
                         tint = OutlineColor,
                         modifier = Modifier.size(16.dp)
                     )
@@ -127,10 +129,10 @@ fun TummyTimeGoalWidgetCard(
         0f
     }
 
-    WidgetCardShell(title = "Tummy time", onRemoveWidget = onRemoveWidget) {
+    WidgetCardShell(title = stringResource(R.string.card_tummy_time), onRemoveWidget = onRemoveWidget) {
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "$todayMinutes of $goalMinutes min",
+            text = stringResource(R.string.cards_tummy_progress, todayMinutes, goalMinutes),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -158,7 +160,7 @@ fun TummyTimeGoalWidgetCard(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("+5 min", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.cards_plus_minutes, 5), style = MaterialTheme.typography.labelLarge)
             }
             Button(
                 onClick = { onAddMinutes(10) },
@@ -169,7 +171,7 @@ fun TummyTimeGoalWidgetCard(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("+10 min", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.cards_plus_minutes, 10), style = MaterialTheme.typography.labelLarge)
             }
         }
     }
@@ -186,11 +188,11 @@ fun TemperatureWidgetCard(
     val canLog = parsed != null && isPlausibleTemperature(parsed)
     val latest = temperatures.maxByOrNull { it.timeMillis }
 
-    WidgetCardShell(title = "Temperature", onRemoveWidget = onRemoveWidget) {
+    WidgetCardShell(title = stringResource(R.string.card_temperature), onRemoveWidget = onRemoveWidget) {
         Spacer(modifier = Modifier.height(4.dp))
         if (latest != null) {
             Text(
-                text = String.format(Locale.US, "%.1f°", latest.temperature),
+                text = String.format(Locale.getDefault(), "%.1f°", latest.temperature),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = PrimaryColor
@@ -207,7 +209,7 @@ fun TemperatureWidgetCard(
             }
         } else {
             Text(
-                text = "No readings today",
+                text = stringResource(R.string.cards_no_readings),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -246,7 +248,7 @@ fun TemperatureWidgetCard(
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
             ) {
-                Text("Log", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.nav_log), style = MaterialTheme.typography.labelLarge)
             }
         }
     }
@@ -264,11 +266,11 @@ fun GrowthWidgetCard(
     var showDialog by remember { mutableStateOf(false) }
     val latest = latestGrowth(growth)
 
-    WidgetCardShell(title = "Growth", onRemoveWidget = onRemoveWidget) {
+    WidgetCardShell(title = stringResource(R.string.card_growth), onRemoveWidget = onRemoveWidget) {
         Spacer(modifier = Modifier.height(4.dp))
         if (latest.isEmpty()) {
             Text(
-                text = "No measurements yet",
+                text = stringResource(R.string.cards_no_measurements),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -292,7 +294,7 @@ fun GrowthWidgetCard(
                 Column(horizontalAlignment = Alignment.End) {
                     if (percentile != null) {
                         Text(
-                            "${ordinalPercentile(percentile)} percentile",
+                            stringResource(R.string.cards_percentile, ordinalPercentile(percentile)),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium
                         )
@@ -307,7 +309,7 @@ fun GrowthWidgetCard(
         }
         if (latest.isNotEmpty() && sex == null) {
             Text(
-                text = "Choose boy or girl in Settings → You to see WHO percentiles.",
+                text = stringResource(R.string.cards_choose_sex),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -319,7 +321,7 @@ fun GrowthWidgetCard(
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Log growth", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.cards_log_growth), style = MaterialTheme.typography.labelLarge)
         }
     }
 
@@ -344,11 +346,11 @@ fun NotesWidgetCard(
     var input by remember { mutableStateOf("") }
     val latestNotes = notes.sortedByDescending { it.timeMillis }.take(3)
 
-    WidgetCardShell(title = "Notes", onRemoveWidget = onRemoveWidget) {
+    WidgetCardShell(title = stringResource(R.string.card_notes), onRemoveWidget = onRemoveWidget) {
         Spacer(modifier = Modifier.height(4.dp))
         if (latestNotes.isEmpty()) {
             Text(
-                text = "No notes yet",
+                text = stringResource(R.string.cards_no_notes),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -384,7 +386,7 @@ fun NotesWidgetCard(
             OutlinedTextField(
                 value = input,
                 onValueChange = { input = it },
-                placeholder = { Text("Add a note") },
+                placeholder = { Text(stringResource(R.string.cards_add_note)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 shape = RoundedCornerShape(16.dp),
@@ -406,7 +408,7 @@ fun NotesWidgetCard(
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
             ) {
-                Text("Add", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.add), style = MaterialTheme.typography.labelLarge)
             }
         }
     }
@@ -438,7 +440,7 @@ fun WakeWindowsWidgetCard(
     val awake = awakeSince != null && awakeSince <= now && sleepingSince == null
     val showNapDue = awake && WakeWindowPart.NAP_DUE in parts && nextSleepAt != null && nextSleepAt > awakeSince!!
 
-    WidgetCardShell(title = "Wake windows", onRemoveWidget = onRemoveWidget) {
+    WidgetCardShell(title = stringResource(R.string.card_wake_windows), onRemoveWidget = onRemoveWidget) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -447,31 +449,31 @@ fun WakeWindowsWidgetCard(
         ) {
             when {
                 sleepingSince != null -> if (WakeWindowPart.AWAKE_FOR in parts) {
-                    Text("Asleep for", style = MaterialTheme.typography.labelLarge, color = OutlineColor)
+                    Text(stringResource(R.string.cards_asleep_for), style = MaterialTheme.typography.labelLarge, color = OutlineColor)
                     Text(
                         formatMinutes(((now - sleepingSince) / 60_000L).toInt().coerceAtLeast(0)),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        windows.lastOrNull()?.let { "since ${TimeFormat.clock(sleepingSince)} · awake ${formatMinutes(it.minutes)} before" }
-                            ?: "since ${TimeFormat.clock(sleepingSince)}",
+                        windows.lastOrNull()?.let { stringResource(R.string.cards_since_awake_before, TimeFormat.clock(sleepingSince), formatMinutes(it.minutes)) }
+                            ?: stringResource(R.string.cards_since, TimeFormat.clock(sleepingSince)),
                         style = MaterialTheme.typography.bodySmall,
                         color = OutlineColor
                     )
                 }
 
                 awake -> if (WakeWindowPart.AWAKE_FOR in parts) {
-                    Text("Awake for", style = MaterialTheme.typography.labelLarge, color = OutlineColor)
+                    Text(stringResource(R.string.wake_part_awake_for), style = MaterialTheme.typography.labelLarge, color = OutlineColor)
                     Text(
                         formatMinutes(((now - awakeSince!!) / 60_000L).toInt()),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
-                    Text("since ${TimeFormat.clock(awakeSince)}", style = MaterialTheme.typography.bodySmall, color = OutlineColor)
+                    Text(stringResource(R.string.cards_since, TimeFormat.clock(awakeSince)), style = MaterialTheme.typography.bodySmall, color = OutlineColor)
                 }
 
-                else -> Text("No sleep logged yet", style = MaterialTheme.typography.bodyMedium, color = OutlineColor)
+                else -> Text(stringResource(R.string.cards_no_sleep), style = MaterialTheme.typography.bodyMedium, color = OutlineColor)
             }
             if (showNapDue) {
                 val since = awakeSince!!
@@ -489,8 +491,11 @@ fun WakeWindowsWidgetCard(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    "Nap due ~${TimeFormat.clock(due)} · " +
-                        if (minutesLeft >= 0) "in ${formatMinutes(minutesLeft)}" else "${formatMinutes(-minutesLeft)} over",
+                    if (minutesLeft >= 0) {
+                        stringResource(R.string.cards_nap_due_in, TimeFormat.clock(due), formatMinutes(minutesLeft))
+                    } else {
+                        stringResource(R.string.cards_nap_due_over, TimeFormat.clock(due), formatMinutes(-minutesLeft))
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = if (minutesLeft < 0) PrimaryColor else MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -500,7 +505,7 @@ fun WakeWindowsWidgetCard(
         if (windows.isNotEmpty() && WakeWindowPart.TODAY_STATS in parts) {
             Spacer(modifier = Modifier.height(14.dp))
             Text(
-                "Today: ${windows.size} · average ${formatMinutes(windows.averageMinutes())} · longest ${formatMinutes(windows.maxOf { it.minutes })}",
+                stringResource(R.string.cards_wake_today_stats, windows.size, formatMinutes(windows.averageMinutes()), formatMinutes(windows.maxOf { it.minutes })),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

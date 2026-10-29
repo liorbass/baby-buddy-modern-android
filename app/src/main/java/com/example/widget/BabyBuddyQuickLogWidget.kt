@@ -21,7 +21,7 @@ class BabyBuddyQuickLogWidget : AppWidgetProvider() {
         val profile = repo.babyProfile.value
 
         val lastFeed = repo.feedings.value.firstOrNull()
-        val statusText = if (lastFeed != null) "Last fed ${lastFeed.timeFormatted}" else "No feeds yet today"
+        val statusText = if (lastFeed != null) context.getString(R.string.widget_last_fed, lastFeed.timeFormatted) else context.getString(R.string.widget_no_feeds_today)
 
         for (appWidgetId in appWidgetIds) {
             val views = RemoteViews(context.packageName, R.layout.widget_quick_log)

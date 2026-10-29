@@ -1,5 +1,7 @@
 package com.example.data.model
 
+import com.example.R
+
 data class BabyProfile(
     val id: Int = 1,
     val name: String = "Leo James",
@@ -96,7 +98,11 @@ data class SleepTimerState(
 fun isNapTime(startMillis: Long): Boolean = java.util.Calendar.getInstance().apply { timeInMillis = startMillis }.get(java.util.Calendar.HOUR_OF_DAY) in 7..18
 
 /** "45m", "2h 05m". */
-fun formatMinutes(minutes: Int): String = if (minutes >= 60) "%dh %02dm".format(minutes / 60, minutes % 60) else "${minutes}m"
+fun formatMinutes(minutes: Int): String {
+    // Plain JVM tests have no resources: they get the English format
+    val res = AppText.resources ?: return if (minutes >= 60) "%dh %02dm".format(minutes / 60, minutes % 60) else "${minutes}m"
+    return if (minutes >= 60) res.getString(R.string.duration_hours_minutes, minutes / 60, minutes % 60) else res.getString(R.string.duration_minutes, minutes)
+}
 
 enum class DiaperType {
     WET,
@@ -219,25 +225,31 @@ data class HandoffSummary(
 }
 
 /** What this phone tracks (Settings → Tracked items); a hidden item disappears everywhere in the app. */
-enum class TrackedItem(val label: String, val description: String) {
-    BREASTFEEDING("Breastfeeding", "Left/Right timer, last side, nursing stats"),
-    BOTTLE("Bottle feeds", "Formula and breast-milk bottles"),
-    DIAPERS("Diapers", "Changes, wet/dirty counts, diaper rhythm"),
-    SLEEP("Sleep", "Sleep timer, naps, awake time, sleep rhythm"),
-    PUMPING("Pumping", "Pump sessions and amounts"),
-    MILK_STASH("Milk stash", "Stored breast milk on Today"),
-    TUMMY_TIME("Tummy time", "Sessions and the daily goal card"),
-    QUICK_NOTES("Quick notes", "One-tap tagged notes on Today"),
-    BATH("Baths", "Bath log and time since the last bath"),
-    GROWTH("Growth", "Weight, length and head circumference, with WHO charts in Trends")
+enum class TrackedItem(private val labelRes: Int, private val descriptionRes: Int) {
+    BREASTFEEDING(R.string.item_breastfeeding, R.string.item_breastfeeding_desc),
+    BOTTLE(R.string.item_bottle, R.string.item_bottle_desc),
+    DIAPERS(R.string.item_diapers, R.string.item_diapers_desc),
+    SLEEP(R.string.item_sleep, R.string.item_sleep_desc),
+    PUMPING(R.string.item_pumping, R.string.item_pumping_desc),
+    MILK_STASH(R.string.item_milk_stash, R.string.item_milk_stash_desc),
+    TUMMY_TIME(R.string.item_tummy_time, R.string.item_tummy_time_desc),
+    QUICK_NOTES(R.string.item_quick_notes, R.string.item_quick_notes_desc),
+    BATH(R.string.item_bath, R.string.item_bath_desc),
+    GROWTH(R.string.item_growth, R.string.item_growth_desc);
+
+    val label: String get() = AppText.get(labelRes)
+    val description: String get() = AppText.get(descriptionRes)
 }
 
 /** Which side a one-tap breastfeed starts on (timer widget, Quick Settings tile); Settings → You. */
-enum class StartSide(val label: String, val description: String) {
-    OPPOSITE("Opposite of the last feed", "Alternate sides: start where the last feed didn't end"),
-    SAME("Same as the last feed", "Start on the side the last feed ended on"),
-    LEFT("Always left", "Start every feed on the left"),
-    RIGHT("Always right", "Start every feed on the right");
+enum class StartSide(private val labelRes: Int, private val descriptionRes: Int) {
+    OPPOSITE(R.string.start_side_opposite, R.string.start_side_opposite_desc),
+    SAME(R.string.start_side_same, R.string.start_side_same_desc),
+    LEFT(R.string.start_side_left, R.string.start_side_left_desc),
+    RIGHT(R.string.start_side_right, R.string.start_side_right_desc);
+
+    val label: String get() = AppText.get(labelRes)
+    val description: String get() = AppText.get(descriptionRes)
 
     /** The side to start on, given the side the last breastfeed ended on (null if unknown: left). */
     fun after(lastSide: BreastSide?): BreastSide = when (this) {
@@ -249,47 +261,57 @@ enum class StartSide(val label: String, val description: String) {
 }
 
 /** Light/dark choice (Settings → Appearance). */
-enum class ThemeMode(val label: String, val description: String) {
-    BY_TIME("By time of day", "Dark from 20:00 to 07:00"),
-    SYSTEM("Same as phone", "Follows the phone's dark theme"),
-    LIGHT("Light", "Always light"),
-    DARK("Dark", "Always dark")
+enum class ThemeMode(private val labelRes: Int, private val descriptionRes: Int) {
+    BY_TIME(R.string.theme_by_time, R.string.theme_by_time_desc),
+    SYSTEM(R.string.theme_system, R.string.theme_system_desc),
+    LIGHT(R.string.theme_light, R.string.theme_light_desc),
+    DARK(R.string.theme_dark, R.string.theme_dark_desc);
+
+    val label: String get() = AppText.get(labelRes)
+    val description: String get() = AppText.get(descriptionRes)
 }
 
 /** Shortcut buttons at the top of Today; which ones show, and their order, is up to the user. */
-enum class QuickAction(val label: String) {
-    FEEDING("Feeding"),
-    DIAPER("Diaper"),
-    PUMP("Pump"),
-    TUMMY_TIME("Tummy time"),
-    SLEEP("Sleep"),
-    BATH("Bath");
+enum class QuickAction(private val labelRes: Int) {
+    FEEDING(R.string.action_feeding),
+    DIAPER(R.string.action_diaper),
+    PUMP(R.string.action_pump),
+    TUMMY_TIME(R.string.action_tummy_time),
+    SLEEP(R.string.action_sleep),
+    BATH(R.string.action_bath);
+
+    val label: String get() = AppText.get(labelRes)
 
     companion object {
         val DEFAULT = listOf(FEEDING, DIAPER)
     }
 }
 
-enum class DashboardWidgetType(val displayName: String, val category: String) {
-    LAST_FEED("Last feed", "Feeding"),
-    LAST_DIAPER("Last diaper", "Diapers"),
-    WAKE_WINDOWS("Wake windows", "Sleep"),
-    TUMMY_TIME_GOAL("Tummy time", "Activity"),
-    HEALTH_VITALS("Temperature", "Health"),
-    CAREGIVER_NOTES("Notes", "Family"),
-    GROWTH("Growth", "Health")
+enum class DashboardWidgetType(private val nameRes: Int, private val categoryRes: Int) {
+    LAST_FEED(R.string.card_last_feed, R.string.card_category_feeding),
+    LAST_DIAPER(R.string.card_last_diaper, R.string.card_category_diapers),
+    WAKE_WINDOWS(R.string.card_wake_windows, R.string.card_category_sleep),
+    TUMMY_TIME_GOAL(R.string.card_tummy_time, R.string.card_category_activity),
+    HEALTH_VITALS(R.string.card_temperature, R.string.card_category_health),
+    CAREGIVER_NOTES(R.string.card_notes, R.string.card_category_family),
+    GROWTH(R.string.card_growth, R.string.card_category_health);
+
+    val displayName: String get() = AppText.get(nameRes)
+    val category: String get() = AppText.get(categoryRes)
 }
 
 /** The tiles in Today's summary grid; which show is chosen in Customize Today (and tracked items still apply). */
-enum class TodayTile(val label: String, val item: TrackedItem?) {
-    FEEDS("Feeds", null), // shown while breast or bottle feeds are tracked
-    DIAPERS("Diapers", TrackedItem.DIAPERS),
-    SLEEP("Sleep", TrackedItem.SLEEP),
-    WAKE_WINDOW("Wake window", TrackedItem.SLEEP),
-    PUMPED("Pumped", TrackedItem.PUMPING),
-    MILK_STASH("Milk stash", TrackedItem.MILK_STASH),
-    TUMMY_TIME("Tummy time", TrackedItem.TUMMY_TIME),
-    BATH("Last bath", TrackedItem.BATH)
+enum class TodayTile(private val labelRes: Int, val item: TrackedItem?) {
+    FEEDS(R.string.tile_feeds, null), // shown while breast or bottle feeds are tracked
+    DIAPERS(R.string.tile_diapers, TrackedItem.DIAPERS),
+    SLEEP(R.string.tile_sleep, TrackedItem.SLEEP),
+    WAKE_WINDOW(R.string.tile_wake_window, TrackedItem.SLEEP),
+    PUMPED(R.string.tile_pumped, TrackedItem.PUMPING),
+    MILK_STASH(R.string.tile_milk_stash, TrackedItem.MILK_STASH),
+    TUMMY_TIME(R.string.tile_tummy_time, TrackedItem.TUMMY_TIME),
+    BATH(R.string.tile_last_bath, TrackedItem.BATH);
+
+    val label: String get() = AppText.get(labelRes)
 }
 
 data class DashboardWidgetConfig(
@@ -322,24 +344,32 @@ data class TemperatureEvent(
 )
 
 /** Used only to pick the WHO reference (boys' or girls' charts); Baby Buddy has no such field. Settings → You. */
-enum class BabySex(val label: String) { BOY("Boy"), GIRL("Girl") }
+enum class BabySex(private val labelRes: Int) {
+    BOY(R.string.sex_boy),
+    GIRL(R.string.sex_girl);
+
+    val label: String get() = AppText.get(labelRes)
+}
 
 /**
  * A growth measurement and its Baby Buddy endpoint ([endpoint]) and value field ([field]).
  * Length is the lying-down length the WHO uses under 2 (the server calls it "height").
  */
 enum class GrowthKind(
-    val label: String,
-    val shortLabel: String,
+    private val labelRes: Int,
+    private val shortLabelRes: Int,
     val unit: String,
     val endpoint: String,
     val field: String,
     val plausible: ClosedFloatingPointRange<Double>,
     val example: String
 ) {
-    WEIGHT("Weight", "Weight", "kg", "weight", "weight", 0.5..40.0, "4.2"),
-    LENGTH("Length", "Length", "cm", "height", "height", 30.0..130.0, "55"),
-    HEAD("Head circumference", "Head", "cm", "head-circumference", "head_circumference", 20.0..60.0, "37");
+    WEIGHT(R.string.growth_weight, R.string.growth_weight, "kg", "weight", "weight", 0.5..40.0, "4.2"),
+    LENGTH(R.string.growth_length, R.string.growth_length, "cm", "height", "height", 30.0..130.0, "55"),
+    HEAD(R.string.growth_head, R.string.growth_head_short, "cm", "head-circumference", "head_circumference", 20.0..60.0, "37");
+
+    val label: String get() = AppText.get(labelRes)
+    val shortLabel: String get() = AppText.get(shortLabelRes)
 
     companion object {
         fun forEndpoint(endpoint: String): GrowthKind? = entries.firstOrNull { it.endpoint == endpoint }
@@ -357,8 +387,9 @@ data class GrowthEvent(
     val caregiver: String? = null
 )
 
-/** "6.1 kg", "57.5 cm" (up to two decimals, no trailing zeros). */
-fun formatGrowth(kind: GrowthKind, value: Double): String = java.math.BigDecimal(value).setScale(2, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString() + " " + kind.unit
+/** "6.1 kg", "57.5 cm" (up to two decimals, no trailing zeros; the phone's decimal separator, "6,1 kg" in French). */
+fun formatGrowth(kind: GrowthKind, value: Double): String = java.math.BigDecimal(value).setScale(2, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+    .replace('.', java.text.DecimalFormatSymbols.getInstance().decimalSeparator) + " " + kind.unit
 
 /** Age in days at [atMillis] for a "yyyy-MM-dd" birth date, or null if it can't be read. */
 fun ageInDays(birthDate: String, atMillis: Long): Double? = runCatching {
@@ -373,23 +404,18 @@ fun growthPercentile(event: GrowthEvent, birthDate: String?, sex: BabySex?): Dou
     return WhoGrowthStandards.percentile(event.kind, sex, age, event.value)
 }
 
-/** "52nd", "3rd", "<1st", ">99th" */
+/** "52nd", "3rd", "<1st", ">99th" (in the phone's language). */
 fun ordinalPercentile(p: Double): String {
-    if (p < 1) return "<1st"
-    if (p > 99) return ">99th"
-    val n = kotlin.math.round(p).toInt()
-    val suffix = if (n % 100 in 11..13) {
-        "th"
-    } else {
-        when (n % 10) {
-            1 -> "st"
-            2 -> "nd"
-            3 -> "rd"
-            else -> "th"
-        }
-    }
-    return "$n$suffix"
+    if (p < 1) return AppText.get(R.string.percentile_below, ordinal(1))
+    if (p > 99) return AppText.get(R.string.percentile_above, ordinal(99))
+    return ordinal(kotlin.math.round(p).toInt())
 }
+
+/** "52nd" in English, "52e" in French. */
+fun ordinal(n: Int): String = android.icu.text.MessageFormat("{0,ordinal}", java.util.Locale.getDefault()).format(arrayOf(n))
+
+/** A date pattern for [skeleton] ("MMMd", "EEEEMMMd") in the phone's language and field order. */
+fun localDatePattern(skeleton: String): String = android.text.format.DateFormat.getBestDateTimePattern(java.util.Locale.getDefault(), skeleton)
 
 /** Parses a typed value ("4,55" too); null unless it's plausible for a baby. */
 fun parseGrowth(kind: GrowthKind, text: String): Double? = text.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it in kind.plausible }
@@ -476,7 +502,7 @@ fun dayAndTime(timeMillis: Long, clock: String): String {
     }.timeInMillis
     return when {
         timeMillis >= start -> clock
-        timeMillis >= start - 24 * 60 * 60_000L -> "Yesterday $clock"
-        else -> java.text.SimpleDateFormat("MMM d", java.util.Locale.getDefault()).format(java.util.Date(timeMillis)) + ", $clock"
+        timeMillis >= start - 24 * 60 * 60_000L -> AppText.get(R.string.yesterday_at, clock)
+        else -> AppText.get(R.string.date_at, java.text.SimpleDateFormat(localDatePattern("MMMd"), java.util.Locale.getDefault()).format(java.util.Date(timeMillis)), clock)
     }
 }

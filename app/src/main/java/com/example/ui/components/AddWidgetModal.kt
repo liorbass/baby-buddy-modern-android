@@ -76,10 +76,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
+import com.example.data.model.AppText
 import com.example.data.model.DashboardWidgetConfig
 import com.example.data.model.DashboardWidgetType
 import com.example.data.model.TodayTile
@@ -158,13 +161,13 @@ fun AddWidgetModal(
                     }
                     Column {
                         Text(
-                            text = "Customize Today",
+                            text = stringResource(R.string.customize_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Cards and home-screen widgets",
+                            text = stringResource(R.string.customize_subtitle),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -180,7 +183,7 @@ fun AddWidgetModal(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
+                        contentDescription = stringResource(R.string.close),
                         tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(20.dp)
                     )
@@ -210,7 +213,7 @@ fun AddWidgetModal(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                "Dashboard Cards",
+                                stringResource(R.string.customize_tab_cards),
                                 fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Medium
                             )
                             Surface(
@@ -218,7 +221,7 @@ fun AddWidgetModal(
                                 color = if (selectedTab == 0) PrimaryFixed else SurfaceContainerHigh
                             ) {
                                 Text(
-                                    text = "$activeCount active",
+                                    text = stringResource(R.string.customize_active, activeCount),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = if (selectedTab == 0) PrimaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -238,7 +241,7 @@ fun AddWidgetModal(
                         ) {
                             Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(16.dp))
                             Text(
-                                "Phone Home Screen",
+                                stringResource(R.string.customize_tab_home),
                                 fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Medium
                             )
                         }
@@ -305,7 +308,7 @@ private fun DashboardWidgetsTab(
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "Turn cards on or off for your Today view.",
+                        text = stringResource(R.string.customize_cards_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -321,9 +324,9 @@ private fun DashboardWidgetsTab(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Summary tiles", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.customize_summary_tiles), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text(
-                        "The \"Today\" grid of totals. Items you don't track stay hidden.",
+                        stringResource(R.string.customize_summary_tiles_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -343,7 +346,7 @@ private fun DashboardWidgetsTab(
                 // The Wake windows card's parts, while it's on
                 options = if (widget.type == DashboardWidgetType.WAKE_WINDOWS && widget.isEnabled) {
                     {
-                        Text("Show", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.customize_show), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         ToggleChips(
                             options = WakeWindowPart.entries.map { it.label to it },
                             isOn = { it !in hiddenWakeParts },
@@ -449,11 +452,11 @@ private fun DashboardWidgetItemCard(
                 if (widget.isEnabled) {
                     Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Added", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.customize_added), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                 } else {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.add), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -518,14 +521,14 @@ private fun HomeScreenWidgetsTab(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "📱 Android Home Screen Widgets",
+                        text = stringResource(R.string.customize_home_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryColor
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Add these widgets directly to your phone's home screen for rapid 1-tap logging and live timer controls without opening the app.",
+                        text = stringResource(R.string.customize_home_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -536,9 +539,9 @@ private fun HomeScreenWidgetsTab(
         // 1. Quick Log Launcher Widget Preview
         item {
             HomeScreenWidgetCard(
-                title = "1-Tap Quick Logger Widget",
-                sizeLabel = "4 × 1 Standard",
-                description = "Feed, Diaper and Tummy time buttons.",
+                title = stringResource(R.string.customize_quick_title),
+                sizeLabel = stringResource(R.string.customize_quick_size),
+                description = stringResource(R.string.customize_quick_desc),
                 onPinClick = { onPinWidget("QUICK_LOG") }
             ) {
                 // Interactive Preview of Quick Log Widget
@@ -555,13 +558,13 @@ private fun HomeScreenWidgetsTab(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "Baby Leo • 3m 12d",
+                                stringResource(R.string.customize_preview_baby),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryColor
                             )
                             Text(
-                                "Last fed 45m ago",
+                                stringResource(R.string.customize_preview_last_fed),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -571,9 +574,9 @@ private fun HomeScreenWidgetsTab(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            QuickActionChip(icon = Icons.Default.WaterDrop, label = "Feed", color = PrimaryColor, modifier = Modifier.weight(1f))
-                            QuickActionChip(icon = Icons.Default.Opacity, label = "Diaper", color = ItemColors.tint(TrackedItem.DIAPERS), modifier = Modifier.weight(1f))
-                            QuickActionChip(icon = Icons.Default.FitnessCenter, label = "Tummy", color = ItemColors.tint(TrackedItem.TUMMY_TIME), modifier = Modifier.weight(1f))
+                            QuickActionChip(icon = Icons.Default.WaterDrop, label = stringResource(R.string.widget_quick_feed), color = PrimaryColor, modifier = Modifier.weight(1f))
+                            QuickActionChip(icon = Icons.Default.Opacity, label = stringResource(R.string.widget_quick_diaper), color = ItemColors.tint(TrackedItem.DIAPERS), modifier = Modifier.weight(1f))
+                            QuickActionChip(icon = Icons.Default.FitnessCenter, label = stringResource(R.string.widget_quick_tummy), color = ItemColors.tint(TrackedItem.TUMMY_TIME), modifier = Modifier.weight(1f))
                         }
                     }
                 }
@@ -583,9 +586,9 @@ private fun HomeScreenWidgetsTab(
         // 2. Live Nursing Timer Widget Preview
         item {
             HomeScreenWidgetCard(
-                title = "Live Active Nursing Timer Widget",
-                sizeLabel = "4 × 2 Full Controls",
-                description = "Real-time stopwatch with Left/Right breakdown and Pause/Switch buttons.",
+                title = stringResource(R.string.customize_timer_title),
+                sizeLabel = stringResource(R.string.customize_timer_size),
+                description = stringResource(R.string.customize_timer_desc),
                 onPinClick = { onPinWidget("TIMER") }
             ) {
                 Surface(
@@ -600,8 +603,8 @@ private fun HomeScreenWidgetsTab(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("🤱 LIVE NURSING TIMER", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = PrimaryColor)
-                            Text("Right Breast Active", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = SecondaryColor)
+                            Text(stringResource(R.string.customize_preview_timer), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = PrimaryColor)
+                            Text(stringResource(R.string.customize_preview_right_active), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = SecondaryColor)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Surface(
@@ -634,7 +637,7 @@ private fun HomeScreenWidgetsTab(
                                 ) {
                                     Icon(Icons.Default.SwapHoriz, contentDescription = null, tint = SecondaryColor, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Switch Side", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.widget_switch_side), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                                 }
                             }
                             Surface(
@@ -649,7 +652,7 @@ private fun HomeScreenWidgetsTab(
                                 ) {
                                     Icon(Icons.Default.Pause, contentDescription = null, tint = OnPrimary, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Pause", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = OnPrimary)
+                                    Text(stringResource(R.string.pause), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = OnPrimary)
                                 }
                             }
                         }
@@ -661,9 +664,9 @@ private fun HomeScreenWidgetsTab(
         // 3. Daily Care Summary Widget Preview
         item {
             HomeScreenWidgetCard(
-                title = "Today At-a-Glance Summary Widget",
+                title = stringResource(R.string.customize_summary_title),
                 sizeLabel = "4 × 1",
-                description = "Today's feeds and diapers.",
+                description = stringResource(R.string.widget_summary_desc),
                 onPinClick = { onPinWidget("SUMMARY") }
             ) {
                 Surface(
@@ -677,7 +680,7 @@ private fun HomeScreenWidgetsTab(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Today", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = PrimaryColor)
+                            Text(stringResource(R.string.widget_summary_today), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = PrimaryColor)
                             Text("Baby Buddy", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = SecondaryColor)
                         }
                         Spacer(modifier = Modifier.height(8.dp))
@@ -685,8 +688,8 @@ private fun HomeScreenWidgetsTab(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            MiniSummaryBox("FEEDS", "6", "", PrimaryColor, Modifier.weight(1f))
-                            MiniSummaryBox("DIAPERS", "5 wet · 2 dirty", "", ItemColors.tint(TrackedItem.DIAPERS), Modifier.weight(1f))
+                            MiniSummaryBox(stringResource(R.string.widget_summary_feeds), "6", "", PrimaryColor, Modifier.weight(1f))
+                            MiniSummaryBox(stringResource(R.string.widget_summary_diapers), stringResource(R.string.widget_wet_dirty, 5, 2), "", ItemColors.tint(TrackedItem.DIAPERS), Modifier.weight(1f))
                         }
                     }
                 }
@@ -702,14 +705,14 @@ private fun HomeScreenWidgetsTab(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "💡 Manual Installation Tip",
+                        text = stringResource(R.string.customize_tip_title),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "If your launcher doesn't support 1-tap pinning, touch & hold any empty spot on your Android home screen, tap 'Widgets', scroll to 'Baby Buddy', and drag it into position.",
+                        text = stringResource(R.string.customize_tip_text),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -784,7 +787,7 @@ private fun HomeScreenWidgetCard(
                 Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Add to Android Home Screen",
+                    stringResource(R.string.customize_add_to_home),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -858,11 +861,11 @@ private fun getWidgetAccent(type: DashboardWidgetType): Color = when (type) {
 }
 
 private fun getWidgetDescription(type: DashboardWidgetType): String = when (type) {
-    DashboardWidgetType.LAST_FEED -> "When the last feed started, how long ago, and the last side."
-    DashboardWidgetType.LAST_DIAPER -> "When the last diaper change was, how long ago, and its type."
-    DashboardWidgetType.WAKE_WINDOWS -> "How long the baby has been awake, when the next nap is due, and today's wake windows."
-    DashboardWidgetType.TUMMY_TIME_GOAL -> "Log tummy time towards a daily goal."
-    DashboardWidgetType.HEALTH_VITALS -> "Log and see temperature readings."
-    DashboardWidgetType.CAREGIVER_NOTES -> "Shared notes like baths and routines."
-    DashboardWidgetType.GROWTH -> "Latest weight, length and head size with WHO percentiles."
+    DashboardWidgetType.LAST_FEED -> AppText.get(R.string.card_last_feed_long)
+    DashboardWidgetType.LAST_DIAPER -> AppText.get(R.string.card_last_diaper_long)
+    DashboardWidgetType.WAKE_WINDOWS -> AppText.get(R.string.card_wake_windows_long)
+    DashboardWidgetType.TUMMY_TIME_GOAL -> AppText.get(R.string.card_tummy_time_long)
+    DashboardWidgetType.HEALTH_VITALS -> AppText.get(R.string.card_temperature_long)
+    DashboardWidgetType.CAREGIVER_NOTES -> AppText.get(R.string.card_notes_long)
+    DashboardWidgetType.GROWTH -> AppText.get(R.string.card_growth_long)
 }

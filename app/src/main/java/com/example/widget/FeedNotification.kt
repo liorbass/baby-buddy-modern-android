@@ -29,7 +29,6 @@ object FeedNotification {
 
     const val NOTIFICATION_ID = 4201
     private const val CHANNEL_ID = "feeding"
-    private const val CHANNEL_NAME = "Breastfeeding timer"
 
     private const val REQUEST_CONTENT = 4210
     private const val REQUEST_LEFT = 4211
@@ -60,12 +59,12 @@ object FeedNotification {
         ensureChannel(context)
         val running = !state.isPaused
         val title = when {
-            !running -> "Feed paused"
-            state.activeBreast == BreastSide.LEFT -> "Feeding · Left side"
-            else -> "Feeding · Right side"
+            !running -> context.getString(R.string.feed_paused)
+            state.activeBreast == BreastSide.LEFT -> context.getString(R.string.feeding_left_side)
+            else -> context.getString(R.string.feeding_right_side)
         }
-        val leftLabel = if (running && state.activeBreast == BreastSide.LEFT) "Pause left" else "Left"
-        val rightLabel = if (running && state.activeBreast == BreastSide.RIGHT) "Pause right" else "Right"
+        val leftLabel = context.getString(if (running && state.activeBreast == BreastSide.LEFT) R.string.pause_left else R.string.side_left)
+        val rightLabel = context.getString(if (running && state.activeBreast == BreastSide.RIGHT) R.string.pause_right else R.string.side_right)
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(if (running) R.drawable.ic_widget_play else R.drawable.ic_widget_pause)
@@ -79,12 +78,12 @@ object FeedNotification {
             .setContentIntent(contentIntent(context))
             .addAction(0, leftLabel, actionIntent(context, WidgetActionReceiver.ACTION_TAP_LEFT, REQUEST_LEFT))
             .addAction(0, rightLabel, actionIntent(context, WidgetActionReceiver.ACTION_TAP_RIGHT, REQUEST_RIGHT))
-            .addAction(0, "End", actionIntent(context, WidgetActionReceiver.ACTION_END_FEED, REQUEST_END))
+            .addAction(0, context.getString(R.string.end), actionIntent(context, WidgetActionReceiver.ACTION_END_FEED, REQUEST_END))
 
-        val started = if (state.sessionStartMillis > 0) " · started ${TimeFormat.clock(state.sessionStartMillis)}" else ""
+        val started = if (state.sessionStartMillis > 0) context.getString(R.string.feed_started_suffix, TimeFormat.clock(state.sessionStartMillis)) else ""
         if (running) {
             // The chronometer counts the total; only the running side grows, so the other side's time stays exact
-            val other = if (state.activeBreast == BreastSide.LEFT) "R ${formatDuration(state.rightSeconds)}" else "L ${formatDuration(state.leftSeconds)}"
+            val other = if (state.activeBreast == BreastSide.LEFT) context.getString(R.string.right_short_time, formatDuration(state.rightSeconds)) else context.getString(R.string.left_short_time, formatDuration(state.leftSeconds))
             builder
                 .setUsesChronometer(true)
                 .setWhen(System.currentTimeMillis() - state.totalSeconds * 1000L)
@@ -96,8 +95,8 @@ object FeedNotification {
                 .setShowWhen(false)
                 .setSubText(formatDuration(state.totalSeconds))
                 .setContentText(
-                    "Total ${formatDuration(state.totalSeconds)} · " +
-                        "L ${formatDuration(state.leftSeconds)} · R ${formatDuration(state.rightSeconds)}$started"
+                    context.getString(R.string.feed_paused_text, formatDuration(state.totalSeconds), formatDuration(state.leftSeconds), formatDuration(state.rightSeconds)) +
+                        started
                 )
         }
         return builder.build()
@@ -111,7 +110,7 @@ object FeedNotification {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (manager.getNotificationChannel(CHANNEL_ID) != null) return
-        val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW).apply {
+        val channel = NotificationChannel(CHANNEL_ID, context.getString(R.string.channel_feed_timer), NotificationManager.IMPORTANCE_LOW).apply {
             setShowBadge(false)
             lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
         }
