@@ -146,7 +146,6 @@ private fun SwitchSetting(title: String, description: String, checked: Boolean, 
 
 private const val BABY_BUDDY_REPO = "https://github.com/babybuddy/babybuddy"
 private const val APP_REPO = "https://github.com/liorbass/baby-buddy-modern-android"
-
 private const val MODEL_TIMED = "When the model saved in Trends → Models expects it; the time below is the fallback"
 
 @Composable
