@@ -1,0 +1,1 @@
+- Choose the app's language in Settings → Appearance (the phone's language by default)
