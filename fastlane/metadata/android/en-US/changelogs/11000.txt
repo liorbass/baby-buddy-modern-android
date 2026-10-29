@@ -1,0 +1,3 @@
+- French translation (follows the phone's language, or pick it per app on Android 13+)
+- All app text can now be translated: dates, decimal separators and plurals follow the phone's language
+- Fix links on the login screen and in About cutting off text when they wrap
