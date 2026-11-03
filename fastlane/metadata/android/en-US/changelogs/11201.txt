@@ -1,0 +1,2 @@
+- Fixed: starting a breastfeed sometimes logged a 0m feed instead of starting the timer
+- "While you were away" lists the newest entries first
