@@ -1482,6 +1482,8 @@ class BabyBuddyRepository {
         _stashBase.value = null
         setFeedTimerRemoteId(null)
         setSleepTimerRemoteId(null)
+        setFeedTimerToDelete(null)
+        setSleepTimerToDelete(null)
         _temperatures.value = emptyList()
         _notes.value = emptyList()
         _growth.value = emptyList()
@@ -2101,6 +2103,11 @@ class BabyBuddyRepository {
 
     private var feedTimerRemoteId: Long? = null
     private var sleepTimerRemoteId: Long? = null
+
+    // The timer of a feed/sleep that ended here, until its delete goes through. Kept apart from the
+    // current id so a new feed never takes it as its own (its 404 or absence would end the new feed).
+    private var feedTimerToDelete: Long? = null
+    private var sleepTimerToDelete: Long? = null
     private var feedEndedAt = 0L // a remote snapshot older than this is a feed already ended here
     private var sleepEndedAt = 0L
     private val feedTimerDirty = Channel<Unit>(Channel.CONFLATED)
@@ -2123,6 +2130,16 @@ class BabyBuddyRepository {
     private fun setSleepTimerRemoteId(id: Long?) {
         sleepTimerRemoteId = id
         prefs?.edit()?.putLong(PREF_SLEEP_TIMER_ID, id ?: -1L)?.apply()
+    }
+
+    private fun setFeedTimerToDelete(id: Long?) {
+        feedTimerToDelete = id
+        prefs?.edit()?.putLong(PREF_FEED_TIMER_TO_DELETE, id ?: -1L)?.apply()
+    }
+
+    private fun setSleepTimerToDelete(id: Long?) {
+        sleepTimerToDelete = id
+        prefs?.edit()?.putLong(PREF_SLEEP_TIMER_TO_DELETE, id ?: -1L)?.apply()
     }
 
     private fun startTimerPushers() {
@@ -2161,6 +2178,8 @@ class BabyBuddyRepository {
             remoteId = feedTimerRemoteId,
             isOurs = { SharedTimers.decodeFeed(it) != null },
             setRemoteId = ::setFeedTimerRemoteId,
+            toDelete = feedTimerToDelete,
+            setToDelete = ::setFeedTimerToDelete,
             channel = feedTimerDirty,
             onGone = { feedEndedElsewhere(System.currentTimeMillis()) }
         )
@@ -2174,6 +2193,8 @@ class BabyBuddyRepository {
             remoteId = sleepTimerRemoteId,
             isOurs = { SharedTimers.decodeSleep(it) != null },
             setRemoteId = ::setSleepTimerRemoteId,
+            toDelete = sleepTimerToDelete,
+            setToDelete = ::setSleepTimerToDelete,
             channel = sleepTimerDirty,
             onGone = { sleepEndedElsewhere(System.currentTimeMillis()) }
         )
@@ -2186,24 +2207,40 @@ class BabyBuddyRepository {
         remoteId: Long?,
         isOurs: (String?) -> Boolean,
         setRemoteId: (Long?) -> Unit,
+        toDelete: Long?,
+        setToDelete: (Long?) -> Unit,
         channel: Channel<Unit>,
         onGone: () -> Unit
     ) {
         val api = remoteApi ?: return
         val child = remoteChildId ?: return
         val auth = remoteAuthHeader
+        var pendingDelete = toDelete
+        var currentId = remoteId
+        if (name == null && currentId != null) {
+            // The feed/sleep ended: its timer is no longer the current one, even before the delete succeeds
+            pendingDelete = currentId
+            setToDelete(currentId)
+            setRemoteId(null)
+            currentId = null
+        }
         try {
-            if (name == null) {
-                val id = remoteId ?: return
-                val response = api.deleteRecord(auth, ENDPOINT_TIMERS, id)
+            if (pendingDelete != null) {
+                val response = api.deleteRecord(auth, ENDPOINT_TIMERS, pendingDelete)
                 when {
-                    response.isSuccessful || response.code() == 404 -> setRemoteId(null)
-                    response.code() >= 500 -> retryTimerPush(channel)
+                    response.isSuccessful || response.code() == 404 -> setToDelete(null)
+
+                    response.code() >= 500 -> {
+                        retryTimerPush(channel)
+                        return
+                    }
+
+                    else -> setToDelete(null) // refused for good; don't keep retrying
                 }
-                return
             }
+            if (name == null) return
             // Reuse our timer, or one another phone made, before creating a new one
-            val id = remoteId ?: api.getTimers(auth, child).body()?.results.orEmpty()
+            val id = currentId ?: api.getTimers(auth, child).body()?.results.orEmpty()
                 .firstOrNull { isOurs(it.name) }?.id
             if (id != null) {
                 val response = api.updateRecord(auth, ENDPOINT_TIMERS, id, mapOf("name" to name))
@@ -2216,7 +2253,7 @@ class BabyBuddyRepository {
                     return
                 }
                 if (response.code() != 404) return
-                if (id == remoteId) {
+                if (id == currentId) {
                     // Our timer was deleted: the feed/sleep was ended on another phone. Recreating it would bring
                     // it back on every phone, so end it here too and fetch the finished entry.
                     onGone()
@@ -2248,6 +2285,10 @@ class BabyBuddyRepository {
         val api = remoteApi ?: return
         val child = remoteChildId ?: return
         val auth = remoteAuthHeader
+        // A timer pushed while the list below is being fetched is missing from it. Only a timer that was
+        // already ours before the fetch, and still is, can have been ended elsewhere.
+        val feedIdAtFetch = feedTimerRemoteId
+        val sleepIdAtFetch = sleepTimerRemoteId
         val timers = try {
             api.getTimers(auth, child).takeIf { it.isSuccessful }?.body()?.results
         } catch (e: Exception) {
@@ -2267,7 +2308,7 @@ class BabyBuddyRepository {
             val now = System.currentTimeMillis()
             val local = _liveTimerState.value
             if (feed == null) {
-                if (local.isRunning && feedTimerRemoteId != null) {
+                if (local.isRunning && feedTimerRemoteId != null && feedTimerRemoteId == feedIdAtFetch) {
                     feedEndedElsewhere(now)
                     endedElsewhere = true
                 }
@@ -2288,7 +2329,7 @@ class BabyBuddyRepository {
 
             val localSleep = _sleepTimer.value
             if (sleep == null) {
-                if (localSleep.isRunning && sleepTimerRemoteId != null) {
+                if (localSleep.isRunning && sleepTimerRemoteId != null && sleepTimerRemoteId == sleepIdAtFetch) {
                     sleepEndedElsewhere(now)
                     endedElsewhere = true
                 }
@@ -2766,6 +2807,8 @@ class BabyBuddyRepository {
         }
         feedTimerRemoteId = p.getLong(PREF_FEED_TIMER_ID, -1L).takeIf { it >= 0 }
         sleepTimerRemoteId = p.getLong(PREF_SLEEP_TIMER_ID, -1L).takeIf { it >= 0 }
+        feedTimerToDelete = p.getLong(PREF_FEED_TIMER_TO_DELETE, -1L).takeIf { it >= 0 }
+        sleepTimerToDelete = p.getLong(PREF_SLEEP_TIMER_TO_DELETE, -1L).takeIf { it >= 0 }
         feedEndedAt = p.getLong(PREF_FEED_ENDED_AT, 0L)
         sleepEndedAt = p.getLong(PREF_SLEEP_ENDED_AT, 0L)
         _reminders.value = ReminderSettings(
@@ -3033,6 +3076,8 @@ class BabyBuddyRepository {
         private const val PREF_SLEEP_CHANGED = "sleep_timer_changed_at"
         private const val PREF_FEED_TIMER_ID = "feed_timer_remote_id"
         private const val PREF_SLEEP_TIMER_ID = "sleep_timer_remote_id"
+        private const val PREF_FEED_TIMER_TO_DELETE = "feed_timer_to_delete"
+        private const val PREF_SLEEP_TIMER_TO_DELETE = "sleep_timer_to_delete"
         private const val PREF_FEED_ENDED_AT = "feed_ended_at"
         private const val PREF_SLEEP_ENDED_AT = "sleep_ended_at"
         private const val PREF_REMIND_FEED = "remind_feed_minutes"
