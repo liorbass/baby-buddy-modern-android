@@ -648,7 +648,7 @@ private fun HandoffCard(summary: HandoffSummary, onOpen: () -> Unit, onDismiss: 
             summary.sleeps.map { s ->
                 Line(s.timeMillis, TrackedItem.SLEEP, stringResource(if (s.isNap) R.string.today_handoff_nap else R.string.today_handoff_sleep, formatMinutes(s.durationMinutes)), s.caregiver)
             }
-        ).sortedBy { it.at }
+        ).sortedByDescending { it.at } // newest first; older ones fall under "+N more"
     val shown = 6
     Card(
         onClick = onOpen,
