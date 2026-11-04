@@ -59,9 +59,13 @@ import com.example.ui.screens.HistoryScreen
 import com.example.ui.screens.NursingTimerScreen
 import com.example.ui.screens.QuickLogModal
 import com.example.ui.screens.RhythmModelsTab
+import com.example.ui.screens.SettingsActions
+import com.example.ui.screens.SettingsState
 import com.example.ui.screens.SleepActions
 import com.example.ui.screens.SleepScreen
+import com.example.ui.screens.TodayActions
 import com.example.ui.screens.TodayDashboardScreen
+import com.example.ui.screens.TodayState
 import com.example.ui.screens.TrendsActions
 import com.example.ui.screens.TrendsScreen
 import com.example.ui.screens.TrendsState
@@ -262,6 +266,65 @@ fun BabyBuddyApp(
     val hiddenTodayTiles by viewModel.hiddenTodayTiles.collectAsState()
     val hiddenWakeWindowParts by viewModel.hiddenWakeWindowParts.collectAsState()
     val todayOrder by viewModel.todayOrder.collectAsState()
+    val todayActions = remember(viewModel) {
+        TodayActions(
+            onDismissHandoff = { viewModel.dismissHandoff() },
+            onLogGrowth = { values, date, notes -> viewModel.logGrowth(values, date, notes) },
+            onQuickActionsChange = { viewModel.setQuickActions(it) },
+            onLogPumping = { ml, minutes, notes, start -> viewModel.logPumping(ml, minutes, notes, start) },
+            onSetMilkStash = { viewModel.setMilkStash(it) },
+            onAddTaggedNote = { text, tags -> viewModel.addNote(text, tags) },
+            onLogBath = { notes, time -> viewModel.logBath(time, notes) },
+            onOpenHistory = { filter -> viewModel.openHistory(filter) },
+            onRefresh = { viewModel.refresh() },
+            onNavigate = { dest -> viewModel.navigateTo(dest) },
+            onOpenAddWidgetModal = { viewModel.setAddWidgetModalVisible(true) },
+            onAddTummyTimeMinutes = { min -> viewModel.addTummyTimeMinutes(min) },
+            onLogTemperature = { value, notes -> viewModel.logTemperature(value, notes) },
+            onAddNote = { text -> viewModel.addNote(text) },
+            onRemoveDashboardWidget = { type -> viewModel.removeDashboardWidget(type) },
+            onLogBottle = { ml, formula, notes -> viewModel.logBottle(ml, formula, notes) },
+            onTapSide = { side -> viewModel.tapSide(side) },
+            onEndFeed = { viewModel.endFeed() }
+        )
+    }
+    val settingsActions = remember(viewModel, context) {
+        SettingsActions(
+            onBack = { viewModel.navigateTo(ScreenDestination.TODAY_DASHBOARD) },
+            onTestConnect = { url, token, allowSelfSigned, cfId, cfSecret ->
+                viewModel.testBackendConnection(url, token, allowSelfSigned, cfId, cfSecret)
+            },
+            onShowToast = { msg -> viewModel.showToast(msg) },
+            onDisconnect = { viewModel.disconnectServer() },
+            onEnterDemoMode = { viewModel.enterDemoMode() },
+            onTrustCertificate = { viewModel.trustCertificate() },
+            onDismissCertificate = { viewModel.dismissCertificatePrompt() },
+            onCaregiverNameChange = { viewModel.setCaregiverName(it) },
+            onBabySexChange = { viewModel.setBabySex(it) },
+            onThemeModeChange = { viewModel.setThemeMode(it) },
+            onItemTrackedChange = { item, on -> viewModel.setItemTracked(item, on) },
+            onRemindersChange = { settings ->
+                viewModel.setReminders(settings)
+                if (settings.anyOn) {
+                    (context as? MainActivity)?.requestNotificationPermission()
+                }
+            },
+            onUse24hChange = { viewModel.setUse24h(it) },
+            onDayHoursChange = { day, night -> viewModel.setDayHours(day, night) },
+            onTrendsDayStartChange = { viewModel.setTrendsDayStart(it) },
+            onModelsTabChange = { viewModel.setModelsTab(it) },
+            onFeedNotificationChange = { enabled ->
+                viewModel.setFeedNotificationEnabled(enabled)
+                if (enabled) (context as? MainActivity)?.requestNotificationPermission()
+            },
+            onStartSideChange = { viewModel.setStartSide(it) },
+            onNextUpNotificationChange = { enabled ->
+                viewModel.setNextUpNotification(enabled)
+                if (enabled) (context as? MainActivity)?.requestNotificationPermission()
+            }
+
+        )
+    }
     val trendsActions = remember(viewModel) {
         TrendsActions(
             onSelectRange = { days -> viewModel.loadTrends(days) },
@@ -340,58 +403,43 @@ fun BabyBuddyApp(
             when (screen) {
                 ScreenDestination.TODAY_DASHBOARD -> {
                     TodayDashboardScreen(
-                        liveTimerState = liveTimerState,
-                        connectionConfig = connectionConfig,
-                        handoff = handoff,
-                        onDismissHandoff = { viewModel.dismissHandoff() },
-                        recentFeedings = recentFeedings,
-                        recentDiapers = recentDiapers,
-                        recentTummyTimes = recentTummyTimes,
-                        recentPumpings = recentPumpings,
-                        dashboardWidgets = dashboardWidgets,
-                        tummyTimeGoal = tummyTimeGoal,
-                        temperatures = temperatures,
-                        growth = growth,
-                        birthDate = babyProfile.birthDate,
-                        babySex = babySex,
-                        onLogGrowth = { values, date, notes -> viewModel.logGrowth(values, date, notes) },
-                        notes = notes,
-                        feedIntervals = feedIntervals,
-                        lastBreastfeed = lastBreastfeed,
-                        lastFeed = lastFeed,
-                        previousFeedMillis = previousFeedMillis,
-                        lastDiaper = lastDiaper,
-                        quickActions = quickActions,
-                        onQuickActionsChange = { viewModel.setQuickActions(it) },
-                        onLogPumping = { ml, minutes, notes, start -> viewModel.logPumping(ml, minutes, notes, start) },
-                        sleepTimer = sleepTimer,
-                        recentSleeps = recentSleeps,
-                        milkStash = milkStash,
-                        onSetMilkStash = { viewModel.setMilkStash(it) },
-                        noteTags = noteTags,
-                        onAddTaggedNote = { text, tags -> viewModel.addNote(text, tags) },
-                        lastFeedMillis = lastFeedMillis,
-                        lastSleepEndMillis = lastSleepEndMillis,
-                        reminders = reminders,
-                        modelNext = modelNext,
-                        hiddenItems = hiddenItems,
-                        hiddenTiles = hiddenTodayTiles,
-                        hiddenWakeParts = hiddenWakeWindowParts,
-                        todayOrder = todayOrder,
-                        lastBathMillis = lastBathMillis,
-                        onLogBath = { notes, time -> viewModel.logBath(time, notes) },
-                        onOpenHistory = { filter -> viewModel.openHistory(filter) },
-                        isRefreshing = isRefreshing,
-                        onRefresh = { viewModel.refresh() },
-                        onNavigate = { dest -> viewModel.navigateTo(dest) },
-                        onOpenAddWidgetModal = { viewModel.setAddWidgetModalVisible(true) },
-                        onAddTummyTimeMinutes = { min -> viewModel.addTummyTimeMinutes(min) },
-                        onLogTemperature = { value, notes -> viewModel.logTemperature(value, notes) },
-                        onAddNote = { text -> viewModel.addNote(text) },
-                        onRemoveDashboardWidget = { type -> viewModel.removeDashboardWidget(type) },
-                        onLogBottle = { ml, formula, notes -> viewModel.logBottle(ml, formula, notes) },
-                        onTapSide = { side -> viewModel.tapSide(side) },
-                        onEndFeed = { viewModel.endFeed() }
+                        state = TodayState(
+                            liveTimerState = liveTimerState,
+                            connectionConfig = connectionConfig,
+                            handoff = handoff,
+                            recentFeedings = recentFeedings,
+                            recentDiapers = recentDiapers,
+                            recentTummyTimes = recentTummyTimes,
+                            recentPumpings = recentPumpings,
+                            dashboardWidgets = dashboardWidgets,
+                            tummyTimeGoal = tummyTimeGoal,
+                            temperatures = temperatures,
+                            growth = growth,
+                            birthDate = babyProfile.birthDate,
+                            babySex = babySex,
+                            notes = notes,
+                            feedIntervals = feedIntervals,
+                            lastBreastfeed = lastBreastfeed,
+                            lastFeed = lastFeed,
+                            previousFeedMillis = previousFeedMillis,
+                            lastDiaper = lastDiaper,
+                            quickActions = quickActions,
+                            sleepTimer = sleepTimer,
+                            recentSleeps = recentSleeps,
+                            milkStash = milkStash,
+                            noteTags = noteTags,
+                            lastFeedMillis = lastFeedMillis,
+                            lastSleepEndMillis = lastSleepEndMillis,
+                            reminders = reminders,
+                            modelNext = modelNext,
+                            hiddenItems = hiddenItems,
+                            hiddenTiles = hiddenTodayTiles,
+                            hiddenWakeParts = hiddenWakeWindowParts,
+                            todayOrder = todayOrder,
+                            lastBathMillis = lastBathMillis,
+                            isRefreshing = isRefreshing
+                        ),
+                        actions = todayActions
                     )
                 }
 
@@ -570,51 +618,22 @@ fun BabyBuddyApp(
 
                 ScreenDestination.CONNECT_SERVER -> {
                     ConnectBackendScreen(
-                        config = connectionConfig,
-                        onBack = { viewModel.navigateTo(ScreenDestination.TODAY_DASHBOARD) },
-                        onTestConnect = { url, token, allowSelfSigned, cfId, cfSecret ->
-                            viewModel.testBackendConnection(url, token, allowSelfSigned, cfId, cfSecret)
-                        },
-                        onShowToast = { msg -> viewModel.showToast(msg) },
-                        onDisconnect = { viewModel.disconnectServer() },
-                        onEnterDemoMode = { viewModel.enterDemoMode() },
-                        certificatePrompt = certificatePrompt,
-                        onTrustCertificate = { viewModel.trustCertificate() },
-                        onDismissCertificate = { viewModel.dismissCertificatePrompt() },
-                        caregiverName = caregiverName,
-                        onCaregiverNameChange = { viewModel.setCaregiverName(it) },
-                        babySex = babySex,
-                        onBabySexChange = { viewModel.setBabySex(it) },
-                        feedNotificationEnabled = feedNotificationEnabled,
-                        use24h = use24h,
-                        themeMode = themeMode,
-                        onThemeModeChange = { viewModel.setThemeMode(it) },
-                        hiddenItems = hiddenItems,
-                        onItemTrackedChange = { item, on -> viewModel.setItemTracked(item, on) },
-                        reminders = reminders,
-                        onRemindersChange = { settings ->
-                            viewModel.setReminders(settings)
-                            if (settings.anyOn) {
-                                (context as? MainActivity)?.requestNotificationPermission()
-                            }
-                        },
-                        onUse24hChange = { viewModel.setUse24h(it) },
-                        onDayHoursChange = { day, night -> viewModel.setDayHours(day, night) },
-                        onTrendsDayStartChange = { viewModel.setTrendsDayStart(it) },
-                        modelsTab = modelsTab,
-                        modelTargets = usedModels.keys,
-                        onModelsTabChange = { viewModel.setModelsTab(it) },
-                        onFeedNotificationChange = { enabled ->
-                            viewModel.setFeedNotificationEnabled(enabled)
-                            if (enabled) (context as? MainActivity)?.requestNotificationPermission()
-                        },
-                        nextUpNotification = nextUpNotification,
-                        startSide = startSide,
-                        onStartSideChange = { viewModel.setStartSide(it) },
-                        onNextUpNotificationChange = { enabled ->
-                            viewModel.setNextUpNotification(enabled)
-                            if (enabled) (context as? MainActivity)?.requestNotificationPermission()
-                        }
+                        state = SettingsState(
+                            config = connectionConfig,
+                            certificatePrompt = certificatePrompt,
+                            caregiverName = caregiverName,
+                            babySex = babySex,
+                            feedNotificationEnabled = feedNotificationEnabled,
+                            use24h = use24h,
+                            themeMode = themeMode,
+                            hiddenItems = hiddenItems,
+                            reminders = reminders,
+                            modelsTab = modelsTab,
+                            modelTargets = usedModels.keys,
+                            nextUpNotification = nextUpNotification,
+                            startSide = startSide
+                        ),
+                        actions = settingsActions
                     )
                 }
             }

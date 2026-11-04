@@ -34,8 +34,6 @@ import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.Widgets
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -135,456 +133,467 @@ import com.example.ui.theme.SurfaceContainerLow
 import com.example.ui.theme.SurfaceContainerLowest
 import kotlinx.coroutines.delay
 
+/** What Today shows. */
+data class TodayState(
+    val liveTimerState: LiveTimerState,
+    val connectionConfig: ServerConnectionConfig,
+    val recentFeedings: List<FeedingEvent>,
+    val handoff: HandoffSummary? = null, // what other caregivers logged while this phone was away
+    val recentDiapers: List<DiaperEvent> = emptyList(),
+    val recentTummyTimes: List<TummyTimeEvent> = emptyList(),
+    val recentPumpings: List<PumpingEvent> = emptyList(),
+    val dashboardWidgets: List<DashboardWidgetConfig> = emptyList(),
+    val tummyTimeGoal: TummyTimeGoal = TummyTimeGoal(),
+    val temperatures: List<TemperatureEvent> = emptyList(),
+    val growth: List<GrowthEvent> = emptyList(),
+    val birthDate: String? = null,
+    val babySex: BabySex? = null,
+    val notes: List<NoteEvent> = emptyList(),
+    val feedIntervals: FeedIntervalStats? = null,
+    val lastBreastfeed: FeedingEvent? = null,
+    val lastFeed: FeedingEvent? = null, // breast or bottle
+    val previousFeedMillis: Long? = null, // while a feed runs, when the one before it started
+    val lastDiaper: DiaperEvent? = null,
+    val quickActions: List<QuickAction> = QuickAction.DEFAULT,
+    val sleepTimer: SleepTimerState = SleepTimerState(),
+    val recentSleeps: List<SleepEvent> = emptyList(),
+    val milkStash: Int? = null,
+    val noteTags: List<NoteTag> = emptyList(),
+    val lastFeedMillis: Long? = null,
+    val lastSleepEndMillis: Long? = null,
+    val reminders: ReminderSettings = ReminderSettings(),
+    val modelNext: Map<RhythmTarget, Long> = emptyMap(), // picked rhythm models' next times (Trends → Models)
+    val hiddenItems: Set<TrackedItem> = emptySet(),
+    val hiddenTiles: Set<TodayTile> = emptySet(), // summary tiles turned off in Customize Today
+    val hiddenWakeParts: Set<WakeWindowPart> = emptySet(), // Wake windows card parts turned off there
+    val todayOrder: List<TodaySection> = TodaySection.entries, // section order picked in Customize Today
+    val lastBathMillis: Long? = null,
+    val isRefreshing: Boolean = false
+)
+
+/** What Today can do: log, open screens, change cards and shortcuts, control a running feed. */
+data class TodayActions(
+    val onDismissHandoff: () -> Unit = {},
+    val onQuickActionsChange: (List<QuickAction>) -> Unit = {},
+    val onLogPumping: (ml: Int, minutes: Int, notes: String, startMillis: Long) -> Unit = { _, _, _, _ -> },
+    val onSetMilkStash: (Int) -> Unit = {},
+    val onAddTaggedNote: (text: String, tags: List<String>) -> Unit = { _, _ -> },
+    val onLogBath: (notes: String, timeMillis: Long?) -> Unit = { _, _ -> },
+    val onOpenHistory: (HistoryFilter) -> Unit = {},
+    val onRefresh: () -> Unit = {},
+    val onNavigate: (ScreenDestination) -> Unit = {},
+    val onOpenAddWidgetModal: () -> Unit = {},
+    val onAddTummyTimeMinutes: (Int) -> Unit = {},
+    val onLogTemperature: (Double, String) -> Unit = { _, _ -> },
+    val onLogGrowth: (values: Map<GrowthKind, Double>, dateMillis: Long, notes: String) -> Unit = { _, _, _ -> },
+    val onAddNote: (String) -> Unit = {},
+    val onRemoveDashboardWidget: (DashboardWidgetType) -> Unit = {},
+    val onLogBottle: (ml: Int, formula: Boolean, notes: String) -> Unit = { _, _, _ -> },
+    val onTapSide: (BreastSide) -> Unit = {},
+    val onEndFeed: () -> Unit = {}
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodayDashboardScreen(
-    liveTimerState: LiveTimerState,
-    connectionConfig: ServerConnectionConfig,
-    recentFeedings: List<FeedingEvent>,
-    handoff: HandoffSummary? = null, // what other caregivers logged while this phone was away
-    onDismissHandoff: () -> Unit = {},
-    recentDiapers: List<DiaperEvent> = emptyList(),
-    recentTummyTimes: List<TummyTimeEvent> = emptyList(),
-    recentPumpings: List<PumpingEvent> = emptyList(),
-    dashboardWidgets: List<DashboardWidgetConfig> = emptyList(),
-    tummyTimeGoal: TummyTimeGoal = TummyTimeGoal(),
-    temperatures: List<TemperatureEvent> = emptyList(),
-    growth: List<GrowthEvent> = emptyList(),
-    birthDate: String? = null,
-    babySex: BabySex? = null,
-    notes: List<NoteEvent> = emptyList(),
-    feedIntervals: FeedIntervalStats? = null,
-    lastBreastfeed: FeedingEvent? = null,
-    lastFeed: FeedingEvent? = null, // breast or bottle
-    previousFeedMillis: Long? = null, // while a feed runs, when the one before it started
-    lastDiaper: DiaperEvent? = null,
-    quickActions: List<QuickAction> = QuickAction.DEFAULT,
-    onQuickActionsChange: (List<QuickAction>) -> Unit = {},
-    onLogPumping: (ml: Int, minutes: Int, notes: String, startMillis: Long) -> Unit = { _, _, _, _ -> },
-    sleepTimer: SleepTimerState = SleepTimerState(),
-    recentSleeps: List<SleepEvent> = emptyList(),
-    milkStash: Int? = null,
-    onSetMilkStash: (Int) -> Unit = {},
-    noteTags: List<NoteTag> = emptyList(),
-    onAddTaggedNote: (text: String, tags: List<String>) -> Unit = { _, _ -> },
-    lastFeedMillis: Long? = null,
-    lastSleepEndMillis: Long? = null,
-    reminders: ReminderSettings = ReminderSettings(),
-    modelNext: Map<RhythmTarget, Long> = emptyMap(), // picked rhythm models' next times (Trends → Models)
-    hiddenItems: Set<TrackedItem> = emptySet(),
-    hiddenTiles: Set<TodayTile> = emptySet(), // summary tiles turned off in Customize Today
-    hiddenWakeParts: Set<WakeWindowPart> = emptySet(), // Wake windows card parts turned off there
-    todayOrder: List<TodaySection> = TodaySection.entries, // section order picked in Customize Today
-    lastBathMillis: Long? = null,
-    onLogBath: (notes: String, timeMillis: Long?) -> Unit = { _, _ -> },
-    onOpenHistory: (HistoryFilter) -> Unit = {},
-    isRefreshing: Boolean = false,
-    onRefresh: () -> Unit = {},
-    onNavigate: (ScreenDestination) -> Unit,
-    onOpenAddWidgetModal: () -> Unit = {},
-    onAddTummyTimeMinutes: (Int) -> Unit = {},
-    onLogTemperature: (Double, String) -> Unit = { _, _ -> },
-    onLogGrowth: (values: Map<GrowthKind, Double>, dateMillis: Long, notes: String) -> Unit = { _, _, _ -> },
-    onAddNote: (String) -> Unit = {},
-    onRemoveDashboardWidget: (DashboardWidgetType) -> Unit = {},
-    onLogBottle: (ml: Int, formula: Boolean, notes: String) -> Unit = { _, _, _ -> },
-    onTapSide: (BreastSide) -> Unit = {},
-    onEndFeed: () -> Unit = {},
-    modifier: Modifier = Modifier
-) {
-    var showFeedChooser by remember { mutableStateOf(false) }
-    var showBottleDialog by remember { mutableStateOf(false) }
-    var showPumpDialog by remember { mutableStateOf(false) }
-    var showTummyDialog by remember { mutableStateOf(false) }
-    var showActionsEditor by remember { mutableStateOf(false) }
-    var showStashDialog by remember { mutableStateOf(false) }
-    var showBathDialog by remember { mutableStateOf(false) }
+fun TodayDashboardScreen(state: TodayState, actions: TodayActions, modifier: Modifier = Modifier) {
+    // The fields of state and actions read as plain names below
+    with(state) {
+        with(actions) {
+            var showFeedChooser by remember { mutableStateOf(false) }
+            var showBottleDialog by remember { mutableStateOf(false) }
+            var showPumpDialog by remember { mutableStateOf(false) }
+            var showTummyDialog by remember { mutableStateOf(false) }
+            var showActionsEditor by remember { mutableStateOf(false) }
+            var showStashDialog by remember { mutableStateOf(false) }
+            var showBathDialog by remember { mutableStateOf(false) }
 
-    // Leave out what this phone doesn't track (Settings → Tracked items)
-    val feedingShown = TrackedItem.BREASTFEEDING !in hiddenItems || TrackedItem.BOTTLE !in hiddenItems
-    val visibleFeedings = recentFeedings.filter { f ->
-        if (f.type == FeedType.NURSING) TrackedItem.BREASTFEEDING !in hiddenItems else TrackedItem.BOTTLE !in hiddenItems
-    }
-    val availableActions = QuickAction.entries.filter { action ->
-        when (action) {
-            QuickAction.FEEDING -> feedingShown
-            QuickAction.DIAPER -> TrackedItem.DIAPERS !in hiddenItems
-            QuickAction.PUMP -> TrackedItem.PUMPING !in hiddenItems
-            QuickAction.TUMMY_TIME -> TrackedItem.TUMMY_TIME !in hiddenItems
-            QuickAction.SLEEP -> TrackedItem.SLEEP !in hiddenItems
-            QuickAction.BATH -> TrackedItem.BATH !in hiddenItems
-        }
-    }
-    var showNoteDialog by remember { mutableStateOf(false) }
-
-    // Today's finished wake windows, for the Wake windows card and summary tile
-    val todayStart = remember(recentSleeps) {
-        startOfDay()
-    }
-    val wakeWindows = remember(recentSleeps, todayStart) { completedWakeWindows(recentSleeps, todayStart) }
-
-    if (showStashDialog) {
-        MilkStashDialog(
-            initialMl = milkStash,
-            onDismiss = { showStashDialog = false },
-            onSave = { ml ->
-                showStashDialog = false
-                onSetMilkStash(ml)
+            // Leave out what this phone doesn't track (Settings → Tracked items)
+            val feedingShown = TrackedItem.BREASTFEEDING !in hiddenItems || TrackedItem.BOTTLE !in hiddenItems
+            val visibleFeedings = recentFeedings.filter { f ->
+                if (f.type == FeedType.NURSING) TrackedItem.BREASTFEEDING !in hiddenItems else TrackedItem.BOTTLE !in hiddenItems
             }
-        )
-    }
-    if (showNoteDialog) {
-        NoteDialog(
-            tags = noteTags.map { it.name },
-            onDismiss = { showNoteDialog = false },
-            onSave = { text, tags ->
-                showNoteDialog = false
-                onAddTaggedNote(text, tags)
-            }
-        )
-    }
-
-    if (showPumpDialog) {
-        val lastPump = recentPumpings.firstOrNull()
-        PumpingDialog(
-            initialMl = lastPump?.amountMl ?: 120,
-            initialMinutes = lastPump?.durationMinutes ?: 20,
-            onDismiss = { showPumpDialog = false },
-            onSave = { ml, minutes, notes, start ->
-                showPumpDialog = false
-                onLogPumping(ml, minutes, notes, start)
-            }
-        )
-    }
-    if (showBathDialog) {
-        BathDialog(
-            onDismiss = { showBathDialog = false },
-            onSave = { notes, time ->
-                showBathDialog = false
-                onLogBath(notes, time)
-            }
-        )
-    }
-    if (showTummyDialog) {
-        TummyTimeDialog(
-            initialMinutes = recentTummyTimes.firstOrNull()?.durationMinutes ?: 5,
-            onDismiss = { showTummyDialog = false },
-            onSave = { minutes ->
-                showTummyDialog = false
-                onAddTummyTimeMinutes(minutes)
-            }
-        )
-    }
-    if (showActionsEditor) {
-        QuickActionsEditorDialog(
-            current = quickActions.filter { it in availableActions },
-            available = availableActions,
-            onDismiss = { showActionsEditor = false },
-            onSave = { actions ->
-                showActionsEditor = false
-                onQuickActionsChange(actions)
-            }
-        )
-    }
-
-    if (showFeedChooser) {
-        FeedTypeChooserDialog(
-            onDismiss = { showFeedChooser = false },
-            onBreastfeed = {
-                showFeedChooser = false
-                onNavigate(ScreenDestination.ACTIVE_NURSING_TIMER)
-            },
-            onBottle = {
-                showFeedChooser = false
-                showBottleDialog = true
-            }
-        )
-    }
-    if (showBottleDialog) {
-        // Start from the last bottle's amount and contents
-        val lastBottle = recentFeedings.firstOrNull { it.amountMl != null }
-        BottleDialog(
-            initialMl = lastBottle?.amountMl ?: 120,
-            initialFormula = lastBottle?.bottleFormula ?: false,
-            onDismiss = { showBottleDialog = false },
-            onSave = { ml, formula, notes ->
-                showBottleDialog = false
-                onLogBottle(ml, formula, notes)
-            }
-        )
-    }
-
-    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh, modifier = modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item { Spacer(modifier = Modifier.height(4.dp)) }
-
-            // Shown everywhere below (Customize Today picks the order)
-            fun cardOn(type: DashboardWidgetType) = dashboardWidgets.any { it.type == type && it.isEnabled }
-            val showLastFeed = feedingShown && cardOn(DashboardWidgetType.LAST_FEED)
-            val showLastDiaper = TrackedItem.DIAPERS !in hiddenItems && cardOn(DashboardWidgetType.LAST_DIAPER)
-            // Awake for … / next feed around …
-            val feedEvery = reminders.feedAfterMinutes.takeIf { it > 0 } ?: feedIntervals?.thisWeekAverageMinutes
-            // (a sleep ending later than now, e.g. one entered with a wrong date, would leave the card empty)
-            val awakeSince = lastSleepEndMillis.takeIf {
-                !sleepTimer.isRunning && TrackedItem.SLEEP !in hiddenItems && it != null && it <= System.currentTimeMillis()
-            }
-            val showWakeWindows = TrackedItem.SLEEP !in hiddenItems && cardOn(DashboardWidgetType.WAKE_WINDOWS)
-            val nightWaking = awakeSince != null && recentSleeps.maxByOrNull { it.endMillis }?.let(::isLikelyNightWaking) == true
-            val nextFeedAt = modelNext[RhythmTarget.FEED_GAP]
-                ?: if (!feedingShown || liveTimerState.isRunning || lastFeedMillis == null || feedEvery == null) {
-                    null
-                } else {
-                    lastFeedMillis + feedEvery * 60_000L
+            val availableActions = QuickAction.entries.filter { action ->
+                when (action) {
+                    QuickAction.FEEDING -> feedingShown
+                    QuickAction.DIAPER -> TrackedItem.DIAPERS !in hiddenItems
+                    QuickAction.PUMP -> TrackedItem.PUMPING !in hiddenItems
+                    QuickAction.TUMMY_TIME -> TrackedItem.TUMMY_TIME !in hiddenItems
+                    QuickAction.SLEEP -> TrackedItem.SLEEP !in hiddenItems
+                    QuickAction.BATH -> TrackedItem.BATH !in hiddenItems
                 }
-            // Left out when the Wake windows card already shows them
-            val wakeCardShows = { part: WakeWindowPart -> showWakeWindows && part !in hiddenWakeParts }
-            // Only the next feed and, while awake, the next sleep (diaper and wake-up estimates were noise here)
-            val otherNext = listOfNotNull(
-                modelNext[RhythmTarget.AWAKE_WINDOW]?.takeIf { awakeSince != null }?.takeUnless { wakeCardShows(WakeWindowPart.NAP_DUE) }
-                    ?.let { AppText.get(R.string.rhythm_awake_window) to it }
-            )
-            val nextUpAwakeSince = awakeSince.takeUnless { wakeCardShows(WakeWindowPart.AWAKE_FOR) }
+            }
+            var showNoteDialog by remember { mutableStateOf(false) }
 
-            // A running feed or sleep (and While you were away) stays at the top, under the shortcuts when they're first
-            fun LazyListScope.banners() {
-                if (liveTimerState.isRunning) {
-                    item(key = "live_feed") {
-                        LiveFeedingBanner(
-                            liveTimerState = liveTimerState,
-                            onTapSide = onTapSide,
-                            onEndFeed = onEndFeed,
-                            onOpenFullTimer = { onNavigate(ScreenDestination.ACTIVE_NURSING_TIMER) },
-                            previousFeedMillis = previousFeedMillis
-                        )
+            // Today's finished wake windows, for the Wake windows card and summary tile
+            val todayStart = remember(recentSleeps) {
+                startOfDay()
+            }
+            val wakeWindows = remember(recentSleeps, todayStart) { completedWakeWindows(recentSleeps, todayStart) }
+
+            if (showStashDialog) {
+                MilkStashDialog(
+                    initialMl = milkStash,
+                    onDismiss = { showStashDialog = false },
+                    onSave = { ml ->
+                        showStashDialog = false
+                        onSetMilkStash(ml)
                     }
-                }
-
-                if (sleepTimer.isRunning) {
-                    item(key = "live_sleep") {
-                        SleepingBanner(startMillis = sleepTimer.startMillis, onClick = { onNavigate(ScreenDestination.SLEEP) })
-                    }
-                }
-
-                if (handoff != null) {
-                    item(key = "handoff") {
-                        HandoffCard(summary = handoff, onOpen = { onOpenHistory(HistoryFilter.ALL) }, onDismiss = onDismissHandoff)
-                    }
-                }
+                )
             }
-            // Sections in the chosen order; each branch below only checks what its data needs
-            val sections = todayOrder.filter { it.isShown(hiddenItems, ::cardOn) }
-            val shortcutsFirst = sections.firstOrNull() == TodaySection.QUICK_ACTIONS
-            if (!shortcutsFirst) banners()
+            if (showNoteDialog) {
+                NoteDialog(
+                    tags = noteTags.map { it.name },
+                    onDismiss = { showNoteDialog = false },
+                    onSave = { text, tags ->
+                        showNoteDialog = false
+                        onAddTaggedNote(text, tags)
+                    }
+                )
+            }
 
-            sections.forEach { section ->
-                when (section) {
-                    TodaySection.QUICK_ACTIONS -> {
-                        item(key = "quick_actions") {
-                            QuickActionsRow(
-                                actions = quickActions.filter { it in availableActions },
-                                onAction = { action ->
-                                    when (action) {
-                                        QuickAction.FEEDING -> when {
-                                            // Only one kind of feed tracked: skip the chooser
-                                            TrackedItem.BOTTLE in hiddenItems -> onNavigate(ScreenDestination.ACTIVE_NURSING_TIMER)
+            if (showPumpDialog) {
+                val lastPump = recentPumpings.firstOrNull()
+                PumpingDialog(
+                    initialMl = lastPump?.amountMl ?: 120,
+                    initialMinutes = lastPump?.durationMinutes ?: 20,
+                    onDismiss = { showPumpDialog = false },
+                    onSave = { ml, minutes, notes, start ->
+                        showPumpDialog = false
+                        onLogPumping(ml, minutes, notes, start)
+                    }
+                )
+            }
+            if (showBathDialog) {
+                BathDialog(
+                    onDismiss = { showBathDialog = false },
+                    onSave = { notes, time ->
+                        showBathDialog = false
+                        onLogBath(notes, time)
+                    }
+                )
+            }
+            if (showTummyDialog) {
+                TummyTimeDialog(
+                    initialMinutes = recentTummyTimes.firstOrNull()?.durationMinutes ?: 5,
+                    onDismiss = { showTummyDialog = false },
+                    onSave = { minutes ->
+                        showTummyDialog = false
+                        onAddTummyTimeMinutes(minutes)
+                    }
+                )
+            }
+            if (showActionsEditor) {
+                QuickActionsEditorDialog(
+                    current = quickActions.filter { it in availableActions },
+                    available = availableActions,
+                    onDismiss = { showActionsEditor = false },
+                    onSave = { actions ->
+                        showActionsEditor = false
+                        onQuickActionsChange(actions)
+                    }
+                )
+            }
 
-                                            TrackedItem.BREASTFEEDING in hiddenItems -> showBottleDialog = true
+            if (showFeedChooser) {
+                FeedTypeChooserDialog(
+                    onDismiss = { showFeedChooser = false },
+                    onBreastfeed = {
+                        showFeedChooser = false
+                        onNavigate(ScreenDestination.ACTIVE_NURSING_TIMER)
+                    },
+                    onBottle = {
+                        showFeedChooser = false
+                        showBottleDialog = true
+                    }
+                )
+            }
+            if (showBottleDialog) {
+                // Start from the last bottle's amount and contents
+                val lastBottle = recentFeedings.firstOrNull { it.amountMl != null }
+                BottleDialog(
+                    initialMl = lastBottle?.amountMl ?: 120,
+                    initialFormula = lastBottle?.bottleFormula ?: false,
+                    onDismiss = { showBottleDialog = false },
+                    onSave = { ml, formula, notes ->
+                        showBottleDialog = false
+                        onLogBottle(ml, formula, notes)
+                    }
+                )
+            }
 
-                                            else -> showFeedChooser = true
-                                        }
+            PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh, modifier = modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item { Spacer(modifier = Modifier.height(4.dp)) }
 
-                                        QuickAction.DIAPER -> onNavigate(ScreenDestination.LOG_DIAPER)
-
-                                        QuickAction.PUMP -> showPumpDialog = true
-
-                                        QuickAction.TUMMY_TIME -> showTummyDialog = true
-
-                                        QuickAction.SLEEP -> onNavigate(ScreenDestination.SLEEP)
-
-                                        QuickAction.BATH -> showBathDialog = true
-                                    }
-                                },
-                                onEdit = { showActionsEditor = true }
-                            )
+                    // Shown everywhere below (Customize Today picks the order)
+                    fun cardOn(type: DashboardWidgetType) = dashboardWidgets.any { it.type == type && it.isEnabled }
+                    val showLastFeed = feedingShown && cardOn(DashboardWidgetType.LAST_FEED)
+                    val showLastDiaper = TrackedItem.DIAPERS !in hiddenItems && cardOn(DashboardWidgetType.LAST_DIAPER)
+                    // Awake for … / next feed around …
+                    val feedEvery = reminders.feedAfterMinutes.takeIf { it > 0 } ?: feedIntervals?.thisWeekAverageMinutes
+                    // (a sleep ending later than now, e.g. one entered with a wrong date, would leave the card empty)
+                    val awakeSince = lastSleepEndMillis.takeIf {
+                        !sleepTimer.isRunning && TrackedItem.SLEEP !in hiddenItems && it != null && it <= System.currentTimeMillis()
+                    }
+                    val showWakeWindows = TrackedItem.SLEEP !in hiddenItems && cardOn(DashboardWidgetType.WAKE_WINDOWS)
+                    val nightWaking = awakeSince != null && recentSleeps.maxByOrNull { it.endMillis }?.let(::isLikelyNightWaking) == true
+                    val nextFeedAt = modelNext[RhythmTarget.FEED_GAP]
+                        ?: if (!feedingShown || liveTimerState.isRunning || lastFeedMillis == null || feedEvery == null) {
+                            null
+                        } else {
+                            lastFeedMillis + feedEvery * 60_000L
                         }
-                        if (shortcutsFirst) banners()
-                    }
+                    // Left out when the Wake windows card already shows them
+                    val wakeCardShows = { part: WakeWindowPart -> showWakeWindows && part !in hiddenWakeParts }
+                    // Only the next feed and, while awake, the next sleep (diaper and wake-up estimates were noise here)
+                    val otherNext = listOfNotNull(
+                        modelNext[RhythmTarget.AWAKE_WINDOW]?.takeIf { awakeSince != null }?.takeUnless { wakeCardShows(WakeWindowPart.NAP_DUE) }
+                            ?.let { AppText.get(R.string.rhythm_awake_window) to it }
+                    )
+                    val nextUpAwakeSince = awakeSince.takeUnless { wakeCardShows(WakeWindowPart.AWAKE_FOR) }
 
-                    TodaySection.LAST_ENTRIES -> {
-                        if (showLastFeed || showLastDiaper) {
-                            item(key = "last_entries") {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    if (showLastFeed) {
-                                        LastFeedCard(
-                                            recentFeedings = visibleFeedings,
-                                            latestFeed = lastFeed?.takeIf {
-                                                (if (it.type == FeedType.NURSING) TrackedItem.BREASTFEEDING else TrackedItem.BOTTLE) !in hiddenItems
-                                            },
-                                            lastBreastfeed = lastBreastfeed.takeIf { TrackedItem.BREASTFEEDING !in hiddenItems },
-                                            onClick = { onOpenHistory(HistoryFilter.FEEDS) },
-                                            onRemove = { onRemoveDashboardWidget(DashboardWidgetType.LAST_FEED) },
-                                            modifier = Modifier.weight(1f).fillMaxHeight()
+                    // A running feed or sleep (and While you were away) stays at the top, under the shortcuts when they're first
+                    fun LazyListScope.banners() {
+                        if (liveTimerState.isRunning) {
+                            item(key = "live_feed") {
+                                LiveFeedingBanner(
+                                    liveTimerState = liveTimerState,
+                                    onTapSide = onTapSide,
+                                    onEndFeed = onEndFeed,
+                                    onOpenFullTimer = { onNavigate(ScreenDestination.ACTIVE_NURSING_TIMER) },
+                                    previousFeedMillis = previousFeedMillis
+                                )
+                            }
+                        }
+
+                        if (sleepTimer.isRunning) {
+                            item(key = "live_sleep") {
+                                SleepingBanner(startMillis = sleepTimer.startMillis, onClick = { onNavigate(ScreenDestination.SLEEP) })
+                            }
+                        }
+
+                        if (handoff != null) {
+                            item(key = "handoff") {
+                                HandoffCard(summary = handoff, onOpen = { onOpenHistory(HistoryFilter.ALL) }, onDismiss = onDismissHandoff)
+                            }
+                        }
+                    }
+                    // Sections in the chosen order; each branch below only checks what its data needs
+                    val sections = todayOrder.filter { it.isShown(hiddenItems, ::cardOn) }
+                    val shortcutsFirst = sections.firstOrNull() == TodaySection.QUICK_ACTIONS
+                    if (!shortcutsFirst) banners()
+
+                    sections.forEach { section ->
+                        when (section) {
+                            TodaySection.QUICK_ACTIONS -> {
+                                item(key = "quick_actions") {
+                                    QuickActionsRow(
+                                        actions = quickActions.filter { it in availableActions },
+                                        onAction = { action ->
+                                            when (action) {
+                                                QuickAction.FEEDING -> when {
+                                                    // Only one kind of feed tracked: skip the chooser
+                                                    TrackedItem.BOTTLE in hiddenItems -> onNavigate(ScreenDestination.ACTIVE_NURSING_TIMER)
+
+                                                    TrackedItem.BREASTFEEDING in hiddenItems -> showBottleDialog = true
+
+                                                    else -> showFeedChooser = true
+                                                }
+
+                                                QuickAction.DIAPER -> onNavigate(ScreenDestination.LOG_DIAPER)
+
+                                                QuickAction.PUMP -> showPumpDialog = true
+
+                                                QuickAction.TUMMY_TIME -> showTummyDialog = true
+
+                                                QuickAction.SLEEP -> onNavigate(ScreenDestination.SLEEP)
+
+                                                QuickAction.BATH -> showBathDialog = true
+                                            }
+                                        },
+                                        onEdit = { showActionsEditor = true }
+                                    )
+                                }
+                                if (shortcutsFirst) banners()
+                            }
+
+                            TodaySection.LAST_ENTRIES -> {
+                                if (showLastFeed || showLastDiaper) {
+                                    item(key = "last_entries") {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            if (showLastFeed) {
+                                                LastFeedCard(
+                                                    recentFeedings = visibleFeedings,
+                                                    latestFeed = lastFeed?.takeIf {
+                                                        (if (it.type == FeedType.NURSING) TrackedItem.BREASTFEEDING else TrackedItem.BOTTLE) !in hiddenItems
+                                                    },
+                                                    lastBreastfeed = lastBreastfeed.takeIf { TrackedItem.BREASTFEEDING !in hiddenItems },
+                                                    onClick = { onOpenHistory(HistoryFilter.FEEDS) },
+                                                    onRemove = { onRemoveDashboardWidget(DashboardWidgetType.LAST_FEED) },
+                                                    modifier = Modifier.weight(1f).fillMaxHeight()
+                                                )
+                                            }
+                                            if (showLastDiaper) {
+                                                LastDiaperCard(
+                                                    lastDiaper = lastDiaper,
+                                                    onClick = { onOpenHistory(HistoryFilter.DIAPERS) },
+                                                    onRemove = { onRemoveDashboardWidget(DashboardWidgetType.LAST_DIAPER) },
+                                                    modifier = Modifier.weight(1f).fillMaxHeight()
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            TodaySection.WAKE_WINDOWS -> {
+                                if (showWakeWindows) {
+                                    item(key = "wake_windows") {
+                                        WakeWindowsWidgetCard(
+                                            awakeSince = awakeSince,
+                                            sleepingSince = sleepTimer.startMillis.takeIf { sleepTimer.isRunning },
+                                            // No nap due during a night waking
+                                            nextSleepAt = modelNext[RhythmTarget.AWAKE_WINDOW]
+                                                ?: awakeSince?.takeUnless { nightWaking }?.let { since -> reminders.awakeAfterMinutes.takeIf { it > 0 }?.let { since + it * 60_000L } },
+                                            windows = wakeWindows,
+                                            parts = WakeWindowPart.entries.toSet() - hiddenWakeParts,
+                                            onOpenSleep = { onNavigate(ScreenDestination.SLEEP) },
+                                            onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.WAKE_WINDOWS) }
                                         )
                                     }
-                                    if (showLastDiaper) {
-                                        LastDiaperCard(
-                                            lastDiaper = lastDiaper,
-                                            onClick = { onOpenHistory(HistoryFilter.DIAPERS) },
-                                            onRemove = { onRemoveDashboardWidget(DashboardWidgetType.LAST_DIAPER) },
-                                            modifier = Modifier.weight(1f).fillMaxHeight()
+                                }
+                            }
+
+                            TodaySection.NEXT_UP -> {
+                                if (nextUpAwakeSince != null || nextFeedAt != null || otherNext.isNotEmpty()) {
+                                    item(key = "next_up") {
+                                        NextUpCard(
+                                            awakeSince = nextUpAwakeSince,
+                                            nextFeedAt = nextFeedAt,
+                                            onSleepClick = { onNavigate(ScreenDestination.SLEEP) },
+                                            modelNext = otherNext
                                         )
                                     }
+                                }
+                            }
+
+                            TodaySection.SUMMARY_TILES -> {
+                                item(key = "summary_tiles") {
+                                    TodaySummaryGrid(
+                                        recentFeedings = visibleFeedings,
+                                        recentDiapers = recentDiapers,
+                                        recentTummyTimes = recentTummyTimes,
+                                        recentPumpings = recentPumpings,
+                                        recentSleeps = recentSleeps,
+                                        hidden = hiddenItems,
+                                        hiddenTiles = hiddenTiles,
+                                        awakeSince = awakeSince,
+                                        wakeWindows = wakeWindows,
+                                        onWakeWindowClick = { onNavigate(ScreenDestination.SLEEP) },
+                                        sleepTimer = sleepTimer,
+                                        milkStash = milkStash,
+                                        onMilkStashClick = { showStashDialog = true },
+                                        lastBathMillis = lastBathMillis,
+                                        onBathClick = { showBathDialog = true },
+                                        onOpenHistory = onOpenHistory
+                                    )
+                                }
+                            }
+
+                            TodaySection.QUICK_NOTES -> {
+                                if (TrackedItem.QUICK_NOTES !in hiddenItems) {
+                                    item(key = "quick_notes") {
+                                        QuickNotesCard(
+                                            tags = noteTags,
+                                            todaysNotes = notes,
+                                            onTag = { tag -> onAddTaggedNote(tag.name.replaceFirstChar(Char::uppercase), listOf(tag.name)) },
+                                            onAddNote = { showNoteDialog = true }
+                                        )
+                                    }
+                                }
+                            }
+
+                            TodaySection.LAST_PUMP -> {
+                                if (recentPumpings.isNotEmpty()) {
+                                    item(key = "last_pump") { LastPumpCard(recentPumpings = recentPumpings) }
+                                }
+                            }
+
+                            TodaySection.FEED_INTERVAL -> {
+                                if (feedIntervals?.thisWeekAverageMinutes != null) {
+                                    item(key = "feed_interval") { FeedIntervalCard(feedIntervals) }
+                                }
+                            }
+
+                            TodaySection.TUMMY_TIME -> {
+                                item(key = "widget_TUMMY_TIME_GOAL") {
+                                    TummyTimeGoalWidgetCard(
+                                        goalMinutes = tummyTimeGoal.dailyGoalMinutes,
+                                        todayMinutes = recentTummyTimes.sumOf { it.durationMinutes },
+                                        onAddMinutes = onAddTummyTimeMinutes,
+                                        onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.TUMMY_TIME_GOAL) }
+                                    )
+                                }
+                            }
+
+                            TodaySection.TEMPERATURE -> {
+                                item(key = "widget_HEALTH_VITALS") {
+                                    TemperatureWidgetCard(
+                                        temperatures = temperatures,
+                                        onLogTemperature = onLogTemperature,
+                                        onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.HEALTH_VITALS) }
+                                    )
+                                }
+                            }
+
+                            TodaySection.NOTES -> {
+                                item(key = "widget_CAREGIVER_NOTES") {
+                                    NotesWidgetCard(
+                                        notes = notes.filterNot { MILK_STASH_TAG in it.tags },
+                                        onAddNote = onAddNote,
+                                        onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.CAREGIVER_NOTES) }
+                                    )
+                                }
+                            }
+
+                            TodaySection.GROWTH -> {
+                                item(key = "widget_GROWTH") {
+                                    GrowthWidgetCard(
+                                        growth = growth,
+                                        birthDate = birthDate,
+                                        sex = babySex,
+                                        onLogGrowth = onLogGrowth,
+                                        onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.GROWTH) }
+                                    )
                                 }
                             }
                         }
                     }
 
-                    TodaySection.WAKE_WINDOWS -> {
-                        if (showWakeWindows) {
-                            item(key = "wake_windows") {
-                                WakeWindowsWidgetCard(
-                                    awakeSince = awakeSince,
-                                    sleepingSince = sleepTimer.startMillis.takeIf { sleepTimer.isRunning },
-                                    // No nap due during a night waking
-                                    nextSleepAt = modelNext[RhythmTarget.AWAKE_WINDOW]
-                                        ?: awakeSince?.takeUnless { nightWaking }?.let { since -> reminders.awakeAfterMinutes.takeIf { it > 0 }?.let { since + it * 60_000L } },
-                                    windows = wakeWindows,
-                                    parts = WakeWindowPart.entries.toSet() - hiddenWakeParts,
-                                    onOpenSleep = { onNavigate(ScreenDestination.SLEEP) },
-                                    onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.WAKE_WINDOWS) }
-                                )
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            TextButton(
+                                onClick = onOpenAddWidgetModal,
+                                modifier = Modifier.testTag("customize_dashboard_btn")
+                            ) {
+                                Icon(Icons.Default.Widgets, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(stringResource(R.string.customize_title), style = MaterialTheme.typography.labelLarge)
                             }
                         }
                     }
 
-                    TodaySection.NEXT_UP -> {
-                        if (nextUpAwakeSince != null || nextFeedAt != null || otherNext.isNotEmpty()) {
-                            item(key = "next_up") {
-                                NextUpCard(
-                                    awakeSince = nextUpAwakeSince,
-                                    nextFeedAt = nextFeedAt,
-                                    onSleepClick = { onNavigate(ScreenDestination.SLEEP) },
-                                    modelNext = otherNext
-                                )
-                            }
-                        }
-                    }
-
-                    TodaySection.SUMMARY_TILES -> {
-                        item(key = "summary_tiles") {
-                            TodaySummaryGrid(
-                                recentFeedings = visibleFeedings,
-                                recentDiapers = recentDiapers,
-                                recentTummyTimes = recentTummyTimes,
-                                recentPumpings = recentPumpings,
-                                recentSleeps = recentSleeps,
-                                hidden = hiddenItems,
-                                hiddenTiles = hiddenTiles,
-                                awakeSince = awakeSince,
-                                wakeWindows = wakeWindows,
-                                onWakeWindowClick = { onNavigate(ScreenDestination.SLEEP) },
-                                sleepTimer = sleepTimer,
-                                milkStash = milkStash,
-                                onMilkStashClick = { showStashDialog = true },
-                                lastBathMillis = lastBathMillis,
-                                onBathClick = { showBathDialog = true },
-                                onOpenHistory = onOpenHistory
-                            )
-                        }
-                    }
-
-                    TodaySection.QUICK_NOTES -> {
-                        if (TrackedItem.QUICK_NOTES !in hiddenItems) {
-                            item(key = "quick_notes") {
-                                QuickNotesCard(
-                                    tags = noteTags,
-                                    todaysNotes = notes,
-                                    onTag = { tag -> onAddTaggedNote(tag.name.replaceFirstChar(Char::uppercase), listOf(tag.name)) },
-                                    onAddNote = { showNoteDialog = true }
-                                )
-                            }
-                        }
-                    }
-
-                    TodaySection.LAST_PUMP -> {
-                        if (recentPumpings.isNotEmpty()) {
-                            item(key = "last_pump") { LastPumpCard(recentPumpings = recentPumpings) }
-                        }
-                    }
-
-                    TodaySection.FEED_INTERVAL -> {
-                        if (feedIntervals?.thisWeekAverageMinutes != null) {
-                            item(key = "feed_interval") { FeedIntervalCard(feedIntervals) }
-                        }
-                    }
-
-                    TodaySection.TUMMY_TIME -> {
-                        item(key = "widget_TUMMY_TIME_GOAL") {
-                            TummyTimeGoalWidgetCard(
-                                goalMinutes = tummyTimeGoal.dailyGoalMinutes,
-                                todayMinutes = recentTummyTimes.sumOf { it.durationMinutes },
-                                onAddMinutes = onAddTummyTimeMinutes,
-                                onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.TUMMY_TIME_GOAL) }
-                            )
-                        }
-                    }
-
-                    TodaySection.TEMPERATURE -> {
-                        item(key = "widget_HEALTH_VITALS") {
-                            TemperatureWidgetCard(
-                                temperatures = temperatures,
-                                onLogTemperature = onLogTemperature,
-                                onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.HEALTH_VITALS) }
-                            )
-                        }
-                    }
-
-                    TodaySection.NOTES -> {
-                        item(key = "widget_CAREGIVER_NOTES") {
-                            NotesWidgetCard(
-                                notes = notes.filterNot { MILK_STASH_TAG in it.tags },
-                                onAddNote = onAddNote,
-                                onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.CAREGIVER_NOTES) }
-                            )
-                        }
-                    }
-
-                    TodaySection.GROWTH -> {
-                        item(key = "widget_GROWTH") {
-                            GrowthWidgetCard(
-                                growth = growth,
-                                birthDate = birthDate,
-                                sex = babySex,
-                                onLogGrowth = onLogGrowth,
-                                onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.GROWTH) }
-                            )
-                        }
-                    }
+                    item { Spacer(modifier = Modifier.height(16.dp)) }
                 }
             }
-
-            item {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    TextButton(
-                        onClick = onOpenAddWidgetModal,
-                        modifier = Modifier.testTag("customize_dashboard_btn")
-                    ) {
-                        Icon(Icons.Default.Widgets, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.customize_title), style = MaterialTheme.typography.labelLarge)
-                    }
-                }
-            }
-
-            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }

@@ -6,7 +6,6 @@ import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -62,7 +61,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -95,7 +93,6 @@ import com.example.ui.components.SegmentedToggle
 import com.example.ui.theme.OnPrimary
 import com.example.ui.theme.OutlineColor
 import com.example.ui.theme.PrimaryColor
-import com.example.ui.theme.SecondaryColor
 import com.example.ui.theme.SurfaceContainerLow
 import kotlinx.coroutines.delay
 
@@ -265,72 +262,266 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
 private const val BABY_BUDDY_REPO = "https://github.com/babybuddy/babybuddy"
 private const val APP_REPO = "https://github.com/liorbass/baby-buddy-modern-android"
 
+/** What Settings shows. */
+data class SettingsState(
+    val config: ServerConnectionConfig,
+    val caregiverName: String = "",
+    val babySex: BabySex? = null,
+    val feedNotificationEnabled: Boolean = true,
+    val nextUpNotification: Boolean = false,
+    val startSide: StartSide = StartSide.OPPOSITE,
+    val use24h: Boolean = true,
+    val modelsTab: Boolean = false,
+    val modelTargets: Set<RhythmTarget> = emptySet(), // rhythms whose reminders a saved model times (Trends → Models)
+    val themeMode: ThemeMode = ThemeMode.BY_TIME,
+    val reminders: ReminderSettings = ReminderSettings(),
+    val hiddenItems: Set<TrackedItem> = emptySet(),
+    val certificatePrompt: CertificatePrompt? = null
+)
+
+/** What Settings can do. */
+data class SettingsActions(
+    val onBack: () -> Unit = {},
+    val onTestConnect: (url: String, token: String, allowSelfSigned: Boolean, cfClientId: String, cfClientSecret: String) -> Unit = { _, _, _, _, _ -> },
+    val onShowToast: (String) -> Unit = {},
+    val onDisconnect: () -> Unit = {},
+    val onCaregiverNameChange: (String) -> Unit = {},
+    val onBabySexChange: (BabySex) -> Unit = {},
+    val onFeedNotificationChange: (Boolean) -> Unit = {},
+    val onStartSideChange: (StartSide) -> Unit = {},
+    val onNextUpNotificationChange: (Boolean) -> Unit = {},
+    val onUse24hChange: (Boolean) -> Unit = {},
+    val onDayHoursChange: (dayStartHour: Int, nightStartHour: Int) -> Unit = { _, _ -> },
+    val onTrendsDayStartChange: (Int) -> Unit = {},
+    val onModelsTabChange: (Boolean) -> Unit = {},
+    val onThemeModeChange: (ThemeMode) -> Unit = {},
+    val onRemindersChange: (ReminderSettings) -> Unit = {},
+    val onItemTrackedChange: (TrackedItem, Boolean) -> Unit = { _, _ -> },
+    val onEnterDemoMode: () -> Unit = {},
+    val onTrustCertificate: () -> Unit = {},
+    val onDismissCertificate: () -> Unit = {}
+)
+
 @Composable
-fun ConnectBackendScreen(
+fun ConnectBackendScreen(state: SettingsState, actions: SettingsActions, modifier: Modifier = Modifier) {
+    // The fields of state and actions read as plain names below
+    with(state) {
+        with(actions) {
+            certificatePrompt?.let { CertificateDialog(it, onTrustCertificate, onDismissCertificate) }
+
+            val isLoggedIn = config.isConnected && !config.isDemoMode
+            val uriHandler = LocalUriHandler.current
+            val openLink: (String) -> Unit = { url -> runCatching { uriHandler.openUri(url) }.onFailure { onShowToast(AppText.get(R.string.settings_no_browser, url)) } }
+            // Demo mode gets the whole of Settings too, so every feature can be tried; its Server connection logs in for real
+            val showSettings = config.isConnected
+
+            // The open category (its own page within Settings), or null for the list of categories
+            var openSection by rememberSaveable { mutableStateOf<String?>(null) }
+            BackHandler(enabled = showSettings && openSection != null) { openSection = null }
+            val sectionTitles = mapOf(
+                "connection" to stringResource(R.string.settings_connection),
+                "you" to stringResource(R.string.settings_you),
+                "tracked" to stringResource(R.string.settings_tracked),
+                "appearance" to stringResource(R.string.settings_appearance),
+                "notifications" to stringResource(R.string.settings_notifications),
+                "about" to stringResource(R.string.settings_about)
+            )
+
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                if (!showSettings) {
+                    // First run / logged out: this is the login screen
+                    Column(
+                        modifier = Modifier.padding(top = 48.dp, bottom = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(R.string.login_intro),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        // Up top as well as under the form, so it's seen before the server fields
+                        TextButton(onClick = onEnterDemoMode, contentPadding = PaddingValues(0.dp), shape = RectangleShape, modifier = Modifier.testTag("demo_mode_link")) {
+                            Text(stringResource(R.string.login_no_server), color = PrimaryColor, fontWeight = FontWeight.Medium)
+                        }
+                        var showWhatIs by rememberSaveable { mutableStateOf(false) }
+                        TextButton(onClick = { showWhatIs = !showWhatIs }, contentPadding = PaddingValues(0.dp), shape = RectangleShape, modifier = Modifier.testTag("what_is_baby_buddy_link")) {
+                            Text(stringResource(if (showWhatIs) R.string.login_what_is_open else R.string.login_what_is_closed), color = PrimaryColor, fontWeight = FontWeight.Medium)
+                        }
+                        AnimatedVisibility(visible = showWhatIs) {
+                            Surface(color = SurfaceContainerLow, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text(
+                                        stringResource(R.string.login_what_is_text),
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        stringResource(R.string.login_what_is_companion),
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    TextButton(onClick = { openLink(BABY_BUDDY_REPO) }, contentPadding = PaddingValues(0.dp), shape = RectangleShape) {
+                                        Text(stringResource(R.string.login_set_up_server), color = PrimaryColor, fontWeight = FontWeight.Medium)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    ServerConnectionForm(config, isLoggedIn, onTestConnect, onShowToast, onEnterDemoMode)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    return@Column
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Back closes an open category first, then leaves Settings
+                    IconButton(onClick = { if (openSection != null) openSection = null else onBack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = openSection?.let { sectionTitles[it] } ?: stringResource(R.string.nav_settings),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                SettingsSection(
+                    title = stringResource(R.string.settings_connection),
+                    summary = stringResource(R.string.settings_connected_to, config.serverUrl),
+                    icon = Icons.Default.Cloud,
+                    expanded = openSection == "connection",
+                    hidden = openSection != null && openSection != "connection",
+                    onOpen = { openSection = "connection" }
+                ) {
+                    ServerConnectionForm(config, isLoggedIn, onTestConnect, onShowToast, onEnterDemoMode)
+                    OutlinedButton(
+                        onClick = onDisconnect,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("disconnect_btn")
+                    ) {
+                        Text(stringResource(R.string.settings_disconnect), color = MaterialTheme.colorScheme.error)
+                    }
+                }
+
+                SettingsSection(
+                    title = stringResource(R.string.settings_you),
+                    summary = caregiverName.ifBlank { stringResource(R.string.settings_add_your_name) },
+                    icon = Icons.Default.Person,
+                    expanded = openSection == "you",
+                    hidden = openSection != null && openSection != "you",
+                    onOpen = { openSection = "you" }
+                ) {
+                    YouSettings(state, actions)
+                }
+
+                SettingsSection(
+                    title = stringResource(R.string.settings_tracked),
+                    summary = if (hiddenItems.isEmpty()) {
+                        stringResource(R.string.settings_tracking_everything)
+                    } else {
+                        stringResource(R.string.settings_hidden, TrackedItem.entries.filter { it in hiddenItems }.joinToString(", ") { it.label })
+                    },
+                    icon = Icons.Default.Checklist,
+                    expanded = openSection == "tracked",
+                    hidden = openSection != null && openSection != "tracked",
+                    onOpen = { openSection = "tracked" }
+                ) {
+                    TrackedItemsSettings(state, actions)
+                }
+
+                SettingsSection(
+                    title = stringResource(R.string.settings_appearance),
+                    summary = stringResource(if (use24h) R.string.settings_appearance_24h else R.string.settings_appearance_12h, themeMode.label),
+                    icon = Icons.Default.Palette,
+                    expanded = openSection == "appearance",
+                    hidden = openSection != null && openSection != "appearance",
+                    onOpen = { openSection = "appearance" }
+                ) {
+                    AppearanceSettings(state, actions)
+                }
+
+                SettingsSection(
+                    title = stringResource(R.string.settings_notifications),
+                    summary = listOfNotNull(
+                        stringResource(R.string.settings_summary_lock_screen).takeIf { feedNotificationEnabled },
+                        stringResource(R.string.settings_summary_next_up).takeIf { nextUpNotification },
+                        stringResource(R.string.settings_summary_feed).takeIf { reminders.feedAfterMinutes > 0 },
+                        stringResource(R.string.settings_summary_awake).takeIf { reminders.awakeAfterMinutes > 0 },
+                        stringResource(R.string.settings_summary_sleep).takeIf { reminders.sleepAfterMinutes > 0 },
+                        stringResource(R.string.settings_summary_diaper).takeIf { reminders.diaperAfterMinutes > 0 }
+                    ).joinToString(" · ").replaceFirstChar(Char::uppercase).ifBlank { stringResource(R.string.off) },
+                    icon = Icons.Default.Notifications,
+                    expanded = openSection == "notifications",
+                    hidden = openSection != null && openSection != "notifications",
+                    onOpen = { openSection = "notifications" }
+                ) {
+                    NotificationSettings(state, actions)
+                }
+
+                SettingsSection(
+                    title = stringResource(R.string.settings_about),
+                    summary = stringResource(R.string.about_summary, BuildConfig.VERSION_NAME, BuildConfig.BUILD_DATE),
+                    icon = Icons.Default.Info,
+                    expanded = openSection == "about",
+                    hidden = openSection != null && openSection != "about",
+                    onOpen = { openSection = "about" }
+                ) {
+                    AboutSettings(state, actions, openLink)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+/** Trust on first use: the server's certificate, shown so the user can check it before trusting it. */
+@Composable
+private fun CertificateDialog(prompt: CertificatePrompt, onTrust: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(if (prompt.changed) R.string.cert_changed_title else R.string.cert_trust_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    if (prompt.changed) {
+                        stringResource(R.string.cert_changed_text)
+                    } else {
+                        stringResource(R.string.cert_unknown_text)
+                    }
+                )
+                Text(prompt.fingerprint, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onTrust, modifier = Modifier.testTag("trust_cert_btn")) { Text(stringResource(R.string.cert_trust), color = PrimaryColor) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        }
+    )
+}
+
+/** Server URL, token, certificates, Cloudflare and the Connect button (and, logged out, the demo button). */
+@Composable
+private fun ServerConnectionForm(
     config: ServerConnectionConfig,
-    onBack: () -> Unit,
+    isLoggedIn: Boolean,
     onTestConnect: (url: String, token: String, allowSelfSigned: Boolean, cfClientId: String, cfClientSecret: String) -> Unit,
     onShowToast: (String) -> Unit,
-    onDisconnect: () -> Unit = {},
-    caregiverName: String = "",
-    onCaregiverNameChange: (String) -> Unit = {},
-    babySex: BabySex? = null,
-    onBabySexChange: (BabySex) -> Unit = {},
-    feedNotificationEnabled: Boolean = true,
-    onFeedNotificationChange: (Boolean) -> Unit = {},
-    nextUpNotification: Boolean = false,
-    startSide: StartSide = StartSide.OPPOSITE,
-    onStartSideChange: (StartSide) -> Unit = {},
-    onNextUpNotificationChange: (Boolean) -> Unit = {},
-    use24h: Boolean = true,
-    onUse24hChange: (Boolean) -> Unit = {},
-    onDayHoursChange: (dayStartHour: Int, nightStartHour: Int) -> Unit = { _, _ -> },
-    onTrendsDayStartChange: (Int) -> Unit = {},
-    modelsTab: Boolean = false,
-    modelTargets: Set<RhythmTarget> = emptySet(), // rhythms whose reminders a saved model times (Trends → Models)
-    onModelsTabChange: (Boolean) -> Unit = {},
-    themeMode: ThemeMode = ThemeMode.BY_TIME,
-    onThemeModeChange: (ThemeMode) -> Unit = {},
-    reminders: ReminderSettings = ReminderSettings(),
-    onRemindersChange: (ReminderSettings) -> Unit = {},
-    hiddenItems: Set<TrackedItem> = emptySet(),
-    onItemTrackedChange: (TrackedItem, Boolean) -> Unit = { _, _ -> },
-    onEnterDemoMode: () -> Unit = {},
-    certificatePrompt: CertificatePrompt? = null,
-    onTrustCertificate: () -> Unit = {},
-    onDismissCertificate: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onEnterDemoMode: () -> Unit
 ) {
-    certificatePrompt?.let { prompt ->
-        AlertDialog(
-            onDismissRequest = onDismissCertificate,
-            title = { Text(stringResource(if (prompt.changed) R.string.cert_changed_title else R.string.cert_trust_title)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        if (prompt.changed) {
-                            stringResource(R.string.cert_changed_text)
-                        } else {
-                            stringResource(R.string.cert_unknown_text)
-                        }
-                    )
-                    Text(prompt.fingerprint, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = onTrustCertificate, modifier = Modifier.testTag("trust_cert_btn")) { Text(stringResource(R.string.cert_trust), color = PrimaryColor) }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissCertificate) { Text(stringResource(R.string.cancel)) }
-            }
-        )
-    }
-
-    val isLoggedIn = config.isConnected && !config.isDemoMode
-    val uriHandler = LocalUriHandler.current
-    val openLink: (String) -> Unit = { url -> runCatching { uriHandler.openUri(url) }.onFailure { onShowToast(AppText.get(R.string.settings_no_browser, url)) } }
-    // Demo mode gets the whole of Settings too, so every feature can be tried; its Server connection logs in for real
-    val showSettings = config.isConnected
     var serverUrl by remember { mutableStateOf(config.serverUrl) }
     var apiToken by remember { mutableStateOf(config.apiToken) }
     var tokenVisible by remember { mutableStateOf(false) }
@@ -339,292 +530,186 @@ fun ConnectBackendScreen(
     var cfClientSecret by remember { mutableStateOf(config.cfClientSecret) }
     var cfSecretVisible by remember { mutableStateOf(false) }
     var showCloudflare by remember { mutableStateOf(config.cfClientId.isNotBlank()) }
+    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        // Server URL
+        OutlinedTextField(
+            value = serverUrl,
+            onValueChange = { serverUrl = it },
+            label = { Text(stringResource(R.string.login_server_url)) },
+            placeholder = { Text("https://babybuddy.example.com") },
+            singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("server_url_input")
+        )
 
-    // The open category (its own page within Settings), or null for the list of categories
-    var openSection by rememberSaveable { mutableStateOf<String?>(null) }
-    BackHandler(enabled = showSettings && openSection != null) { openSection = null }
-    val sectionTitles = mapOf(
-        "connection" to stringResource(R.string.settings_connection),
-        "you" to stringResource(R.string.settings_you),
-        "tracked" to stringResource(R.string.settings_tracked),
-        "appearance" to stringResource(R.string.settings_appearance),
-        "notifications" to stringResource(R.string.settings_notifications),
-        "about" to stringResource(R.string.settings_about)
-    )
-
-    // Server URL, token, certificates, Cloudflare and the Connect button
-    val connectionForm: @Composable () -> Unit = {
-        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            // Server URL
+        // API token
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             OutlinedTextField(
-                value = serverUrl,
-                onValueChange = { serverUrl = it },
-                label = { Text(stringResource(R.string.login_server_url)) },
-                placeholder = { Text("https://babybuddy.example.com") },
+                value = apiToken,
+                onValueChange = { apiToken = it },
+                label = { Text(stringResource(R.string.login_api_token)) },
                 singleLine = true,
+                trailingIcon = {
+                    IconButton(onClick = { tokenVisible = !tokenVisible }) {
+                        Icon(
+                            imageVector = if (tokenVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = stringResource(if (tokenVisible) R.string.login_hide_token else R.string.login_show_token),
+                            tint = OutlineColor
+                        )
+                    }
+                },
+                visualTransformation = if (tokenVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("server_url_input")
+                    .testTag("api_token_input")
             )
+            Text(
+                stringResource(R.string.login_token_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
+        }
 
-            // API token
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        // Self-signed certificates
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.login_self_signed), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    stringResource(R.string.login_self_signed_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = allowSelfSigned,
+                onCheckedChange = { allowSelfSigned = it },
+                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = PrimaryColor)
+            )
+        }
+
+        // Cloudflare Access service token (for servers behind Cloudflare Zero Trust)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.login_cloudflare), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    stringResource(R.string.login_cloudflare_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = showCloudflare,
+                onCheckedChange = {
+                    showCloudflare = it
+                    if (!it) {
+                        cfClientId = ""
+                        cfClientSecret = ""
+                    }
+                },
+                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = PrimaryColor)
+            )
+        }
+        if (showCloudflare) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
-                    value = apiToken,
-                    onValueChange = { apiToken = it },
-                    label = { Text(stringResource(R.string.login_api_token)) },
+                    value = cfClientId,
+                    onValueChange = { cfClientId = it },
+                    label = { Text("CF-Access-Client-Id") },
+                    placeholder = { Text("xxxxxxxx.access") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth().testTag("cf_client_id_input")
+                )
+                OutlinedTextField(
+                    value = cfClientSecret,
+                    onValueChange = { cfClientSecret = it },
+                    label = { Text("CF-Access-Client-Secret") },
                     singleLine = true,
                     trailingIcon = {
-                        IconButton(onClick = { tokenVisible = !tokenVisible }) {
+                        IconButton(onClick = { cfSecretVisible = !cfSecretVisible }) {
                             Icon(
-                                imageVector = if (tokenVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = stringResource(if (tokenVisible) R.string.login_hide_token else R.string.login_show_token),
+                                imageVector = if (cfSecretVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = stringResource(if (cfSecretVisible) R.string.login_hide_secret else R.string.login_show_secret),
                                 tint = OutlineColor
                             )
                         }
                     },
-                    visualTransformation = if (tokenVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    visualTransformation = if (cfSecretVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("api_token_input")
+                    modifier = Modifier.fillMaxWidth().testTag("cf_client_secret_input")
                 )
                 Text(
-                    stringResource(R.string.login_token_hint),
+                    stringResource(R.string.login_cloudflare_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 4.dp)
                 )
             }
+        }
 
-            // Self-signed certificates
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+        // Actions
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = {
+                    if (serverUrl.isBlank() || apiToken.isBlank()) {
+                        onShowToast(AppText.get(R.string.login_enter_url_token))
+                    } else if (showCloudflare && (cfClientId.isBlank() || cfClientSecret.isBlank())) {
+                        onShowToast(AppText.get(R.string.login_enter_cloudflare))
+                    } else {
+                        onTestConnect(serverUrl.trim(), apiToken.trim(), allowSelfSigned, cfClientId.trim(), cfClientSecret.trim())
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor, contentColor = OnPrimary),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .testTag("test_connect_btn")
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.login_self_signed), style = MaterialTheme.typography.bodyLarge)
-                    Text(
-                        stringResource(R.string.login_self_signed_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Switch(
-                    checked = allowSelfSigned,
-                    onCheckedChange = { allowSelfSigned = it },
-                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = PrimaryColor)
+                Text(
+                    text = stringResource(if (isLoggedIn) R.string.login_reconnect else R.string.login_connect),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
-            // Cloudflare Access service token (for servers behind Cloudflare Zero Trust)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            OutlinedButton(
+                onClick = onEnterDemoMode,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .testTag("demo_mode_btn")
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.login_cloudflare), style = MaterialTheme.typography.bodyLarge)
-                    Text(
-                        stringResource(R.string.login_cloudflare_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Switch(
-                    checked = showCloudflare,
-                    onCheckedChange = {
-                        showCloudflare = it
-                        if (!it) {
-                            cfClientId = ""
-                            cfClientSecret = ""
-                        }
-                    },
-                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = PrimaryColor)
+                Text(
+                    text = stringResource(R.string.login_try_demo),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = PrimaryColor
                 )
-            }
-            if (showCloudflare) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(
-                        value = cfClientId,
-                        onValueChange = { cfClientId = it },
-                        label = { Text("CF-Access-Client-Id") },
-                        placeholder = { Text("xxxxxxxx.access") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth().testTag("cf_client_id_input")
-                    )
-                    OutlinedTextField(
-                        value = cfClientSecret,
-                        onValueChange = { cfClientSecret = it },
-                        label = { Text("CF-Access-Client-Secret") },
-                        singleLine = true,
-                        trailingIcon = {
-                            IconButton(onClick = { cfSecretVisible = !cfSecretVisible }) {
-                                Icon(
-                                    imageVector = if (cfSecretVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = stringResource(if (cfSecretVisible) R.string.login_hide_secret else R.string.login_show_secret),
-                                    tint = OutlineColor
-                                )
-                            }
-                        },
-                        visualTransformation = if (cfSecretVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth().testTag("cf_client_secret_input")
-                    )
-                    Text(
-                        stringResource(R.string.login_cloudflare_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 4.dp)
-                    )
-                }
-            }
-
-            // Actions
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = {
-                        if (serverUrl.isBlank() || apiToken.isBlank()) {
-                            onShowToast(AppText.get(R.string.login_enter_url_token))
-                        } else if (showCloudflare && (cfClientId.isBlank() || cfClientSecret.isBlank())) {
-                            onShowToast(AppText.get(R.string.login_enter_cloudflare))
-                        } else {
-                            onTestConnect(serverUrl.trim(), apiToken.trim(), allowSelfSigned, cfClientId.trim(), cfClientSecret.trim())
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor, contentColor = OnPrimary),
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .testTag("test_connect_btn")
-                ) {
-                    Text(
-                        text = stringResource(if (isLoggedIn) R.string.login_reconnect else R.string.login_connect),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = onEnterDemoMode,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .testTag("demo_mode_btn")
-                ) {
-                    Text(
-                        text = stringResource(R.string.login_try_demo),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Medium,
-                        color = PrimaryColor
-                    )
-                }
             }
         }
     }
+}
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        if (!showSettings) {
-            // First run / logged out: this is the login screen
-            Column(
-                modifier = Modifier.padding(top = 48.dp, bottom = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                Text(
-                    stringResource(R.string.login_intro),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                // Up top as well as under the form, so it's seen before the server fields
-                TextButton(onClick = onEnterDemoMode, contentPadding = PaddingValues(0.dp), shape = RectangleShape, modifier = Modifier.testTag("demo_mode_link")) {
-                    Text(stringResource(R.string.login_no_server), color = PrimaryColor, fontWeight = FontWeight.Medium)
-                }
-                var showWhatIs by rememberSaveable { mutableStateOf(false) }
-                TextButton(onClick = { showWhatIs = !showWhatIs }, contentPadding = PaddingValues(0.dp), shape = RectangleShape, modifier = Modifier.testTag("what_is_baby_buddy_link")) {
-                    Text(stringResource(if (showWhatIs) R.string.login_what_is_open else R.string.login_what_is_closed), color = PrimaryColor, fontWeight = FontWeight.Medium)
-                }
-                AnimatedVisibility(visible = showWhatIs) {
-                    Surface(color = SurfaceContainerLow, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                stringResource(R.string.login_what_is_text),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Text(
-                                stringResource(R.string.login_what_is_companion),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            TextButton(onClick = { openLink(BABY_BUDDY_REPO) }, contentPadding = PaddingValues(0.dp), shape = RectangleShape) {
-                                Text(stringResource(R.string.login_set_up_server), color = PrimaryColor, fontWeight = FontWeight.Medium)
-                            }
-                        }
-                    }
-                }
-            }
-            connectionForm()
-            Spacer(modifier = Modifier.height(24.dp))
-            return@Column
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Back closes an open category first, then leaves Settings
-            IconButton(onClick = { if (openSection != null) openSection = null else onBack() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = openSection?.let { sectionTitles[it] } ?: stringResource(R.string.nav_settings),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        SettingsSection(
-            title = stringResource(R.string.settings_connection),
-            summary = stringResource(R.string.settings_connected_to, config.serverUrl),
-            icon = Icons.Default.Cloud,
-            expanded = openSection == "connection",
-            hidden = openSection != null && openSection != "connection",
-            onOpen = { openSection = "connection" }
-        ) {
-            connectionForm()
-            OutlinedButton(
-                onClick = onDisconnect,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("disconnect_btn")
-            ) {
-                Text(stringResource(R.string.settings_disconnect), color = MaterialTheme.colorScheme.error)
-            }
-        }
-
-        SettingsSection(
-            title = stringResource(R.string.settings_you),
-            summary = caregiverName.ifBlank { stringResource(R.string.settings_add_your_name) },
-            icon = Icons.Default.Person,
-            expanded = openSection == "you",
-            hidden = openSection != null && openSection != "you",
-            onOpen = { openSection = "you" }
-        ) {
+@Composable
+private fun YouSettings(state: SettingsState, actions: SettingsActions) {
+    with(state) {
+        with(actions) {
             var name by remember { mutableStateOf(caregiverName) }
             LaunchedEffect(name) {
                 delay(600) // save shortly after typing stops
@@ -683,19 +768,13 @@ fun ConnectBackendScreen(
                 }
             }
         }
+    }
+}
 
-        SettingsSection(
-            title = stringResource(R.string.settings_tracked),
-            summary = if (hiddenItems.isEmpty()) {
-                stringResource(R.string.settings_tracking_everything)
-            } else {
-                stringResource(R.string.settings_hidden, TrackedItem.entries.filter { it in hiddenItems }.joinToString(", ") { it.label })
-            },
-            icon = Icons.Default.Checklist,
-            expanded = openSection == "tracked",
-            hidden = openSection != null && openSection != "tracked",
-            onOpen = { openSection = "tracked" }
-        ) {
+@Composable
+private fun TrackedItemsSettings(state: SettingsState, actions: SettingsActions) {
+    with(state) {
+        with(actions) {
             Text(
                 stringResource(R.string.settings_tracked_desc),
                 style = MaterialTheme.typography.bodySmall,
@@ -710,15 +789,13 @@ fun ConnectBackendScreen(
                 )
             }
         }
+    }
+}
 
-        SettingsSection(
-            title = stringResource(R.string.settings_appearance),
-            summary = stringResource(if (use24h) R.string.settings_appearance_24h else R.string.settings_appearance_12h, themeMode.label),
-            icon = Icons.Default.Palette,
-            expanded = openSection == "appearance",
-            hidden = openSection != null && openSection != "appearance",
-            onOpen = { openSection = "appearance" }
-        ) {
+@Composable
+private fun AppearanceSettings(state: SettingsState, actions: SettingsActions) {
+    with(state) {
+        with(actions) {
             Column {
                 Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.labelLarge, color = OutlineColor)
                 ThemeMode.entries.forEach { mode ->
@@ -760,22 +837,13 @@ fun ConnectBackendScreen(
                 onChange = onModelsTabChange
             )
         }
+    }
+}
 
-        SettingsSection(
-            title = stringResource(R.string.settings_notifications),
-            summary = listOfNotNull(
-                stringResource(R.string.settings_summary_lock_screen).takeIf { feedNotificationEnabled },
-                stringResource(R.string.settings_summary_next_up).takeIf { nextUpNotification },
-                stringResource(R.string.settings_summary_feed).takeIf { reminders.feedAfterMinutes > 0 },
-                stringResource(R.string.settings_summary_awake).takeIf { reminders.awakeAfterMinutes > 0 },
-                stringResource(R.string.settings_summary_sleep).takeIf { reminders.sleepAfterMinutes > 0 },
-                stringResource(R.string.settings_summary_diaper).takeIf { reminders.diaperAfterMinutes > 0 }
-            ).joinToString(" · ").replaceFirstChar(Char::uppercase).ifBlank { stringResource(R.string.off) },
-            icon = Icons.Default.Notifications,
-            expanded = openSection == "notifications",
-            hidden = openSection != null && openSection != "notifications",
-            onOpen = { openSection = "notifications" }
-        ) {
+@Composable
+private fun NotificationSettings(state: SettingsState, actions: SettingsActions) {
+    with(state) {
+        with(actions) {
             SwitchSetting(
                 title = stringResource(R.string.settings_lock_screen_timers),
                 description = stringResource(R.string.settings_lock_screen_timers_desc),
@@ -907,15 +975,13 @@ fun ConnectBackendScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
 
-        SettingsSection(
-            title = stringResource(R.string.settings_about),
-            summary = stringResource(R.string.about_summary, BuildConfig.VERSION_NAME, BuildConfig.BUILD_DATE),
-            icon = Icons.Default.Info,
-            expanded = openSection == "about",
-            hidden = openSection != null && openSection != "about",
-            onOpen = { openSection = "about" }
-        ) {
+@Composable
+private fun AboutSettings(state: SettingsState, actions: SettingsActions, openLink: (String) -> Unit) {
+    with(state) {
+        with(actions) {
             // What to quote in a bug report: the release, the exact commit and when it was built
             listOf(
                 stringResource(R.string.about_version) to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
@@ -938,7 +1004,5 @@ fun ConnectBackendScreen(
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }
