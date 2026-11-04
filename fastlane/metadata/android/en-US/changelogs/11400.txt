@@ -1,0 +1,4 @@
+- Update the app from Settings → About: checks GitHub for a new version, then downloads and installs it
+- Settings has new Baby and Tracking pages; Notifications groups the lock screen and reminders
+- Deleting the latest breastfeed no longer leaves its side as "last side" on Today
+- Tips across the app point to the right Settings page
