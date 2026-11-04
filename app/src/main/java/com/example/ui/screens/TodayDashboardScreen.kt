@@ -108,6 +108,7 @@ import com.example.data.model.dayAndTime
 import com.example.data.model.diaperTypeLabel
 import com.example.data.model.formatMinutes
 import com.example.data.model.isLikelyNightWaking
+import com.example.data.model.startOfDay
 import com.example.ui.HistoryFilter
 import com.example.ui.ScreenDestination
 import com.example.ui.components.BathDialog
@@ -218,12 +219,7 @@ fun TodayDashboardScreen(
 
     // Today's finished wake windows, for the Wake windows card and summary tile
     val todayStart = remember(recentSleeps) {
-        java.util.Calendar.getInstance().apply {
-            set(java.util.Calendar.HOUR_OF_DAY, 0)
-            set(java.util.Calendar.MINUTE, 0)
-            set(java.util.Calendar.SECOND, 0)
-            set(java.util.Calendar.MILLISECOND, 0)
-        }.timeInMillis
+        startOfDay()
     }
     val wakeWindows = remember(recentSleeps, todayStart) { completedWakeWindows(recentSleeps, todayStart) }
 
@@ -980,15 +976,8 @@ private fun QuickActionTile(
 
 /** "Today", "Yesterday" or "3 days ago", counted in calendar days. */
 private fun bathAgo(millis: Long): String {
-    fun midnight(t: Long) = java.util.Calendar.getInstance().apply {
-        timeInMillis = t
-        set(java.util.Calendar.HOUR_OF_DAY, 0)
-        set(java.util.Calendar.MINUTE, 0)
-        set(java.util.Calendar.SECOND, 0)
-        set(java.util.Calendar.MILLISECOND, 0)
-    }.timeInMillis
     // Rounded, so a daylight-saving day still counts as one day
-    val days = Math.round((midnight(System.currentTimeMillis()) - midnight(millis)) / 86_400_000.0).toInt()
+    val days = Math.round((startOfDay() - startOfDay(millis)) / 86_400_000.0).toInt()
     return when {
         days <= 0 -> AppText.get(R.string.today)
         days == 1 -> AppText.get(R.string.yesterday)
@@ -1017,12 +1006,7 @@ private fun TodaySummaryGrid(
 ) {
     // Sleep within today (last night's sleep counts from midnight), plus a sleep running now
     val todayStart = remember(recentSleeps) {
-        java.util.Calendar.getInstance().apply {
-            set(java.util.Calendar.HOUR_OF_DAY, 0)
-            set(java.util.Calendar.MINUTE, 0)
-            set(java.util.Calendar.SECOND, 0)
-            set(java.util.Calendar.MILLISECOND, 0)
-        }.timeInMillis
+        startOfDay()
     }
     val now = System.currentTimeMillis()
     val sleptMinutes = (

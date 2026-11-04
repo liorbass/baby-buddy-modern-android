@@ -13,6 +13,7 @@ import com.example.data.model.NoteEvent
 import com.example.data.model.PumpingEvent
 import com.example.data.model.SleepEvent
 import com.example.data.model.TummyTimeEvent
+import com.example.data.model.startOfDay
 import java.util.Calendar
 import kotlin.math.exp
 import kotlin.random.Random
@@ -98,13 +99,7 @@ fun generateDemoHistory(now: Long, birthMillis: Long, days: Int = 90, clock: (Lo
         sleeps += SleepEvent(id = id++, caregiver = who(), timeMillis = start, endMillis = end, timeFormatted = clock(start), isNap = nap, notes = note)
     }
 
-    val todayStart = Calendar.getInstance().apply {
-        timeInMillis = now
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
+    val todayStart = startOfDay(now)
     var bedtime: Long? = null
     for (i in 0 until days) {
         val dayStart = Calendar.getInstance().apply {

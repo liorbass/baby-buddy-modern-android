@@ -50,3 +50,12 @@ object TimeFormat {
         }
     }
 }
+
+/** Local midnight at the start of the day containing [millis] (today by default). */
+fun startOfDay(millis: Long = System.currentTimeMillis()): Long = java.util.Calendar.getInstance().apply {
+    timeInMillis = millis
+    set(java.util.Calendar.HOUR_OF_DAY, 0)
+    set(java.util.Calendar.MINUTE, 0)
+    set(java.util.Calendar.SECOND, 0)
+    set(java.util.Calendar.MILLISECOND, 0)
+}.timeInMillis

@@ -60,6 +60,7 @@ import com.example.data.model.WakeWindowPart
 import com.example.data.model.averageMinutes
 import com.example.data.model.daytimeWakeWindows
 import com.example.data.model.isNapTime
+import com.example.data.model.startOfDay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -454,7 +455,7 @@ class BabyBuddyRepository {
         p.edit().remove(PREF_AWAY_SINCE).apply()
         if (!_connectionConfig.value.isConnected) return
         val from = maxOf(since, System.currentTimeMillis() - 24 * 60 * 60_000L)
-        val (feeds, changes, sleeps) = if (from >= startOfTodayMillis()) {
+        val (feeds, changes, sleeps) = if (from >= startOfDay()) {
             Triple(_feedings.value, _diapers.value, _sleeps.value)
         } else {
             withContext(Dispatchers.IO) { runCatching { fetchEvents(from) }.getOrNull() } ?: Triple(_feedings.value, _diapers.value, _sleeps.value)
@@ -505,21 +506,7 @@ class BabyBuddyRepository {
 
         _isServerDisconnectedView.value = false
         setThemeMode(ThemeMode.LIGHT)
-        _connectionConfig.value = ServerConnectionConfig(
-            serverUrl = "demo.babybuddy.local",
-            apiToken = "demo-token",
-            isConnected = true,
-            isDemoMode = true,
-            detectedChildName = "Sam",
-            lastSyncFormatted = AppText.get(R.string.demo_mode)
-        )
-        _babyProfile.value = BabyProfile(
-            name = "Sam",
-            shortName = "Sam",
-            birthDate = "2026-01-10",
-            ageFormatted = AppText.get(R.string.age_months_days, 9, 3)
-        )
-        loadDemoData()
+        showDemoBaby()
         // Show every feature: growth charts, reminders and the rhythm models (fitted on the demo data and in use)
         if (_babySex.value == null) setBabySex(BabySex.BOY)
         if (!_reminders.value.anyOn) setReminders(ReminderSettings(feedAfterMinutes = 180, awakeAfterMinutes = 120, sleepAfterMinutes = 150, diaperAfterMinutes = 180, earlyMinutes = 15))
@@ -551,7 +538,7 @@ class BabyBuddyRepository {
     }
 
     private fun loadDemoData() {
-        val today = startOfTodayMillis()
+        val today = startOfDay()
         val cal = Calendar.getInstance()
 
         fun clockMs(daysAgo: Int, hour: Int, minute: Int): Long {
@@ -837,25 +824,8 @@ class BabyBuddyRepository {
             val tummies = allDemoTummyTimes
             val pumps = allDemoPumpings
             val sleeps = allDemoSleeps
-            val allNotes = allDemoNotes
-            val (baths, otherNotes) = allNotes.partition { BATH_TAG in it.tags }
-            val daysList = dayStarts.map { start ->
-                val end = Calendar.getInstance().apply {
-                    timeInMillis = start
-                    add(Calendar.DAY_OF_YEAR, 1)
-                }.timeInMillis
-                HistoryDay(
-                    dayStartMillis = start,
-                    feedings = feeds.filter { it.timeMillis in start until end },
-                    diapers = changes.filter { it.timeMillis in start until end },
-                    tummyTimes = tummies.filter { it.timeMillis in start until end },
-                    pumpings = pumps.filter { it.timeMillis in start until end },
-                    sleeps = sleeps.filter { it.timeMillis in start until end },
-                    baths = baths.filter { it.timeMillis in start until end },
-                    notes = otherNotes.filter { it.timeMillis in start until end }
-                )
-            }
-            return@withContext Result.success(daysList)
+            val entries = HistoryEntries(feeds, changes, tummies, pumps, sleeps, allDemoNotes)
+            return@withContext Result.success(dayStarts.map(entries::day))
         }
         val api = remoteApi
         val child = remoteChildId
@@ -885,15 +855,11 @@ class BabyBuddyRepository {
             val pumps = pumpResp.body()?.results.orEmpty().map(::mapPumping)
             val sleeps = sleepResp?.body()?.results.orEmpty().map(::mapSleep)
             val allNotes = noteResp?.body()?.results.orEmpty().map(::mapNote)
-            val (baths, otherNotes) = allNotes.partition { BATH_TAG in it.tags }
-            val todayStart = startOfTodayMillis()
+            val entries = HistoryEntries(feeds, changes, tummies, pumps, sleeps, allNotes)
+            val todayStart = startOfDay()
 
             Result.success(
                 dayStarts.map { start ->
-                    val end = Calendar.getInstance().apply {
-                        timeInMillis = start
-                        add(Calendar.DAY_OF_YEAR, 1)
-                    }.timeInMillis
                     if (start == todayStart) {
                         HistoryDay(
                             start,
@@ -906,16 +872,7 @@ class BabyBuddyRepository {
                             _notes.value.filter { BATH_TAG !in it.tags && it.timeMillis >= start }
                         )
                     } else {
-                        HistoryDay(
-                            dayStartMillis = start,
-                            feedings = feeds.filter { it.timeMillis in start until end },
-                            diapers = changes.filter { it.timeMillis in start until end },
-                            tummyTimes = tummies.filter { it.timeMillis in start until end },
-                            pumpings = pumps.filter { it.timeMillis in start until end },
-                            sleeps = sleeps.filter { it.timeMillis in start until end },
-                            baths = baths.filter { it.timeMillis in start until end },
-                            notes = otherNotes.filter { it.timeMillis in start until end }
-                        )
+                        entries.day(start)
                     }
                 }
             )
@@ -1075,7 +1032,7 @@ class BabyBuddyRepository {
             return@withLock
         }
         val now = System.currentTimeMillis()
-        val midnight = startOfTodayMillis()
+        val midnight = startOfDay()
         if (recentEvents == null || recentFetchedAt < midnight || now - recentFetchedAt > 30 * 60_000L) {
             withContext(Dispatchers.IO) { runCatching { fetchEvents(now - 2 * 24 * 60 * 60_000L) } }.onSuccess {
                 recentEvents = it
@@ -1204,6 +1161,53 @@ class BabyBuddyRepository {
         return SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
             .apply { timeZone = TimeZone.getTimeZone("UTC") }
             .format(cal.time)
+    }
+
+    /** A range of entries, cut into local days for History. Notes tagged [BATH_TAG] are baths. */
+    private class HistoryEntries(
+        val feeds: List<FeedingEvent>,
+        val changes: List<DiaperEvent>,
+        val tummies: List<TummyTimeEvent>,
+        val pumps: List<PumpingEvent>,
+        val sleeps: List<SleepEvent>,
+        val notes: List<NoteEvent>
+    ) {
+        fun day(start: Long): HistoryDay {
+            val end = Calendar.getInstance().apply {
+                timeInMillis = start
+                add(Calendar.DAY_OF_YEAR, 1)
+            }.timeInMillis
+            val onDay = notes.filter { it.timeMillis in start until end }
+            return HistoryDay(
+                dayStartMillis = start,
+                feedings = feeds.filter { it.timeMillis in start until end },
+                diapers = changes.filter { it.timeMillis in start until end },
+                tummyTimes = tummies.filter { it.timeMillis in start until end },
+                pumpings = pumps.filter { it.timeMillis in start until end },
+                sleeps = sleeps.filter { it.timeMillis in start until end },
+                baths = onDay.filter { BATH_TAG in it.tags },
+                notes = onDay.filterNot { BATH_TAG in it.tags }
+            )
+        }
+    }
+
+    /** Demo mode's connection, baby (Sam) and simulated history; used on entering it and on start. */
+    private fun showDemoBaby() {
+        _connectionConfig.value = ServerConnectionConfig(
+            serverUrl = "demo.babybuddy.local",
+            apiToken = "demo-token",
+            isConnected = true,
+            isDemoMode = true,
+            detectedChildName = "Sam",
+            lastSyncFormatted = AppText.get(R.string.demo_mode)
+        )
+        _babyProfile.value = BabyProfile(
+            name = "Sam",
+            shortName = "Sam",
+            birthDate = "2026-01-10",
+            ageFormatted = AppText.get(R.string.age_months_days, 9, 3)
+        )
+        loadDemoData()
     }
 
     fun disconnect() {
@@ -1618,7 +1622,7 @@ class BabyBuddyRepository {
         combine(_stashBase, _pumpings, _feedings) { base, pumps, feeds ->
             if (base == null) return@combine null
             // Today's part comes from the live lists, which include unsent entries
-            val from = maxOf(base.sinceMillis, startOfTodayMillis())
+            val from = maxOf(base.sinceMillis, startOfDay())
             val pumped = pumps.filter { it.timeMillis >= from }.sumOf { it.amountMl }
             val given = feeds.filter { it.timeMillis >= from && isBreastMilkBottle(it) }.sumOf { it.amountMl ?: 0 }
             (base.ml + base.pumpedBeforeToday - base.bottlesBeforeToday + pumped - given).coerceAtLeast(0)
@@ -1654,7 +1658,7 @@ class BabyBuddyRepository {
                 ?: return@runCatching null
             val ml = Regex("""(\d+)""").find(note.note.orEmpty())?.value?.toIntOrNull() ?: return@runCatching null
             val sinceMillis = note.time?.let(::parseServerTime)?.time ?: return@runCatching null
-            val todayStart = startOfTodayMillis()
+            val todayStart = startOfDay()
             if (sinceMillis >= todayStart) return@runCatching StashBase(ml, sinceMillis, 0, 0)
             val from = isoUtc(sinceMillis)
             val pumped = api.getPumping(remoteAuthHeader, child, since = from, limit = 1000).body()!!.results
@@ -2400,7 +2404,7 @@ class BabyBuddyRepository {
         writeQueue.restore(offline.loadQueue())
         val cache = offline.loadCache() ?: return
         if (cache.day != todayKey()) return
-        val startOfDay = startOfTodayMillis()
+        val startOfDay = startOfDay()
         _feedings.value = cache.feedings.filter { it.timeMillis >= startOfDay }
         _diapers.value = cache.diapers.filter { it.timeMillis >= startOfDay }
         _tummyTimes.value = cache.tummyTimes.filter { it.timeMillis >= startOfDay }
@@ -2411,13 +2415,6 @@ class BabyBuddyRepository {
     }
 
     private fun todayKey(): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-
-    private fun startOfTodayMillis(): Long = Calendar.getInstance().apply {
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
 
     /** Emits whenever something home-screen widgets show changes (not on every timer tick). */
     val widgetState: Flow<Any> = combine(
@@ -2435,21 +2432,7 @@ class BabyBuddyRepository {
     private fun restoreConnection(p: SharedPreferences): Boolean {
         if (p.getBoolean(PREF_DEMO_MODE, false)) {
             _caregiverName.value = p.getString(PREF_CAREGIVER, "Sarah").orEmpty().ifBlank { "Sarah" }
-            _connectionConfig.value = ServerConnectionConfig(
-                serverUrl = "demo.babybuddy.local",
-                apiToken = "demo-token",
-                isConnected = true,
-                isDemoMode = true,
-                detectedChildName = "Sam",
-                lastSyncFormatted = AppText.get(R.string.demo_mode)
-            )
-            _babyProfile.value = BabyProfile(
-                name = "Sam",
-                shortName = "Sam",
-                birthDate = "2026-01-10",
-                ageFormatted = AppText.get(R.string.age_months_days, 9, 3)
-            )
-            loadDemoData()
+            showDemoBaby()
             return true
         }
         val url = p.getString(PREF_URL, null) ?: return false
@@ -2706,7 +2689,7 @@ class BabyBuddyRepository {
         val child = remoteChildId
         if (api == null || child == null) return@withContext Result.failure(IllegalStateException(AppText.get(R.string.error_not_connected)))
         try {
-            val todayStart = startOfTodayMillis()
+            val todayStart = startOfDay()
             val day = 86_400_000L
             val from = todayStart - 14 * day
             val response = api.getFeedings(remoteAuthHeader, child, since = isoUtc(from), limit = 1000)

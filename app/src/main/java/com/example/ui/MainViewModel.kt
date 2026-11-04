@@ -47,6 +47,7 @@ import com.example.data.model.TummyTimeGoal
 import com.example.data.model.WakeWindowPart
 import com.example.data.model.formatGrowth
 import com.example.data.model.formatMinutes
+import com.example.data.model.startOfDay
 import com.example.data.repository.BabyBuddyRepository
 import com.example.widget.BabyBuddyQuickLogWidget
 import com.example.widget.BabyBuddySummaryWidget
@@ -182,7 +183,7 @@ class MainViewModel(
         combine(repository.feedings, repository.diapers, repository.tummyTimes) { f, d, t -> Triple(f, d, t) },
         combine(repository.pumpings, repository.sleeps, repository.notes) { p, s, n -> Triple(p, s, n) }
     ) { days, (feeds, diapers, tummies), (pumps, sleeps, notes) ->
-        val todayStart = startOfDay(System.currentTimeMillis())
+        val todayStart = startOfDay()
         days?.map { day ->
             if (day.dayStartMillis == todayStart) {
                 day.copy(
@@ -201,7 +202,7 @@ class MainViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val historyIsCurrentWeek: StateFlow<Boolean> = _historyLastDay
-        .map { startOfDay(it) >= startOfDay(System.currentTimeMillis()) }
+        .map { startOfDay(it) >= startOfDay() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
 
     fun loadHistory() {
@@ -226,14 +227,6 @@ class MainViewModel(
     private fun patchHistory(transform: (HistoryDay) -> HistoryDay) {
         _historyLoaded.value = _historyLoaded.value?.map(transform)
     }
-
-    private fun startOfDay(millis: Long): Long = java.util.Calendar.getInstance().apply {
-        timeInMillis = millis
-        set(java.util.Calendar.HOUR_OF_DAY, 0)
-        set(java.util.Calendar.MINUTE, 0)
-        set(java.util.Calendar.SECOND, 0)
-        set(java.util.Calendar.MILLISECOND, 0)
-    }.timeInMillis
 
     fun loadTrends(days: Int = _trendsRange.value) {
         _trendsRange.value = days

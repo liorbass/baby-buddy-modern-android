@@ -580,12 +580,7 @@ data class PumpingEvent(
 
 /** "7:06 PM" for today, "Yesterday 7:06 PM", else "Oct 8, 7:06 PM". */
 fun dayAndTime(timeMillis: Long, clock: String): String {
-    val start = java.util.Calendar.getInstance().apply {
-        set(java.util.Calendar.HOUR_OF_DAY, 0)
-        set(java.util.Calendar.MINUTE, 0)
-        set(java.util.Calendar.SECOND, 0)
-        set(java.util.Calendar.MILLISECOND, 0)
-    }.timeInMillis
+    val start = startOfDay()
     return when {
         timeMillis >= start -> clock
         timeMillis >= start - 24 * 60 * 60_000L -> AppText.get(R.string.yesterday_at, clock)

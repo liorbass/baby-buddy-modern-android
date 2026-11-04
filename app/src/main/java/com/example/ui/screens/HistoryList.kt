@@ -55,6 +55,7 @@ import com.example.data.model.diaperValueLabel
 import com.example.data.model.formatGrowth
 import com.example.data.model.formatMinutes
 import com.example.data.model.localDatePattern
+import com.example.data.model.startOfDay
 import com.example.ui.HistoryFilter
 import com.example.ui.theme.ItemColors
 import com.example.ui.theme.OnPrimary
@@ -105,14 +106,6 @@ private fun diaperSubtitle(d: DiaperEvent): String = listOfNotNull(
     d.skinBarrierApplied.takeIf { it.isNotEmpty() }?.joinToString(", ") { diaperValueLabel(it.substringBefore(" / ")) },
     whoAndNote(d.caregiver, d.notes).takeIf { it.isNotBlank() }
 ).joinToString(" · ")
-
-private fun localDayStart(millis: Long): Long = Calendar.getInstance().apply {
-    timeInMillis = millis
-    set(Calendar.HOUR_OF_DAY, 0)
-    set(Calendar.MINUTE, 0)
-    set(Calendar.SECOND, 0)
-    set(Calendar.MILLISECOND, 0)
-}.timeInMillis
 
 private fun sideLabel(feed: FeedingEvent): String {
     val sides = feed.sides
@@ -325,12 +318,7 @@ private fun daySummary(day: HistoryDay, growth: List<GrowthEvent>, filter: Histo
 }
 
 private fun dayTitle(dayStartMillis: Long): String {
-    val today = Calendar.getInstance().apply {
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
+    val today = startOfDay()
     return when {
         dayStartMillis >= today -> AppText.get(R.string.today)
         dayStartMillis >= today - 24 * 60 * 60_000L -> AppText.get(R.string.yesterday)
@@ -427,7 +415,7 @@ internal fun HistoryList(
     modifier: Modifier = Modifier
 ) {
     // Measurements are rare (monthly), so the Growth filter lists all of them rather than the week's
-    val growthByDay = growth.groupBy { localDayStart(it.dateMillis) }
+    val growthByDay = growth.groupBy { startOfDay(it.dateMillis) }
     val shownDays = if (filter == HistoryFilter.GROWTH) growthByDay.keys.map { HistoryDay(dayStartMillis = it) } else days
     val grouped = shownDays.sortedByDescending { it.dayStartMillis }.map { day ->
         val dayGrowth = growthByDay[day.dayStartMillis].orEmpty()
