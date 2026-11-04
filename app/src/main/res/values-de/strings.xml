@@ -396,7 +396,7 @@
     <string name="note_optional">Notiz (optional)</string>
 
     <!-- Log screen -->
-    <string name="log_nothing">Hier gibt es nichts zu erfassen. Aktiviere Einträge wieder unter Einstellungen → Erfasste Bereiche.</string>
+    <string name="log_nothing">Hier gibt es nichts zu erfassen. Aktiviere Einträge wieder unter Einstellungen → Erfassung.</string>
     <string name="log_feed_paused">Pausiert · %s</string>
     <string name="log_feed_running">Läuft · %s</string>
     <string name="log_feed_subtitle">Timer links / rechts</string>
@@ -552,7 +552,7 @@
     <string name="cards_no_readings">Heute keine Messungen</string>
     <string name="cards_no_measurements">Noch keine Messungen</string>
     <string name="cards_percentile">%s Perzentile</string>
-    <string name="cards_choose_sex">Wähle Junge oder Mädchen unter Einstellungen → Du, um die WHO-Perzentilen zu sehen.</string>
+    <string name="cards_choose_sex">Wähle Junge oder Mädchen unter Einstellungen → Baby, um die WHO-Perzentilen zu sehen.</string>
     <string name="cards_log_growth">Wachstum erfassen</string>
     <string name="cards_no_notes">Noch keine Notizen</string>
     <string name="cards_add_note">Notiz hinzufügen</string>
@@ -607,6 +607,11 @@
     <string name="settings_appearance">Darstellung</string>
     <string name="settings_notifications">Benachrichtigungen</string>
     <string name="settings_about">Über</string>
+    <string name="settings_baby">Baby</string>
+    <string name="settings_tracking">Erfassung</string>
+    <string name="settings_lock_screen">Sperrbildschirm</string>
+    <string name="settings_reminders">Erinnerungen</string>
+    <string name="settings_day_hours_summary">Tag %1$s–%2$s</string>
     <string name="settings_connected_to">Verbunden · %s</string>
     <string name="settings_disconnect">Trennen</string>
     <string name="settings_add_your_name">Deinen Namen hinzufügen</string>

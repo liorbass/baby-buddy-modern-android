@@ -28,6 +28,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.ChildCare
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
@@ -153,16 +154,11 @@ private fun SwitchSetting(title: String, description: String, checked: Boolean, 
     }
 }
 
-/** Settings → Appearance → Day and night ([DayHours]), and the hour Trends' days start at. */
+/** Settings → Baby → Day and night ([DayHours]). */
 @Composable
-private fun DayNightSetting(onDayHoursChange: (Int, Int) -> Unit, onTrendsDayStartChange: (Int) -> Unit) {
+private fun DayNightSetting(onDayHoursChange: (Int, Int) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(stringResource(R.string.settings_day_night), style = MaterialTheme.typography.bodyLarge)
-        Text(
-            stringResource(R.string.settings_day_night_desc),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        SettingsGroupTitle(stringResource(R.string.settings_day_night), stringResource(R.string.settings_day_night_desc))
         val day = DayHours.dayStartHour
         val night = DayHours.nightStartHour
 
@@ -170,7 +166,13 @@ private fun DayNightSetting(onDayHoursChange: (Int, Int) -> Unit, onTrendsDaySta
         fun step(hour: Int, delta: Int, other: Int) = (hour + delta).mod(24).let { if (it == other) (it + delta).mod(24) else it }
         HourStepper(stringResource(R.string.settings_day_starts), day) { delta -> onDayHoursChange(step(day, delta, night), night) }
         HourStepper(stringResource(R.string.settings_night_starts), night) { delta -> onDayHoursChange(day, step(night, delta, day)) }
-        Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+/** Settings → Tracking → the hour Trends' days start at ([DayHours.trendsDayStartHour]). */
+@Composable
+private fun TrendsDayStartSetting(onTrendsDayStartChange: (Int) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         val trendsStart = DayHours.trendsDayStartHour
         HourStepper(stringResource(R.string.settings_trends_day_start), trendsStart) { delta -> onTrendsDayStartChange((trendsStart + delta).mod(24)) }
         Text(
@@ -178,6 +180,44 @@ private fun DayNightSetting(onDayHoursChange: (Int, Int) -> Unit, onTrendsDaySta
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+/** A heading inside a category, the same in every one, with an optional line under it. */
+@Composable
+private fun SettingsGroupTitle(title: String, description: String? = null) {
+    Column(modifier = Modifier.padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = PrimaryColor)
+        if (description != null) {
+            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+/** A reminder: its switch and, while on, how long after to remind. */
+@Composable
+private fun ReminderSetting(
+    title: String,
+    minutes: Int,
+    defaultMinutes: Int,
+    onText: String, // what "on" means, with the time
+    offText: String,
+    modelTimed: Boolean, // a model saved in Trends → Models times it
+    dialogNote: String,
+    onChange: (Int) -> Unit
+) {
+    SwitchSetting(
+        title = title,
+        description = when {
+            minutes <= 0 -> offText
+            modelTimed -> stringResource(R.string.settings_model_timed)
+            else -> onText
+        },
+        checked = minutes > 0,
+        onChange = { on -> onChange(if (on) defaultMinutes else 0) }
+    )
+    if (minutes > 0) {
+        DurationField(label = stringResource(R.string.settings_remind_after), minutes = minutes, onChange = onChange, dialogNote = dialogNote)
     }
 }
 
@@ -319,11 +359,12 @@ fun ConnectBackendScreen(state: SettingsState, actions: SettingsActions, modifie
             var openSection by rememberSaveable { mutableStateOf<String?>(null) }
             BackHandler(enabled = showSettings && openSection != null) { openSection = null }
             val sectionTitles = mapOf(
-                "connection" to stringResource(R.string.settings_connection),
-                "you" to stringResource(R.string.settings_you),
-                "tracked" to stringResource(R.string.settings_tracked),
-                "appearance" to stringResource(R.string.settings_appearance),
+                "baby" to stringResource(R.string.settings_baby),
+                "tracking" to stringResource(R.string.settings_tracking),
                 "notifications" to stringResource(R.string.settings_notifications),
+                "appearance" to stringResource(R.string.settings_appearance),
+                "you" to stringResource(R.string.settings_you),
+                "connection" to stringResource(R.string.settings_connection),
                 "about" to stringResource(R.string.settings_about)
             )
 
@@ -395,14 +436,60 @@ fun ConnectBackendScreen(state: SettingsState, actions: SettingsActions, modifie
                     )
                 }
 
-                SettingsSection(
-                    title = stringResource(R.string.settings_connection),
-                    summary = stringResource(R.string.settings_connected_to, config.serverUrl),
-                    icon = Icons.Default.Cloud,
-                    expanded = openSection == "connection",
-                    hidden = openSection != null && openSection != "connection",
-                    onOpen = { openSection = "connection" }
-                ) {
+                @Composable
+                fun Category(key: String, summary: String, icon: ImageVector, content: @Composable () -> Unit) = SettingsSection(
+                    title = sectionTitles.getValue(key),
+                    summary = summary,
+                    icon = icon,
+                    expanded = openSection == key,
+                    hidden = openSection != null && openSection != key,
+                    onOpen = { openSection = key },
+                    content = content
+                )
+
+                Category(
+                    "baby",
+                    listOfNotNull(
+                        babySex?.label,
+                        stringResource(R.string.settings_day_hours_summary, DayHours.label(DayHours.dayStartHour), DayHours.label(DayHours.nightStartHour))
+                    ).joinToString(" · "),
+                    Icons.Default.ChildCare
+                ) { BabySettings(state, actions) }
+
+                Category(
+                    "tracking",
+                    if (hiddenItems.isEmpty()) {
+                        stringResource(R.string.settings_tracking_everything)
+                    } else {
+                        stringResource(R.string.settings_hidden, TrackedItem.entries.filter { it in hiddenItems }.joinToString(", ") { it.label })
+                    },
+                    Icons.Default.Checklist
+                ) { TrackingSettings(state, actions) }
+
+                Category(
+                    "notifications",
+                    listOfNotNull(
+                        stringResource(R.string.settings_summary_lock_screen).takeIf { feedNotificationEnabled },
+                        stringResource(R.string.settings_summary_next_up).takeIf { nextUpNotification },
+                        stringResource(R.string.settings_summary_feed).takeIf { reminders.feedAfterMinutes > 0 },
+                        stringResource(R.string.settings_summary_awake).takeIf { reminders.awakeAfterMinutes > 0 },
+                        stringResource(R.string.settings_summary_sleep).takeIf { reminders.sleepAfterMinutes > 0 },
+                        stringResource(R.string.settings_summary_diaper).takeIf { reminders.diaperAfterMinutes > 0 }
+                    ).joinToString(" · ").replaceFirstChar(Char::uppercase).ifBlank { stringResource(R.string.off) },
+                    Icons.Default.Notifications
+                ) { NotificationSettings(state, actions) }
+
+                Category(
+                    "appearance",
+                    stringResource(if (use24h) R.string.settings_appearance_24h else R.string.settings_appearance_12h, themeMode.label),
+                    Icons.Default.Palette
+                ) { AppearanceSettings(state, actions) }
+
+                Category("you", caregiverName.ifBlank { stringResource(R.string.settings_add_your_name) }, Icons.Default.Person) {
+                    YouSettings(state, actions)
+                }
+
+                Category("connection", stringResource(R.string.settings_connected_to, config.serverUrl), Icons.Default.Cloud) {
                     ServerConnectionForm(config, isLoggedIn, onTestConnect, onShowToast, onEnterDemoMode)
                     OutlinedButton(
                         onClick = onDisconnect,
@@ -414,69 +501,7 @@ fun ConnectBackendScreen(state: SettingsState, actions: SettingsActions, modifie
                     }
                 }
 
-                SettingsSection(
-                    title = stringResource(R.string.settings_you),
-                    summary = caregiverName.ifBlank { stringResource(R.string.settings_add_your_name) },
-                    icon = Icons.Default.Person,
-                    expanded = openSection == "you",
-                    hidden = openSection != null && openSection != "you",
-                    onOpen = { openSection = "you" }
-                ) {
-                    YouSettings(state, actions)
-                }
-
-                SettingsSection(
-                    title = stringResource(R.string.settings_tracked),
-                    summary = if (hiddenItems.isEmpty()) {
-                        stringResource(R.string.settings_tracking_everything)
-                    } else {
-                        stringResource(R.string.settings_hidden, TrackedItem.entries.filter { it in hiddenItems }.joinToString(", ") { it.label })
-                    },
-                    icon = Icons.Default.Checklist,
-                    expanded = openSection == "tracked",
-                    hidden = openSection != null && openSection != "tracked",
-                    onOpen = { openSection = "tracked" }
-                ) {
-                    TrackedItemsSettings(state, actions)
-                }
-
-                SettingsSection(
-                    title = stringResource(R.string.settings_appearance),
-                    summary = stringResource(if (use24h) R.string.settings_appearance_24h else R.string.settings_appearance_12h, themeMode.label),
-                    icon = Icons.Default.Palette,
-                    expanded = openSection == "appearance",
-                    hidden = openSection != null && openSection != "appearance",
-                    onOpen = { openSection = "appearance" }
-                ) {
-                    AppearanceSettings(state, actions)
-                }
-
-                SettingsSection(
-                    title = stringResource(R.string.settings_notifications),
-                    summary = listOfNotNull(
-                        stringResource(R.string.settings_summary_lock_screen).takeIf { feedNotificationEnabled },
-                        stringResource(R.string.settings_summary_next_up).takeIf { nextUpNotification },
-                        stringResource(R.string.settings_summary_feed).takeIf { reminders.feedAfterMinutes > 0 },
-                        stringResource(R.string.settings_summary_awake).takeIf { reminders.awakeAfterMinutes > 0 },
-                        stringResource(R.string.settings_summary_sleep).takeIf { reminders.sleepAfterMinutes > 0 },
-                        stringResource(R.string.settings_summary_diaper).takeIf { reminders.diaperAfterMinutes > 0 }
-                    ).joinToString(" · ").replaceFirstChar(Char::uppercase).ifBlank { stringResource(R.string.off) },
-                    icon = Icons.Default.Notifications,
-                    expanded = openSection == "notifications",
-                    hidden = openSection != null && openSection != "notifications",
-                    onOpen = { openSection = "notifications" }
-                ) {
-                    NotificationSettings(state, actions)
-                }
-
-                SettingsSection(
-                    title = stringResource(R.string.settings_about),
-                    summary = stringResource(R.string.about_summary, BuildConfig.VERSION_NAME, BuildConfig.BUILD_DATE),
-                    icon = Icons.Default.Info,
-                    expanded = openSection == "about",
-                    hidden = openSection != null && openSection != "about",
-                    onOpen = { openSection = "about" }
-                ) {
+                Category("about", stringResource(R.string.about_summary, BuildConfig.VERSION_NAME, BuildConfig.BUILD_DATE), Icons.Default.Info) {
                     AboutSettings(state, actions, openLink)
                 }
 
@@ -706,80 +731,45 @@ private fun ServerConnectionForm(
     }
 }
 
+/** Settings → You: this phone's caregiver name. */
 @Composable
 private fun YouSettings(state: SettingsState, actions: SettingsActions) {
-    with(state) {
-        with(actions) {
-            var name by remember { mutableStateOf(caregiverName) }
-            LaunchedEffect(name) {
-                delay(600) // save shortly after typing stops
-                if (name.trim() != caregiverName) onCaregiverNameChange(name)
-            }
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text(stringResource(R.string.settings_your_name)) },
-                supportingText = { Text(stringResource(R.string.settings_your_name_desc)) },
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(stringResource(R.string.settings_growth_charts), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
-            Text(
-                stringResource(R.string.settings_growth_charts_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            SegmentedToggle(
-                options = BabySex.entries.map { it.label },
-                selectedIndex = babySex?.let { BabySex.entries.indexOf(it) } ?: -1,
-                onSelect = { onBabySexChange(BabySex.entries[it]) }
-            )
-            if (TrackedItem.BREASTFEEDING !in hiddenItems) {
-                Text(stringResource(R.string.settings_start_side), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
-                Text(
-                    stringResource(R.string.settings_start_side_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                StartSide.entries.forEach { side ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .selectable(selected = side == startSide, onClick = { onStartSideChange(side) })
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = side == startSide,
-                            onClick = null,
-                            colors = RadioButtonDefaults.colors(selectedColor = PrimaryColor)
-                        )
-                        Column(modifier = Modifier.padding(start = 12.dp)) {
-                            Text(side.label, style = MaterialTheme.typography.bodyLarge)
-                            Text(
-                                side.description,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-        }
+    var name by remember { mutableStateOf(state.caregiverName) }
+    LaunchedEffect(name) {
+        delay(600) // save shortly after typing stops
+        if (name.trim() != state.caregiverName) actions.onCaregiverNameChange(name)
     }
+    OutlinedTextField(
+        value = name,
+        onValueChange = { name = it },
+        label = { Text(stringResource(R.string.settings_your_name)) },
+        supportingText = { Text(stringResource(R.string.settings_your_name_desc)) },
+        singleLine = true,
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
+/** Settings → Baby: sex (for the growth charts) and the baby's day and night hours. */
 @Composable
-private fun TrackedItemsSettings(state: SettingsState, actions: SettingsActions) {
+private fun BabySettings(state: SettingsState, actions: SettingsActions) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SettingsGroupTitle(stringResource(R.string.settings_growth_charts), stringResource(R.string.settings_growth_charts_desc))
+        SegmentedToggle(
+            options = BabySex.entries.map { it.label },
+            selectedIndex = state.babySex?.let { BabySex.entries.indexOf(it) } ?: -1,
+            onSelect = { actions.onBabySexChange(BabySex.entries[it]) }
+        )
+    }
+    DayNightSetting(onDayHoursChange = actions.onDayHoursChange)
+}
+
+/** Settings → Tracking: what's tracked, how breastfeeds start, and how Trends shows it. */
+@Composable
+private fun TrackingSettings(state: SettingsState, actions: SettingsActions) {
     with(state) {
         with(actions) {
-            Text(
-                stringResource(R.string.settings_tracked_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            SettingsGroupTitle(stringResource(R.string.settings_tracked), stringResource(R.string.settings_tracked_desc))
             TrackedItem.entries.forEach { item ->
                 SwitchSetting(
                     title = item.label,
@@ -788,48 +778,16 @@ private fun TrackedItemsSettings(state: SettingsState, actions: SettingsActions)
                     onChange = { on -> onItemTrackedChange(item, on) }
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun AppearanceSettings(state: SettingsState, actions: SettingsActions) {
-    with(state) {
-        with(actions) {
-            Column {
-                Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.labelLarge, color = OutlineColor)
-                ThemeMode.entries.forEach { mode ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .selectable(selected = mode == themeMode, onClick = { onThemeModeChange(mode) })
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = mode == themeMode,
-                            onClick = null,
-                            colors = RadioButtonDefaults.colors(selectedColor = PrimaryColor)
-                        )
-                        Column(modifier = Modifier.padding(start = 12.dp)) {
-                            Text(mode.label, style = MaterialTheme.typography.bodyLarge)
-                            Text(
-                                mode.description,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+            if (TrackedItem.BREASTFEEDING !in hiddenItems) {
+                Column {
+                    SettingsGroupTitle(stringResource(R.string.settings_start_side), stringResource(R.string.settings_start_side_desc))
+                    StartSide.entries.forEach { side ->
+                        RadioOption(side.label, side.description, selected = side == startSide) { onStartSideChange(side) }
                     }
                 }
             }
-            DayNightSetting(onDayHoursChange = onDayHoursChange, onTrendsDayStartChange = onTrendsDayStartChange)
-            LanguageSetting()
-            SwitchSetting(
-                title = stringResource(R.string.settings_24h),
-                description = stringResource(if (use24h) R.string.settings_24h_on else R.string.settings_24h_off),
-                checked = use24h,
-                onChange = onUse24hChange
-            )
+            SettingsGroupTitle(stringResource(R.string.nav_trends))
+            TrendsDayStartSetting(onTrendsDayStartChange)
             SwitchSetting(
                 title = stringResource(R.string.settings_models_tab),
                 description = stringResource(R.string.settings_models_tab_desc),
@@ -840,10 +798,48 @@ private fun AppearanceSettings(state: SettingsState, actions: SettingsActions) {
     }
 }
 
+/** A radio button row with a title and a line under it. */
+@Composable
+private fun RadioOption(title: String, description: String, selected: Boolean, onSelect: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(selected = selected, onClick = onSelect)
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(selected = selected, onClick = null, colors = RadioButtonDefaults.colors(selectedColor = PrimaryColor))
+        Column(modifier = Modifier.padding(start = 12.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+/** Settings → Appearance: theme, clock and language. */
+@Composable
+private fun AppearanceSettings(state: SettingsState, actions: SettingsActions) {
+    Column {
+        SettingsGroupTitle(stringResource(R.string.settings_theme))
+        ThemeMode.entries.forEach { mode ->
+            RadioOption(mode.label, mode.description, selected = mode == state.themeMode) { actions.onThemeModeChange(mode) }
+        }
+    }
+    SwitchSetting(
+        title = stringResource(R.string.settings_24h),
+        description = stringResource(if (state.use24h) R.string.settings_24h_on else R.string.settings_24h_off),
+        checked = state.use24h,
+        onChange = actions.onUse24hChange
+    )
+    LanguageSetting()
+}
+
+/** Settings → Notifications: lock-screen notifications, then reminders. */
 @Composable
 private fun NotificationSettings(state: SettingsState, actions: SettingsActions) {
     with(state) {
         with(actions) {
+            SettingsGroupTitle(stringResource(R.string.settings_lock_screen))
             SwitchSetting(
                 title = stringResource(R.string.settings_lock_screen_timers),
                 description = stringResource(R.string.settings_lock_screen_timers_desc),
@@ -856,124 +852,77 @@ private fun NotificationSettings(state: SettingsState, actions: SettingsActions)
                 checked = nextUpNotification,
                 onChange = onNextUpNotificationChange
             )
+
+            SettingsGroupTitle(stringResource(R.string.settings_reminders), stringResource(R.string.settings_reminders_note))
             if (TrackedItem.BREASTFEEDING !in hiddenItems || TrackedItem.BOTTLE !in hiddenItems) {
-                SwitchSetting(
+                ReminderSetting(
                     title = stringResource(R.string.settings_feed_reminder),
-                    description = if (reminders.feedAfterMinutes > 0) {
-                        if (RhythmTarget.FEED_GAP in modelTargets) {
-                            stringResource(R.string.settings_model_timed)
-                        } else {
-                            stringResource(R.string.settings_feed_reminder_on, formatMinutes(reminders.feedAfterMinutes))
-                        }
-                    } else {
-                        stringResource(R.string.settings_feed_reminder_off)
-                    },
-                    checked = reminders.feedAfterMinutes > 0,
-                    onChange = { on -> onRemindersChange(reminders.copy(feedAfterMinutes = if (on) 180 else 0)) }
-                )
-            }
-            if (reminders.feedAfterMinutes > 0 && (TrackedItem.BREASTFEEDING !in hiddenItems || TrackedItem.BOTTLE !in hiddenItems)) {
-                DurationField(
-                    label = stringResource(R.string.settings_remind_after),
                     minutes = reminders.feedAfterMinutes,
-                    onChange = { onRemindersChange(reminders.copy(feedAfterMinutes = it)) },
-                    dialogNote = stringResource(R.string.settings_feed_reminder_note)
+                    defaultMinutes = 180,
+                    onText = stringResource(R.string.settings_feed_reminder_on, formatMinutes(reminders.feedAfterMinutes)),
+                    offText = stringResource(R.string.settings_feed_reminder_off),
+                    modelTimed = RhythmTarget.FEED_GAP in modelTargets,
+                    dialogNote = stringResource(R.string.settings_feed_reminder_note),
+                    onChange = { onRemindersChange(reminders.copy(feedAfterMinutes = it)) }
                 )
             }
             if (TrackedItem.SLEEP !in hiddenItems) {
-                SwitchSetting(
+                ReminderSetting(
                     title = stringResource(R.string.settings_awake_reminder),
-                    description = if (reminders.awakeAfterMinutes > 0) {
-                        if (RhythmTarget.AWAKE_WINDOW in modelTargets) stringResource(R.string.settings_model_timed) else stringResource(R.string.settings_awake_reminder_on, formatMinutes(reminders.awakeAfterMinutes))
-                    } else {
-                        stringResource(R.string.settings_awake_reminder_off)
-                    },
-                    checked = reminders.awakeAfterMinutes > 0,
-                    onChange = { on -> onRemindersChange(reminders.copy(awakeAfterMinutes = if (on) 90 else 0)) }
-                )
-            }
-            if (reminders.awakeAfterMinutes > 0 && TrackedItem.SLEEP !in hiddenItems) {
-                DurationField(
-                    label = stringResource(R.string.settings_remind_after),
                     minutes = reminders.awakeAfterMinutes,
-                    onChange = { onRemindersChange(reminders.copy(awakeAfterMinutes = it)) },
-                    dialogNote = stringResource(R.string.settings_awake_reminder_note)
+                    defaultMinutes = 90,
+                    onText = stringResource(R.string.settings_awake_reminder_on, formatMinutes(reminders.awakeAfterMinutes)),
+                    offText = stringResource(R.string.settings_awake_reminder_off),
+                    modelTimed = RhythmTarget.AWAKE_WINDOW in modelTargets,
+                    dialogNote = stringResource(R.string.settings_awake_reminder_note),
+                    onChange = { onRemindersChange(reminders.copy(awakeAfterMinutes = it)) }
                 )
-            }
-            if (TrackedItem.SLEEP !in hiddenItems) {
-                SwitchSetting(
+                ReminderSetting(
                     title = stringResource(R.string.settings_sleep_reminder),
-                    description = if (reminders.sleepAfterMinutes > 0) {
-                        if (RhythmTarget.SLEEP_LENGTH in modelTargets) stringResource(R.string.settings_model_timed) else stringResource(R.string.settings_sleep_reminder_on, formatMinutes(reminders.sleepAfterMinutes))
-                    } else {
-                        stringResource(R.string.settings_sleep_reminder_off)
-                    },
-                    checked = reminders.sleepAfterMinutes > 0,
-                    onChange = { on -> onRemindersChange(reminders.copy(sleepAfterMinutes = if (on) 120 else 0)) }
-                )
-            }
-            if (reminders.sleepAfterMinutes > 0 && TrackedItem.SLEEP !in hiddenItems) {
-                DurationField(
-                    label = stringResource(R.string.settings_remind_after),
                     minutes = reminders.sleepAfterMinutes,
-                    onChange = { onRemindersChange(reminders.copy(sleepAfterMinutes = it)) },
-                    dialogNote = stringResource(R.string.settings_sleep_reminder_note)
+                    defaultMinutes = 120,
+                    onText = stringResource(R.string.settings_sleep_reminder_on, formatMinutes(reminders.sleepAfterMinutes)),
+                    offText = stringResource(R.string.settings_sleep_reminder_off),
+                    modelTimed = RhythmTarget.SLEEP_LENGTH in modelTargets,
+                    dialogNote = stringResource(R.string.settings_sleep_reminder_note),
+                    onChange = { onRemindersChange(reminders.copy(sleepAfterMinutes = it)) }
                 )
             }
             if (TrackedItem.DIAPERS !in hiddenItems) {
-                SwitchSetting(
+                ReminderSetting(
                     title = stringResource(R.string.settings_diaper_reminder),
-                    description = if (reminders.diaperAfterMinutes > 0) {
-                        if (RhythmTarget.DIAPER_GAP in modelTargets) {
-                            stringResource(R.string.settings_model_timed)
-                        } else {
-                            stringResource(R.string.settings_diaper_reminder_on, formatMinutes(reminders.diaperAfterMinutes))
-                        }
-                    } else {
-                        stringResource(R.string.settings_diaper_reminder_off)
-                    },
-                    checked = reminders.diaperAfterMinutes > 0,
-                    onChange = { on -> onRemindersChange(reminders.copy(diaperAfterMinutes = if (on) 180 else 0)) }
-                )
-            }
-            if (reminders.diaperAfterMinutes > 0 && TrackedItem.DIAPERS !in hiddenItems) {
-                DurationField(
-                    label = stringResource(R.string.settings_remind_after),
                     minutes = reminders.diaperAfterMinutes,
-                    onChange = { onRemindersChange(reminders.copy(diaperAfterMinutes = it)) },
-                    dialogNote = stringResource(R.string.settings_diaper_reminder_note)
+                    defaultMinutes = 180,
+                    onText = stringResource(R.string.settings_diaper_reminder_on, formatMinutes(reminders.diaperAfterMinutes)),
+                    offText = stringResource(R.string.settings_diaper_reminder_off),
+                    modelTimed = RhythmTarget.DIAPER_GAP in modelTargets,
+                    dialogNote = stringResource(R.string.settings_diaper_reminder_note),
+                    onChange = { onRemindersChange(reminders.copy(diaperAfterMinutes = it)) }
                 )
             }
             if (reminders.anyOn) {
-                Text(
-                    stringResource(R.string.settings_heads_up),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    if (reminders.earlyMinutes > 0) {
-                        stringResource(R.string.settings_heads_up_on, formatMinutes(reminders.earlyMinutes))
-                    } else {
-                        stringResource(R.string.settings_heads_up_off)
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(0, 5, 10, 15, 20, 30, 45, 60).forEach { minutes ->
-                        FilterChip(
-                            selected = reminders.earlyMinutes == minutes,
-                            onClick = { onRemindersChange(reminders.copy(earlyMinutes = minutes)) },
-                            label = { Text(if (minutes == 0) stringResource(R.string.off) else formatMinutes(minutes)) }
-                        )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.settings_heads_up), style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        if (reminders.earlyMinutes > 0) {
+                            stringResource(R.string.settings_heads_up_on, formatMinutes(reminders.earlyMinutes))
+                        } else {
+                            stringResource(R.string.settings_heads_up_off)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(0, 5, 10, 15, 20, 30, 45, 60).forEach { minutes ->
+                            FilterChip(
+                                selected = reminders.earlyMinutes == minutes,
+                                onClick = { onRemindersChange(reminders.copy(earlyMinutes = minutes)) },
+                                label = { Text(if (minutes == 0) stringResource(R.string.off) else formatMinutes(minutes)) }
+                            )
+                        }
                     }
                 }
             }
-            Text(
-                stringResource(R.string.settings_reminders_note),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }

@@ -207,7 +207,7 @@ fun TodayDashboardScreen(state: TodayState, actions: TodayActions, modifier: Mod
             var showStashDialog by remember { mutableStateOf(false) }
             var showBathDialog by remember { mutableStateOf(false) }
 
-            // Leave out what this phone doesn't track (Settings → Tracked items)
+            // Leave out what this phone doesn't track (Settings → Tracking)
             val feedingShown = TrackedItem.BREASTFEEDING !in hiddenItems || TrackedItem.BOTTLE !in hiddenItems
             val visibleFeedings = recentFeedings.filter { f ->
                 if (f.type == FeedType.NURSING) TrackedItem.BREASTFEEDING !in hiddenItems else TrackedItem.BOTTLE !in hiddenItems

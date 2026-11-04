@@ -32,7 +32,7 @@ Both can be turned off in Settings → Notifications. There you can also turn on
 
 ## Quick Settings tiles and shortcuts
 
-Edit your Quick Settings panel to add **Breastfeed** (tap to start, on the side chosen in Settings → You: opposite the last feed by default, the same side, or always left/right; tap again to pause or resume), **Sleep** (tap when asleep, again when awake; the sleep is saved) and **Diaper** (opens the diaper log). Long-press a tile to open its screen. Long-press the app icon for **Feed left**, **Feed right**, **Diaper** and **Sleep now**.
+Edit your Quick Settings panel to add **Breastfeed** (tap to start, on the side chosen in Settings → Tracking: opposite the last feed by default, the same side, or always left/right; tap again to pause or resume), **Sleep** (tap when asleep, again when awake; the sleep is saved) and **Diaper** (opens the diaper log). Long-press a tile to open its screen. Long-press the app icon for **Feed left**, **Feed right**, **Diaper** and **Sleep now**.
 
 ## Reminders
 
@@ -54,7 +54,7 @@ Settings → Notifications:
 
 An optional tab in Trends that learns your baby's rhythm, on the phone, and can use it to estimate what's next.
 
-**Turn it on:** Settings → Appearance → **Models tab in Trends**. Then open **Trends → Models**.
+**Turn it on:** Settings → Tracking → **Models tab in Trends**. Then open **Trends → Models**.
 
 <table>
   <tr>

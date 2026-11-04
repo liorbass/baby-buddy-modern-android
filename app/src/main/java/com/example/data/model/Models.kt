@@ -224,7 +224,7 @@ data class HandoffSummary(
         get() = (feedings.map { it.caregiver } + diapers.map { it.caregiver } + sleeps.map { it.caregiver }).filterNotNull().distinct()
 }
 
-/** What this phone tracks (Settings → Tracked items); a hidden item disappears everywhere in the app. */
+/** What this phone tracks (Settings → Tracking); a hidden item disappears everywhere in the app. */
 enum class TrackedItem(private val labelRes: Int, private val descriptionRes: Int) {
     BREASTFEEDING(R.string.item_breastfeeding, R.string.item_breastfeeding_desc),
     BOTTLE(R.string.item_bottle, R.string.item_bottle_desc),
@@ -241,7 +241,7 @@ enum class TrackedItem(private val labelRes: Int, private val descriptionRes: In
     val description: String get() = AppText.get(descriptionRes)
 }
 
-/** Which side a one-tap breastfeed starts on (timer widget, Quick Settings tile); Settings → You. */
+/** Which side a one-tap breastfeed starts on (timer widget, Quick Settings tile); Settings → Tracking. */
 enum class StartSide(private val labelRes: Int, private val descriptionRes: Int) {
     OPPOSITE(R.string.start_side_opposite, R.string.start_side_opposite_desc),
     SAME(R.string.start_side_same, R.string.start_side_same_desc),
@@ -426,7 +426,7 @@ data class TemperatureEvent(
     val caregiver: String? = null
 )
 
-/** Used only to pick the WHO reference (boys' or girls' charts); Baby Buddy has no such field. Settings → You. */
+/** Used only to pick the WHO reference (boys' or girls' charts); Baby Buddy has no such field. Settings → Baby. */
 enum class BabySex(private val labelRes: Int) {
     BOY(R.string.sex_boy),
     GIRL(R.string.sex_girl);

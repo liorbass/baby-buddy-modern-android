@@ -399,7 +399,7 @@
     <string name="note_optional">הערה (לא חובה)</string>
 
     <!-- Log screen -->
-    <string name="log_nothing">אין כאן מה לרשום. אפשר להפעיל פריטים מחדש בהגדרות ← פריטים במעקב.</string>
+    <string name="log_nothing">אין כאן מה לרשום. אפשר להפעיל פריטים מחדש בהגדרות ← מעקב.</string>
     <string name="log_feed_paused">מושהה · %s</string>
     <string name="log_feed_running">פועל · %s</string>
     <string name="log_feed_subtitle">טיימר שמאל / ימין</string>
@@ -562,7 +562,7 @@
     <string name="cards_no_readings">אין מדידות היום</string>
     <string name="cards_no_measurements">עדיין אין מדידות</string>
     <string name="cards_percentile">אחוזון %s</string>
-    <string name="cards_choose_sex">כדי לראות אחוזונים של ארגון הבריאות העולמי, יש לבחור בן או בת בהגדרות ← אני.</string>
+    <string name="cards_choose_sex">כדי לראות אחוזונים של ארגון הבריאות העולמי, יש לבחור בן או בת בהגדרות ← תינוק.</string>
     <string name="cards_log_growth">רישום גדילה</string>
     <string name="cards_no_notes">עדיין אין הערות</string>
     <string name="cards_add_note">הוספת הערה</string>
@@ -617,6 +617,11 @@
     <string name="settings_appearance">מראה</string>
     <string name="settings_notifications">התראות</string>
     <string name="settings_about">מידע על האפליקציה</string>
+    <string name="settings_baby">תינוק</string>
+    <string name="settings_tracking">מעקב</string>
+    <string name="settings_lock_screen">מסך נעילה</string>
+    <string name="settings_reminders">תזכורות</string>
+    <string name="settings_day_hours_summary">יום %1$s–%2$s</string>
     <string name="settings_connected_to">מחובר · %s</string>
     <string name="settings_disconnect">התנתקות</string>
     <string name="settings_add_your_name">הוספת שם</string>

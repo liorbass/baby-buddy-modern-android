@@ -399,7 +399,7 @@
     <string name="note_optional">Nota (opcional)</string>
 
     <!-- Log screen -->
-    <string name="log_nothing">Nada que registrar aquí. Vuelve a activar elementos en Configuración → Elementos registrados.</string>
+    <string name="log_nothing">Nada que registrar aquí. Vuelve a activar elementos en Configuración → Seguimiento.</string>
     <string name="log_feed_paused">En pausa · %s</string>
     <string name="log_feed_running">En curso · %s</string>
     <string name="log_feed_subtitle">Temporizador izquierdo / derecho</string>
@@ -562,7 +562,7 @@
     <string name="cards_no_readings">Sin lecturas hoy</string>
     <string name="cards_no_measurements">Aún no hay mediciones</string>
     <string name="cards_percentile">Percentil %s</string>
-    <string name="cards_choose_sex">Elige niño o niña en Configuración → Tú para ver los percentiles de la OMS.</string>
+    <string name="cards_choose_sex">Elige niño o niña en Configuración → Bebé para ver los percentiles de la OMS.</string>
     <string name="cards_log_growth">Registrar crecimiento</string>
     <string name="cards_no_notes">Aún no hay notas</string>
     <string name="cards_add_note">Añadir una nota</string>
@@ -617,6 +617,11 @@
     <string name="settings_appearance">Apariencia</string>
     <string name="settings_notifications">Notificaciones</string>
     <string name="settings_about">Acerca de</string>
+    <string name="settings_baby">Bebé</string>
+    <string name="settings_tracking">Seguimiento</string>
+    <string name="settings_lock_screen">Pantalla de bloqueo</string>
+    <string name="settings_reminders">Recordatorios</string>
+    <string name="settings_day_hours_summary">Día %1$s–%2$s</string>
     <string name="settings_connected_to">Conectado · %s</string>
     <string name="settings_disconnect">Desconectar</string>
     <string name="settings_add_your_name">Añade tu nombre</string>

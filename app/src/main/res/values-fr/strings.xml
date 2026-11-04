@@ -460,7 +460,7 @@
     <string name="sleep_save">Enregistrer le sommeil</string>
 
     <!-- Log screen -->
-    <string name="log_nothing">Rien à saisir ici. Réactivez des éléments dans Paramètres → Éléments suivis.</string>
+    <string name="log_nothing">Rien à saisir ici. Réactivez des éléments dans Paramètres → Suivi.</string>
     <string name="log_feed_paused">En pause · %s</string>
     <string name="log_feed_running">En cours · %s</string>
     <string name="log_feed_subtitle">Chronomètre gauche / droite</string>
@@ -564,7 +564,7 @@
     <string name="cards_no_readings">Aucun relevé aujourd\'hui</string>
     <string name="cards_no_measurements">Pas encore de mesure</string>
     <string name="cards_percentile">%s centile</string>
-    <string name="cards_choose_sex">Choisissez garçon ou fille dans Paramètres → Vous pour voir les centiles de l\'OMS.</string>
+    <string name="cards_choose_sex">Choisissez garçon ou fille dans Paramètres → Bébé pour voir les centiles de l\'OMS.</string>
     <string name="cards_log_growth">Noter la croissance</string>
     <string name="cards_no_notes">Pas encore de note</string>
     <string name="cards_add_note">Ajouter une note</string>
@@ -616,6 +616,11 @@
     <string name="settings_appearance">Apparence</string>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_about">À propos</string>
+    <string name="settings_baby">Bébé</string>
+    <string name="settings_tracking">Suivi</string>
+    <string name="settings_lock_screen">Écran de verrouillage</string>
+    <string name="settings_reminders">Rappels</string>
+    <string name="settings_day_hours_summary">Jour %1$s–%2$s</string>
     <string name="settings_connected_to">Connecté · %s</string>
     <string name="settings_disconnect">Se déconnecter</string>
     <string name="settings_add_your_name">Ajoutez votre nom</string>

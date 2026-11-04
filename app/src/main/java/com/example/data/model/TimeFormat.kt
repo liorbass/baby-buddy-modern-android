@@ -9,7 +9,7 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * The app-wide 12h/24h clock choice (Settings → This phone). Snapshot state, so composables that
+ * The app-wide 12h/24h clock choice (Settings → Appearance). Snapshot state, so composables that
  * format times redraw when it changes; the repository reformats stored `timeFormatted` strings.
  */
 object TimeFormat {

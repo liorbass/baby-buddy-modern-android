@@ -5,7 +5,7 @@ import com.example.data.model.StartSide
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** One-tap feeds (timer widget, Quick Settings tile) start on the side chosen in Settings → You. */
+/** One-tap feeds (timer widget, Quick Settings tile) start on the side chosen in Settings → Tracking. */
 class StartSideTest {
 
     @Test

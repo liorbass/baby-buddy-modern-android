@@ -20,7 +20,7 @@ class WidgetActionReceiver : BroadcastReceiver() {
         when (action) {
             ACTION_TIMER_PAUSE_RESUME -> {
                 if (!repo.liveTimerState.value.isRunning) {
-                    // Start on the side from Settings → You (by default opposite the last feed)
+                    // Start on the side from Settings → Tracking (by default opposite the last feed)
                     repo.startNewNursingSession(repo.nextStartSide())
                 } else {
                     repo.togglePause()

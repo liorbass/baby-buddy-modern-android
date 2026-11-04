@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import java.util.Calendar
 
 /**
- * When the day and the night begin (Settings → Appearance → Day and night), in whole hours, and the hour Trends'
+ * When the day and the night begin (Settings → Baby → Day and night), in whole hours, and the hour Trends'
  * days start at. Set by the repository from prefs; Compose state, so screens redraw when they change.
  *
  * Night is used for the "by time of day" theme, the nap / night sleep default for a new sleep, the night shading

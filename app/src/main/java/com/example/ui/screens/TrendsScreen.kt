@@ -96,7 +96,7 @@ import kotlin.math.roundToInt
 
 private const val MINUTES_PER_DAY = 1440f
 
-/** The night (Settings → Appearance → Day and night) as minute ranges within a chart row (rows start at the Trends day start). */
+/** The night (Settings → Baby → Day and night) as minute ranges within a chart row (rows start at the Trends day start). */
 private fun chartNight(): List<Pair<Float, Float>> = nightRanges(DayHours.trendsDayStartHour, DayHours.dayStartHour, DayHours.nightStartHour)
     .map { it.first.toFloat() to it.second.toFloat() }
 

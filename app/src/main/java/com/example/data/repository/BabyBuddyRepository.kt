@@ -263,7 +263,7 @@ class BabyBuddyRepository {
 
     private val _babySex = MutableStateFlow<BabySex?>(null)
 
-    /** Picks the WHO reference charts; null until chosen (Settings → You, or the Trends growth card). */
+    /** Picks the WHO reference charts; null until chosen (Settings → Baby, or the Trends growth card). */
     val babySex: StateFlow<BabySex?> = _babySex.asStateFlow()
 
     fun setBabySex(sex: BabySex) {
@@ -289,7 +289,7 @@ class BabyBuddyRepository {
     /** 24-hour clock (default) or 12-hour with AM/PM. */
     val use24h: StateFlow<Boolean> = _use24h.asStateFlow()
 
-    // Settings → Appearance: the Models tab in Trends (rhythm models fitted on the phone)
+    // Settings → Tracking: the Models tab in Trends (rhythm models fitted on the phone)
     private val _modelsTab = MutableStateFlow(false)
     val modelsTab: StateFlow<Boolean> = _modelsTab.asStateFlow()
 
@@ -298,7 +298,7 @@ class BabyBuddyRepository {
         prefs?.edit()?.putBoolean(PREF_MODELS_TAB, enabled)?.apply()
     }
 
-    /** Settings → Appearance → Day and night; ignored when both are the same hour. */
+    /** Settings → Baby → Day and night; ignored when both are the same hour. */
     fun setDayHours(dayStartHour: Int, nightStartHour: Int) {
         if (dayStartHour == nightStartHour) return
         DayHours.dayStartHour = dayStartHour.mod(24)
@@ -306,7 +306,7 @@ class BabyBuddyRepository {
         prefs?.edit()?.putInt(PREF_DAY_START, DayHours.dayStartHour)?.putInt(PREF_NIGHT_START, DayHours.nightStartHour)?.apply()
     }
 
-    /** The hour Trends' days start at (Settings → Appearance). */
+    /** The hour Trends' days start at (Settings → Tracking). */
     fun setTrendsDayStart(hour: Int) {
         DayHours.trendsDayStartHour = hour.mod(24)
         prefs?.edit()?.putInt(PREF_TRENDS_DAY_START, DayHours.trendsDayStartHour)?.apply()
@@ -383,7 +383,7 @@ class BabyBuddyRepository {
 
     private val _startSide = MutableStateFlow(StartSide.OPPOSITE)
 
-    /** Which side one-tap feeds start on (timer widget, Quick Settings tile); Settings → You. */
+    /** Which side one-tap feeds start on (timer widget, Quick Settings tile); Settings → Tracking. */
     val startSide: StateFlow<StartSide> = _startSide.asStateFlow()
 
     fun setStartSide(side: StartSide) {
