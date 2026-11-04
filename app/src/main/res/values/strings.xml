@@ -682,6 +682,27 @@
     <string name="about_app_id">App ID</string>
     <string name="about_source">Source code, issues and releases on GitHub →</string>
     <string name="about_server">Baby Buddy, the server this app works with →</string>
+    <string name="update_title">Updates</string>
+    <string name="update_desc">New versions from this app\'s releases on GitHub</string>
+    <string name="update_check">Check for updates</string>
+    <string name="update_check_again">Check again</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_up_to_date">You have the latest version.</string>
+    <string name="update_available">Version %1$s is available.</string>
+    <string name="update_install">Download and install</string>
+    <string name="update_install_short">Install</string>
+    <string name="update_whats_new">What\'s new in this release →</string>
+    <string name="update_downloading">Downloading the update…</string>
+    <string name="update_downloading_percent">Downloading the update… %1$d%%</string>
+    <string name="update_needs_permission">To install the update, allow this app to install apps, then come back and tap Install.</string>
+    <string name="update_allow">Allow</string>
+    <string name="update_confirm">Confirm the update in the window that opens.</string>
+    <string name="update_try_again">Try again</string>
+    <string name="update_failed_check">Couldn\'t check for updates: %1$s</string>
+    <string name="update_failed_download">Couldn\'t download the update: %1$s</string>
+    <string name="update_failed_install">The update wasn\'t installed: %1$s</string>
+    <string name="update_corrupt">The download doesn\'t match the release. Try again.</string>
+    <string name="update_other_signer">This update is signed with a different key than the installed app (it was installed from another source, such as F-Droid), so Android can\'t install it over this one. Update from where you installed it.</string>
 
     <!-- Customize Today -->
     <string name="customize_title">Customize Today</string>

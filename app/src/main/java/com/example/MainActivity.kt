@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.service.quicksettings.TileService
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -37,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -151,6 +153,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Android 8+: the screen where the user lets this app install its updates (Settings → About → Updates). */
+    fun openInstallPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        runCatching { startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, "package:$packageName".toUri())) }
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -256,6 +264,7 @@ fun BabyBuddyApp(
     val modelNext by viewModel.modelNextTimes.collectAsState()
     val usedModels by viewModel.usedModels.collectAsState()
     val themeMode by viewModel.themeMode.collectAsState()
+    val updateState by viewModel.updateState.collectAsState()
     val noteTags by viewModel.noteTags.collectAsState()
     val milkStash by viewModel.milkStash.collectAsState()
     val lastFeedMillis by viewModel.lastFeedMillis.collectAsState()
@@ -321,8 +330,10 @@ fun BabyBuddyApp(
             onNextUpNotificationChange = { enabled ->
                 viewModel.setNextUpNotification(enabled)
                 if (enabled) (context as? MainActivity)?.requestNotificationPermission()
-            }
-
+            },
+            onCheckForUpdate = { viewModel.checkForUpdate() },
+            onInstallUpdate = { viewModel.installUpdate() },
+            onAllowInstalls = { (context as? MainActivity)?.openInstallPermission() }
         )
     }
     val trendsActions = remember(viewModel) {
@@ -631,7 +642,8 @@ fun BabyBuddyApp(
                             modelsTab = modelsTab,
                             modelTargets = usedModels.keys,
                             nextUpNotification = nextUpNotification,
-                            startSide = startSide
+                            startSide = startSide,
+                            update = updateState
                         ),
                         actions = settingsActions
                     )

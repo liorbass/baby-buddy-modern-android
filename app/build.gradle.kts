@@ -42,6 +42,8 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("String", "GIT_DESCRIBE", "\"$gitDescribe\"")
     buildConfigField("String", "BUILD_DATE", "\"$buildDate\"")
+    // Updates from GitHub releases (Settings → About); F-Droid builds pass -PselfUpdate=false (gradle.properties)
+    buildConfigField("boolean", "SELF_UPDATE", providers.gradleProperty("selfUpdate").getOrElse("true"))
   }
 
   // Do not remove or modify these signingConfigs. They are necessary for building, installing,

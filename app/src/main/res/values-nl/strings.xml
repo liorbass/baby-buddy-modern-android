@@ -682,6 +682,27 @@
     <string name="about_app_id">App-ID</string>
     <string name="about_source">Broncode, issues en releases op GitHub →</string>
     <string name="about_server">Baby Buddy, de server waarmee deze app werkt →</string>
+    <string name="update_title">Updates</string>
+    <string name="update_desc">Nieuwe versies uit de releases van deze app op GitHub</string>
+    <string name="update_check">Controleren op updates</string>
+    <string name="update_check_again">Opnieuw controleren</string>
+    <string name="update_checking">Controleren op updates…</string>
+    <string name="update_up_to_date">Je hebt de nieuwste versie.</string>
+    <string name="update_available">Versie %1$s is beschikbaar.</string>
+    <string name="update_install">Downloaden en installeren</string>
+    <string name="update_install_short">Installeren</string>
+    <string name="update_whats_new">Nieuw in deze versie →</string>
+    <string name="update_downloading">Update downloaden…</string>
+    <string name="update_downloading_percent">Update downloaden… %1$d%%</string>
+    <string name="update_needs_permission">Sta deze app toe om apps te installeren, kom dan terug en tik op Installeren.</string>
+    <string name="update_allow">Toestaan</string>
+    <string name="update_confirm">Bevestig de update in het venster dat opent.</string>
+    <string name="update_try_again">Opnieuw proberen</string>
+    <string name="update_failed_check">Kan niet controleren op updates: %1$s</string>
+    <string name="update_failed_download">Kan de update niet downloaden: %1$s</string>
+    <string name="update_failed_install">De update is niet geïnstalleerd: %1$s</string>
+    <string name="update_corrupt">De download komt niet overeen met de release. Probeer het opnieuw.</string>
+    <string name="update_other_signer">Deze update is ondertekend met een andere sleutel dan de geïnstalleerde app (die uit een andere bron komt, zoals F-Droid), dus Android kan hem er niet overheen installeren. Update via de bron waar je de app vandaan hebt.</string>
 
     <!-- Customize Today -->
     <string name="customize_title">Vandaag aanpassen</string>

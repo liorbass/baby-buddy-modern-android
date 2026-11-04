@@ -24,8 +24,12 @@ Builds:
       - update-java-alternatives -a
     gradle:
       - yes
-    # F-Droid signs with its own key; the upstream release signing config needs a keystore it doesn't have
-    prebuild: sed -i -e '/signingConfig = signingConfigs.getByName("release")/d' build.gradle.kts
+    # F-Droid signs with its own key; the upstream release signing config needs a keystore it doesn't have.
+    # F-Droid builds update through F-Droid: no GitHub self-updates (Settings → About) and no install permission.
+    prebuild:
+      - sed -i -e '/signingConfig = signingConfigs.getByName("release")/d' build.gradle.kts
+      - echo 'selfUpdate=false' >> ../gradle.properties
+      - sed -i -e '/REQUEST_INSTALL_PACKAGES/d' src/main/AndroidManifest.xml
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags

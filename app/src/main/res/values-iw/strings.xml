@@ -692,6 +692,27 @@
     <string name="about_app_id">מזהה אפליקציה</string>
     <string name="about_source">קוד מקור, דיווח באגים וגרסאות ב־GitHub ←</string>
     <string name="about_server">Baby Buddy, השרת שהאפליקציה עובדת איתו ←</string>
+    <string name="update_title">עדכונים</string>
+    <string name="update_desc">גרסאות חדשות מהגרסאות של האפליקציה ב־GitHub</string>
+    <string name="update_check">בדיקת עדכונים</string>
+    <string name="update_check_again">בדיקה חוזרת</string>
+    <string name="update_checking">מחפש עדכונים…</string>
+    <string name="update_up_to_date">הגרסה שלך היא העדכנית ביותר.</string>
+    <string name="update_available">גרסה %1$s זמינה.</string>
+    <string name="update_install">הורדה והתקנה</string>
+    <string name="update_install_short">התקנה</string>
+    <string name="update_whats_new">מה חדש בגרסה הזו ←</string>
+    <string name="update_downloading">מוריד את העדכון…</string>
+    <string name="update_downloading_percent">מוריד את העדכון… %1$d%%</string>
+    <string name="update_needs_permission">כדי להתקין את העדכון, יש לאפשר לאפליקציה הזו להתקין אפליקציות, לחזור וללחוץ על התקנה.</string>
+    <string name="update_allow">אישור</string>
+    <string name="update_confirm">יש לאשר את העדכון בחלון שנפתח.</string>
+    <string name="update_try_again">ניסיון חוזר</string>
+    <string name="update_failed_check">לא ניתן לבדוק עדכונים: %1$s</string>
+    <string name="update_failed_download">לא ניתן להוריד את העדכון: %1$s</string>
+    <string name="update_failed_install">העדכון לא הותקן: %1$s</string>
+    <string name="update_corrupt">הקובץ שהורד לא תואם לגרסה. יש לנסות שוב.</string>
+    <string name="update_other_signer">העדכון חתום במפתח שונה מזה של האפליקציה המותקנת (היא הותקנה ממקור אחר, כמו F-Droid), ולכן Android לא יכול להתקין אותו מעליה. יש לעדכן מהמקום שממנו התקנת.</string>
 
     <!-- Customize Today -->
     <string name="customize_title">התאמת מסך היום</string>

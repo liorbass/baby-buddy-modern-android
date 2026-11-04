@@ -98,7 +98,7 @@ class TimerSyncService : Service() {
     /** Re-posts (or clears) both notifications as ordinary ones after the service lets go of one. */
     private fun refreshPlainNotifications() {
         val repository = BabyBuddyRepository.instance
-        val enabled = repository.feedNotificationEnabled.value
+        val enabled = repository.settings.feedNotificationEnabled.value
         if (!repository.liveTimerState.value.isRunning) NotificationManagerCompat.from(this).cancel(FeedNotification.NOTIFICATION_ID)
         if (!repository.sleepTimer.value.isRunning) NotificationManagerCompat.from(this).cancel(SleepNotification.NOTIFICATION_ID)
         FeedNotification.update(this, repository.liveTimerState.value, enabled)

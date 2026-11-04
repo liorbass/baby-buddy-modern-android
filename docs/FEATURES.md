@@ -78,3 +78,9 @@ Predictions are estimates from past patterns, not advice; babies change quickly,
 ## While you were away
 
 When you come back to the app, Today shows a **While you were away** card listing the feeds, diaper changes and sleeps that other caregivers logged since you last had the app open (up to the last 24 hours). An entry counts as someone else's when it doesn't carry your name (Settings → You); without a name set, only entries that name a caregiver count. Tap the card to open History, or ✕ to dismiss it.
+
+## Updates
+
+**Settings → About → Updates → Check for updates** looks up the latest release on [GitHub](https://github.com/liorbass/baby-buddy-modern-android/releases). When a newer version is out, it shows the version and its release notes; **Download and install** downloads the APK, checks it against the checksum GitHub publishes and that it's signed with the same key as the app you have, then opens Android's install screen to confirm. The first time, Android asks you to let the app install apps (Settings → Apps → Install unknown apps); allow it, come back and tap **Install**. Nothing is checked in the background, and your data stays as it is.
+
+Copies from F-Droid are signed by F-Droid, so Android won't install a GitHub release over them: update those in F-Droid (the F-Droid build leaves this section out). Copies from GitHub, IzzyOnDroid or Obtainium can update here.

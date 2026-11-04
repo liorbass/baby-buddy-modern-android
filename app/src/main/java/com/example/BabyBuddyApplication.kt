@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.res.Configuration
 import com.example.data.model.AppText
 import com.example.data.repository.BabyBuddyRepository
+import com.example.update.AppUpdater
 import com.example.widget.AppShortcuts
 import com.example.widget.FeedNotification
 import com.example.widget.NextUpNotification
@@ -32,6 +33,7 @@ class BabyBuddyApplication : Application() {
         super.onCreate()
         AppLanguage.apply(this)
         AppText.resources = resources
+        AppUpdater.attach(this)
         val repository = BabyBuddyRepository.instance
         repository.attach(this)
         appScope.launch {
@@ -51,14 +53,14 @@ class BabyBuddyApplication : Application() {
                         )
                     }
                     .distinctUntilChanged(),
-                repository.feedNotificationEnabled
+                repository.settings.feedNotificationEnabled
             ) { _, enabled -> enabled }.collect { enabled ->
                 FeedNotification.update(this@BabyBuddyApplication, repository.liveTimerState.value, enabled)
             }
         }
         appScope.launch {
             // Lock-screen sleep timer (same setting as the feed controls)
-            combine(repository.sleepTimer, repository.feedNotificationEnabled) { sleep, enabled -> sleep to enabled }
+            combine(repository.sleepTimer, repository.settings.feedNotificationEnabled) { sleep, enabled -> sleep to enabled }
                 .distinctUntilChanged()
                 .collect { (sleep, enabled) -> SleepNotification.update(this@BabyBuddyApplication, sleep, enabled) }
         }
@@ -67,7 +69,7 @@ class BabyBuddyApplication : Application() {
             combine(
                 repository.liveTimerState.map { it.isRunning },
                 repository.sleepTimer.map { it.isRunning },
-                repository.feedNotificationEnabled
+                repository.settings.feedNotificationEnabled
             ) { feed, sleep, enabled -> Triple(feed, sleep, enabled) }
                 .distinctUntilChanged()
                 .collect { (feed, sleep, enabled) -> TimerSyncService.sync(this@BabyBuddyApplication, feed || sleep, enabled) }
@@ -89,8 +91,8 @@ class BabyBuddyApplication : Application() {
             // Feed / diaper / awake / sleep reminders follow every feed, change, sleep, prediction and settings change, from any phone
             combine(
                 combine(
-                    repository.reminders,
-                    repository.hiddenItems,
+                    repository.settings.reminders,
+                    repository.settings.hiddenItems,
                     repository.lastDiaper.map { it?.timeMillis },
                     repository.rhythmPredictions
                 ) { r, h, d, p -> listOf(r, h, d, p) },
@@ -107,10 +109,10 @@ class BabyBuddyApplication : Application() {
             // What's next on the lock screen, while no feed or sleep notification is up
             combine(
                 repository.nextUpTimes,
-                repository.nextUpNotification,
+                repository.settings.nextUpNotification,
                 repository.liveTimerState.map { it.isRunning },
                 repository.sleepTimer.map { it.isRunning },
-                repository.feedNotificationEnabled
+                repository.settings.feedNotificationEnabled
             ) { next, enabled, feed, sleep, timers -> next to (enabled && !feed && !(sleep && timers)) }
                 .distinctUntilChanged()
                 .collect { (next, show) -> NextUpNotification.update(this@BabyBuddyApplication, next, show) }
@@ -127,14 +129,14 @@ class BabyBuddyApplication : Application() {
         }
         appScope.launch {
             // The timer widget and tile show the side a one-tap feed starts on
-            repository.startSide.drop(1).collect {
+            repository.settings.startSide.drop(1).collect {
                 WidgetManagerHelper.updateAllWidgets(this@BabyBuddyApplication)
                 QuickTile.refreshAll(this@BabyBuddyApplication)
             }
         }
         appScope.launch {
             // Launcher shortcuts: only when signed in, and only for tracked items
-            combine(repository.connectionConfig.map { it.isConnected }, repository.hiddenItems) { signedIn, hidden -> signedIn to hidden }
+            combine(repository.connectionConfig.map { it.isConnected }, repository.settings.hiddenItems) { signedIn, hidden -> signedIn to hidden }
                 .distinctUntilChanged()
                 .collect { (signedIn, hidden) -> AppShortcuts.update(this@BabyBuddyApplication, signedIn, hidden) }
         }

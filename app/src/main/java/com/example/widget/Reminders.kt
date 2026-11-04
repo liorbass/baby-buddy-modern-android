@@ -50,8 +50,8 @@ object Reminders {
 
     private fun rhythm(kind: String): ReminderRhythm {
         val repo = BabyBuddyRepository.instance
-        val settings = repo.reminders.value
-        val hidden = repo.hiddenItems.value
+        val settings = repo.settings.reminders.value
+        val hidden = repo.settings.hiddenItems.value
         val sleep = repo.sleepTimer.value
         return when (kind) {
             KIND_FEED -> ReminderRhythm(
@@ -107,7 +107,7 @@ object Reminders {
             return
         }
         val (anchor, dueAt) = due
-        val earlyMs = BabyBuddyRepository.instance.reminders.value.earlyMinutes * 60_000L
+        val earlyMs = BabyBuddyRepository.instance.settings.reminders.value.earlyMinutes * 60_000L
         val earlyAt = dueAt - earlyMs
         val earlyPending = earlyMs > 0 && earlyAt > anchor && prefs.getLong("early_$kind", -1L) != anchor
         when {

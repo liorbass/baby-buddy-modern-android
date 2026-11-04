@@ -49,6 +49,8 @@ import com.example.data.model.formatGrowth
 import com.example.data.model.formatMinutes
 import com.example.data.model.startOfDay
 import com.example.data.repository.BabyBuddyRepository
+import com.example.update.AppUpdater
+import com.example.update.UpdateState
 import com.example.widget.BabyBuddyQuickLogWidget
 import com.example.widget.BabyBuddySummaryWidget
 import com.example.widget.BabyBuddyTimerWidget
@@ -140,8 +142,8 @@ class MainViewModel(
     val lastFeed: StateFlow<FeedingEvent?> = repository.lastFeed
     val previousFeedMillis: StateFlow<Long?> = repository.previousFeedMillis
     val lastDiaper: StateFlow<DiaperEvent?> = repository.lastDiaper
-    val quickActions: StateFlow<List<QuickAction>> = repository.quickActions
-    fun setQuickActions(actions: List<QuickAction>) = repository.setQuickActions(actions)
+    val quickActions: StateFlow<List<QuickAction>> = repository.settings.quickActions
+    fun setQuickActions(actions: List<QuickAction>) = repository.settings.setQuickActions(actions)
 
     private val _historyFilter = MutableStateFlow(HistoryFilter.ALL)
     val historyFilter: StateFlow<HistoryFilter> = _historyFilter.asStateFlow()
@@ -242,9 +244,9 @@ class MainViewModel(
     }
 
     // Trends → Models: rhythm models trained on the phone from the last [modelsDays] days
-    val modelsTab: StateFlow<Boolean> = repository.modelsTab
+    val modelsTab: StateFlow<Boolean> = repository.settings.modelsTab
 
-    fun setModelsTab(enabled: Boolean) = repository.setModelsTab(enabled)
+    fun setModelsTab(enabled: Boolean) = repository.settings.setModelsTab(enabled)
 
     sealed interface ModelsState {
         data object Idle : ModelsState
@@ -275,7 +277,7 @@ class MainViewModel(
                 return@launch
             }
             val targets = RhythmTarget.entries.size
-            val r = repository.reminders.value
+            val r = repository.settings.reminders.value
             val defaults = mapOf(
                 RhythmTarget.FEED_GAP to r.feedAfterMinutes,
                 RhythmTarget.DIAPER_GAP to r.diaperAfterMinutes,
@@ -319,31 +321,42 @@ class MainViewModel(
     }
 
     // Widgets State
-    val dashboardWidgets: StateFlow<List<DashboardWidgetConfig>> = repository.dashboardWidgets
+    val dashboardWidgets: StateFlow<List<DashboardWidgetConfig>> = repository.settings.dashboardWidgets
     val tummyTimeGoal: StateFlow<TummyTimeGoal> = repository.tummyTimeGoal
     val temperatures: StateFlow<List<TemperatureEvent>> = repository.temperatures
     val notes: StateFlow<List<NoteEvent>> = repository.notes
     val growth: StateFlow<List<GrowthEvent>> = repository.growth
-    val babySex: StateFlow<BabySex?> = repository.babySex
+    val babySex: StateFlow<BabySex?> = repository.settings.babySex
 
-    fun setBabySex(sex: BabySex) = repository.setBabySex(sex)
+    fun setBabySex(sex: BabySex) = repository.settings.setBabySex(sex)
 
     // Settings
-    val caregiverName: StateFlow<String> = repository.caregiverName
-    val feedNotificationEnabled: StateFlow<Boolean> = repository.feedNotificationEnabled
-    val use24h: StateFlow<Boolean> = repository.use24h
+    val caregiverName: StateFlow<String> = repository.settings.caregiverName
+    val feedNotificationEnabled: StateFlow<Boolean> = repository.settings.feedNotificationEnabled
+    val use24h: StateFlow<Boolean> = repository.settings.use24h
     fun setUse24h(enabled: Boolean) {
-        repository.setUse24h(enabled)
+        repository.settings.setUse24h(enabled)
         if (_historyLoaded.value != null) loadHistory() // past days carry formatted times too
     }
-    fun setCaregiverName(name: String) = repository.setCaregiverName(name)
-    val themeMode: StateFlow<ThemeMode> = repository.themeMode
-    fun setThemeMode(mode: ThemeMode) = repository.setThemeMode(mode)
-    fun setFeedNotificationEnabled(enabled: Boolean) = repository.setFeedNotificationEnabled(enabled)
-    val nextUpNotification: StateFlow<Boolean> = repository.nextUpNotification
-    val startSide: StateFlow<StartSide> = repository.startSide
-    fun setStartSide(side: StartSide) = repository.setStartSide(side)
-    fun setNextUpNotification(enabled: Boolean) = repository.setNextUpNotification(enabled)
+    fun setCaregiverName(name: String) = repository.settings.setCaregiverName(name)
+    val themeMode: StateFlow<ThemeMode> = repository.settings.themeMode
+    fun setThemeMode(mode: ThemeMode) = repository.settings.setThemeMode(mode)
+    fun setFeedNotificationEnabled(enabled: Boolean) = repository.settings.setFeedNotificationEnabled(enabled)
+    val nextUpNotification: StateFlow<Boolean> = repository.settings.nextUpNotification
+    val startSide: StateFlow<StartSide> = repository.settings.startSide
+    fun setStartSide(side: StartSide) = repository.settings.setStartSide(side)
+    fun setNextUpNotification(enabled: Boolean) = repository.settings.setNextUpNotification(enabled)
+
+    // Settings → About → Updates: this app's GitHub releases (AppUpdater)
+    val updateState: StateFlow<UpdateState> = AppUpdater.state
+
+    fun checkForUpdate() {
+        viewModelScope.launch { AppUpdater.check() }
+    }
+
+    fun installUpdate() {
+        viewModelScope.launch { AppUpdater.install() }
+    }
 
     /** "While you were away" on Today: what other caregivers logged since this phone left the app. */
     val handoff: StateFlow<HandoffSummary?> = repository.handoff
@@ -679,8 +692,8 @@ class MainViewModel(
     }
 
     fun toggleDashboardWidget(type: DashboardWidgetType) {
-        repository.toggleWidget(type)
-        val isNowEnabled = repository.dashboardWidgets.value.find { it.type == type }?.isEnabled == true
+        repository.settings.toggleWidget(type)
+        val isNowEnabled = repository.settings.dashboardWidgets.value.find { it.type == type }?.isEnabled == true
         if (isNowEnabled) {
             showToast(AppText.get(R.string.toast_card_added, type.displayName))
         } else {
@@ -689,12 +702,12 @@ class MainViewModel(
     }
 
     fun addDashboardWidget(type: DashboardWidgetType) {
-        repository.addWidget(type)
+        repository.settings.addWidget(type)
         showToast(AppText.get(R.string.toast_card_added, type.displayName))
     }
 
     fun removeDashboardWidget(type: DashboardWidgetType) {
-        repository.removeWidget(type)
+        repository.settings.removeWidget(type)
         showToast(AppText.get(R.string.toast_card_removed_short, type.displayName))
     }
 
@@ -763,22 +776,22 @@ class MainViewModel(
     val milkStash: StateFlow<Int?> = repository.milkStash
     val lastFeedMillis: StateFlow<Long?> = repository.lastFeedMillis
     val lastSleepEndMillis: StateFlow<Long?> = repository.lastSleepEndMillis
-    val reminders: StateFlow<ReminderSettings> = repository.reminders
-    val hiddenItems: StateFlow<Set<TrackedItem>> = repository.hiddenItems
-    fun setItemTracked(item: TrackedItem, tracked: Boolean) = repository.setItemTracked(item, tracked)
-    val hiddenTodayTiles: StateFlow<Set<TodayTile>> = repository.hiddenTodayTiles
-    fun setTodayTileShown(tile: TodayTile, shown: Boolean) = repository.setTodayTileShown(tile, shown)
-    val hiddenWakeWindowParts: StateFlow<Set<WakeWindowPart>> = repository.hiddenWakeWindowParts
-    fun setWakeWindowPartShown(part: WakeWindowPart, shown: Boolean) = repository.setWakeWindowPartShown(part, shown)
-    val todayOrder: StateFlow<List<TodaySection>> = repository.todayOrder
-    fun moveTodaySection(section: TodaySection, delta: Int) = repository.moveTodaySection(section, delta)
-    fun resetTodayOrder() = repository.resetTodayOrder()
-    fun setDayHours(dayStartHour: Int, nightStartHour: Int) = repository.setDayHours(dayStartHour, nightStartHour)
+    val reminders: StateFlow<ReminderSettings> = repository.settings.reminders
+    val hiddenItems: StateFlow<Set<TrackedItem>> = repository.settings.hiddenItems
+    fun setItemTracked(item: TrackedItem, tracked: Boolean) = repository.settings.setItemTracked(item, tracked)
+    val hiddenTodayTiles: StateFlow<Set<TodayTile>> = repository.settings.hiddenTodayTiles
+    fun setTodayTileShown(tile: TodayTile, shown: Boolean) = repository.settings.setTodayTileShown(tile, shown)
+    val hiddenWakeWindowParts: StateFlow<Set<WakeWindowPart>> = repository.settings.hiddenWakeWindowParts
+    fun setWakeWindowPartShown(part: WakeWindowPart, shown: Boolean) = repository.settings.setWakeWindowPartShown(part, shown)
+    val todayOrder: StateFlow<List<TodaySection>> = repository.settings.todayOrder
+    fun moveTodaySection(section: TodaySection, delta: Int) = repository.settings.moveTodaySection(section, delta)
+    fun resetTodayOrder() = repository.settings.resetTodayOrder()
+    fun setDayHours(dayStartHour: Int, nightStartHour: Int) = repository.settings.setDayHours(dayStartHour, nightStartHour)
     fun setTrendsDayStart(hour: Int) {
-        repository.setTrendsDayStart(hour)
+        repository.settings.setTrendsDayStart(hour)
         loadTrends()
     }
-    fun setReminders(settings: ReminderSettings) = repository.setReminders(settings)
+    fun setReminders(settings: ReminderSettings) = repository.settings.setReminders(settings)
 
     fun setMilkStash(ml: Int) {
         val id = repository.setMilkStash(ml)

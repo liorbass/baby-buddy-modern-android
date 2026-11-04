@@ -9,6 +9,8 @@
     <!-- Keeps a running feed/sleep in step with the other phones while the app is closed (TimerSyncService) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Settings → About → Updates installs this app's GitHub releases (AppUpdater); removed from F-Droid builds -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".BabyBuddyApplication"
@@ -72,6 +74,11 @@
         </service>
 
         <!-- Baby Buddy Home Screen App Widgets -->
+        <!-- The package installer's result for an update (update/UpdateInstallReceiver.kt) -->
+        <receiver
+            android:name=".update.UpdateInstallReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".widget.BabyBuddyQuickLogWidget"
             android:exported="true"

@@ -2,7 +2,6 @@ package com.example.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.compose.runtime.snapshotFlow
 import com.example.R
 import com.example.data.api.BabyBuddyApiClient
 import com.example.data.api.BabyBuddyApiService
@@ -21,8 +20,6 @@ import com.example.data.model.BATH_TAG
 import com.example.data.model.BabyProfile
 import com.example.data.model.BabySex
 import com.example.data.model.BreastSide
-import com.example.data.model.DashboardWidgetConfig
-import com.example.data.model.DashboardWidgetType
 import com.example.data.model.DayHours
 import com.example.data.model.DayStats
 import com.example.data.model.DiaperEvent
@@ -41,22 +38,17 @@ import com.example.data.model.MILK_STASH_TAG
 import com.example.data.model.NoteEvent
 import com.example.data.model.NoteTag
 import com.example.data.model.PumpingEvent
-import com.example.data.model.QuickAction
 import com.example.data.model.ReminderSettings
 import com.example.data.model.ServerConnectionConfig
 import com.example.data.model.SleepEvent
 import com.example.data.model.SleepMark
 import com.example.data.model.SleepTimerState
-import com.example.data.model.StartSide
 import com.example.data.model.TemperatureEvent
 import com.example.data.model.ThemeMode
 import com.example.data.model.TimeFormat
-import com.example.data.model.TodaySection
-import com.example.data.model.TodayTile
 import com.example.data.model.TrackedItem
 import com.example.data.model.TummyTimeEvent
 import com.example.data.model.TummyTimeGoal
-import com.example.data.model.WakeWindowPart
 import com.example.data.model.averageMinutes
 import com.example.data.model.daytimeWakeWindows
 import com.example.data.model.isNapTime
@@ -65,7 +57,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -89,7 +80,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import retrofit2.Response
 import java.io.File
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -97,6 +87,9 @@ import java.util.Locale
 import java.util.TimeZone
 
 class BabyBuddyRepository {
+
+    /** This phone's settings (Settings screens, Customize Today), saved in prefs. */
+    val settings = SettingsStore(onClockFormatChanged = { reformatTimes() })
 
     private val _babyProfile = MutableStateFlow(BabyProfile(name = "", shortName = "", ageFormatted = "", avatarUrl = ""))
     val babyProfile: StateFlow<BabyProfile> = _babyProfile.asStateFlow()
@@ -213,20 +206,6 @@ class BabyBuddyRepository {
     /** The server's note tags, most recently used first, for one-tap notes on Today. */
     val noteTags: StateFlow<List<NoteTag>> = _noteTags.asStateFlow()
 
-    private val _reminders = MutableStateFlow(ReminderSettings())
-    val reminders: StateFlow<ReminderSettings> = _reminders.asStateFlow()
-
-    fun setReminders(settings: ReminderSettings) {
-        _reminders.value = settings
-        prefs?.edit()
-            ?.putInt(PREF_REMIND_FEED, settings.feedAfterMinutes)
-            ?.putInt(PREF_REMIND_AWAKE, settings.awakeAfterMinutes)
-            ?.putInt(PREF_REMIND_SLEEP, settings.sleepAfterMinutes)
-            ?.putInt(PREF_REMIND_DIAPER, settings.diaperAfterMinutes)
-            ?.putInt(PREF_REMIND_EARLY, settings.earlyMinutes)
-            ?.apply()
-    }
-
     private val _sleeps = MutableStateFlow<List<SleepEvent>>(emptyList())
     val sleeps: StateFlow<List<SleepEvent>> = _sleeps.asStateFlow()
 
@@ -243,10 +222,6 @@ class BabyBuddyRepository {
     private val _pumpings = MutableStateFlow<List<PumpingEvent>>(emptyList())
     val pumpings: StateFlow<List<PumpingEvent>> = _pumpings.asStateFlow()
 
-    // Dashboard Widgets Customization
-    private val _dashboardWidgets = MutableStateFlow<List<DashboardWidgetConfig>>(defaultDashboardWidgets())
-    val dashboardWidgets: StateFlow<List<DashboardWidgetConfig>> = _dashboardWidgets.asStateFlow()
-
     // Only the goal lives here; progress comes from today's tummy-time entries
     private val _tummyTimeGoal = MutableStateFlow(TummyTimeGoal())
     val tummyTimeGoal: StateFlow<TummyTimeGoal> = _tummyTimeGoal.asStateFlow()
@@ -261,63 +236,8 @@ class BabyBuddyRepository {
     private val _growth = MutableStateFlow<List<GrowthEvent>>(emptyList())
     val growth: StateFlow<List<GrowthEvent>> = _growth.asStateFlow()
 
-    private val _babySex = MutableStateFlow<BabySex?>(null)
-
-    /** Picks the WHO reference charts; null until chosen (Settings → Baby, or the Trends growth card). */
-    val babySex: StateFlow<BabySex?> = _babySex.asStateFlow()
-
-    fun setBabySex(sex: BabySex) {
-        _babySex.value = sex
-        prefs?.edit()?.putString(PREF_BABY_SEX, sex.name)?.apply()
-    }
-
-    // Settings (saved in prefs)
-    private val _caregiverName = MutableStateFlow("")
-
-    /** This device's caregiver; written as "Caregiver: Name" into new entries, like the server's other clients do. */
-    val caregiverName: StateFlow<String> = _caregiverName.asStateFlow()
-    private val _feedNotificationEnabled = MutableStateFlow(true)
-    val feedNotificationEnabled: StateFlow<Boolean> = _feedNotificationEnabled.asStateFlow()
-
-    fun setCaregiverName(name: String) {
-        _caregiverName.value = name.trim()
-        prefs?.edit()?.putString(PREF_CAREGIVER, name.trim())?.apply()
-    }
-
-    private val _use24h = MutableStateFlow(true)
-
-    /** 24-hour clock (default) or 12-hour with AM/PM. */
-    val use24h: StateFlow<Boolean> = _use24h.asStateFlow()
-
-    // Settings → Tracking: the Models tab in Trends (rhythm models fitted on the phone)
-    private val _modelsTab = MutableStateFlow(false)
-    val modelsTab: StateFlow<Boolean> = _modelsTab.asStateFlow()
-
-    fun setModelsTab(enabled: Boolean) {
-        _modelsTab.value = enabled
-        prefs?.edit()?.putBoolean(PREF_MODELS_TAB, enabled)?.apply()
-    }
-
-    /** Settings → Baby → Day and night; ignored when both are the same hour. */
-    fun setDayHours(dayStartHour: Int, nightStartHour: Int) {
-        if (dayStartHour == nightStartHour) return
-        DayHours.dayStartHour = dayStartHour.mod(24)
-        DayHours.nightStartHour = nightStartHour.mod(24)
-        prefs?.edit()?.putInt(PREF_DAY_START, DayHours.dayStartHour)?.putInt(PREF_NIGHT_START, DayHours.nightStartHour)?.apply()
-    }
-
-    /** The hour Trends' days start at (Settings → Tracking). */
-    fun setTrendsDayStart(hour: Int) {
-        DayHours.trendsDayStartHour = hour.mod(24)
-        prefs?.edit()?.putInt(PREF_TRENDS_DAY_START, DayHours.trendsDayStartHour)?.apply()
-    }
-
-    fun setUse24h(enabled: Boolean) {
-        _use24h.value = enabled
-        TimeFormat.use24h = enabled
-        prefs?.edit()?.putBoolean(PREF_USE_24H, enabled)?.apply()
-        reformatTimes()
-    }
+    /** The side a one-tap feed starts on now, per the start side setting and the last breastfeed. */
+    fun nextStartSide(): BreastSide = settings.startSide.value.after(lastBreastfeed.value?.lastSide)
 
     /** Rewrites every shown time in the current clock format. */
     private fun reformatTimes() {
@@ -334,99 +254,6 @@ class BabyBuddyRepository {
         _liveTimerState.update { t ->
             if (t.isRunning && t.sessionStartMillis > 0) t.copy(sessionStartedTime = formatClock(t.sessionStartMillis)) else t
         }
-    }
-
-    private val _hiddenItems = MutableStateFlow<Set<TrackedItem>>(emptySet())
-
-    /** Items this phone doesn't track; the UI leaves them out everywhere. */
-    val hiddenItems: StateFlow<Set<TrackedItem>> = _hiddenItems.asStateFlow()
-
-    fun setItemTracked(item: TrackedItem, tracked: Boolean) {
-        val hidden = if (tracked) _hiddenItems.value - item else _hiddenItems.value + item
-        _hiddenItems.value = hidden
-        prefs?.edit()?.putString(PREF_HIDDEN_ITEMS, hidden.joinToString(",") { it.name })?.apply()
-    }
-
-    // Customize Today: summary tiles and Wake windows card parts turned off (saved as what's off, so new ones show)
-    private val _hiddenTodayTiles = MutableStateFlow<Set<TodayTile>>(emptySet())
-    val hiddenTodayTiles: StateFlow<Set<TodayTile>> = _hiddenTodayTiles.asStateFlow()
-
-    fun setTodayTileShown(tile: TodayTile, shown: Boolean) {
-        val hidden = if (shown) _hiddenTodayTiles.value - tile else _hiddenTodayTiles.value + tile
-        _hiddenTodayTiles.value = hidden
-        prefs?.edit()?.putString(PREF_HIDDEN_SUMMARY_TILES, hidden.joinToString(",") { it.name })?.apply()
-    }
-
-    private val _hiddenWakeWindowParts = MutableStateFlow<Set<WakeWindowPart>>(emptySet())
-    val hiddenWakeWindowParts: StateFlow<Set<WakeWindowPart>> = _hiddenWakeWindowParts.asStateFlow()
-
-    private val _todayOrder = MutableStateFlow(TodaySection.entries.toList())
-    val todayOrder: StateFlow<List<TodaySection>> = _todayOrder.asStateFlow()
-
-    fun moveTodaySection(section: TodaySection, delta: Int) {
-        val cards = _dashboardWidgets.value.filter { it.isEnabled }.map { it.type }.toSet()
-        saveTodayOrder(TodaySection.move(_todayOrder.value, section, delta) { it.isShown(_hiddenItems.value) { type -> type in cards } })
-    }
-
-    fun resetTodayOrder() = saveTodayOrder(TodaySection.entries.toList())
-
-    private fun saveTodayOrder(order: List<TodaySection>) {
-        _todayOrder.value = order
-        prefs?.edit()?.putString(PREF_TODAY_ORDER, order.joinToString(",") { it.name })?.apply()
-    }
-
-    fun setWakeWindowPartShown(part: WakeWindowPart, shown: Boolean) {
-        val hidden = if (shown) _hiddenWakeWindowParts.value - part else _hiddenWakeWindowParts.value + part
-        _hiddenWakeWindowParts.value = hidden
-        prefs?.edit()?.putString(PREF_HIDDEN_WAKE_PARTS, hidden.joinToString(",") { it.name })?.apply()
-    }
-
-    private val _startSide = MutableStateFlow(StartSide.OPPOSITE)
-
-    /** Which side one-tap feeds start on (timer widget, Quick Settings tile); Settings → Tracking. */
-    val startSide: StateFlow<StartSide> = _startSide.asStateFlow()
-
-    fun setStartSide(side: StartSide) {
-        _startSide.value = side
-        prefs?.edit()?.putString(PREF_START_SIDE, side.name)?.apply()
-    }
-
-    /** The side a one-tap feed starts on now, per [startSide] and the last breastfeed. */
-    fun nextStartSide(): BreastSide = _startSide.value.after(lastBreastfeed.value?.lastSide)
-
-    private val _themeMode = MutableStateFlow(ThemeMode.BY_TIME)
-
-    /** Light/dark choice for this phone. */
-    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
-
-    fun setThemeMode(mode: ThemeMode) {
-        _themeMode.value = mode
-        prefs?.edit()?.putString(PREF_THEME_MODE, mode.name)?.apply()
-    }
-
-    private val _quickActions = MutableStateFlow(QuickAction.DEFAULT)
-
-    /** Today's shortcut buttons, in the order shown. */
-    val quickActions: StateFlow<List<QuickAction>> = _quickActions.asStateFlow()
-
-    fun setQuickActions(actions: List<QuickAction>) {
-        _quickActions.value = actions.distinct()
-        prefs?.edit()?.putString(PREF_QUICK_ACTIONS, actions.distinct().joinToString(",") { it.name })?.apply()
-    }
-
-    fun setFeedNotificationEnabled(enabled: Boolean) {
-        _feedNotificationEnabled.value = enabled
-        prefs?.edit()?.putBoolean(PREF_FEED_NOTIFICATION, enabled)?.apply()
-    }
-
-    private val _nextUpNotification = MutableStateFlow(false)
-
-    /** Silent notification with what's next (feed, diaper, sleep) while no timer runs (Settings → Notifications). */
-    val nextUpNotification: StateFlow<Boolean> = _nextUpNotification.asStateFlow()
-
-    fun setNextUpNotification(enabled: Boolean) {
-        _nextUpNotification.value = enabled
-        prefs?.edit()?.putBoolean(PREF_NEXT_UP_NOTIFICATION, enabled)?.apply()
     }
 
     private val _handoff = MutableStateFlow<HandoffSummary?>(null)
@@ -462,7 +289,7 @@ class BabyBuddyRepository {
         }
         val me = myName()
         fun byOther(caregiver: String?) = if (me != null) !caregiver.equals(me, ignoreCase = true) else !caregiver.isNullOrBlank()
-        val hidden = _hiddenItems.value
+        val hidden = settings.hiddenItems.value
         val summary = HandoffSummary(
             sinceMillis = from,
             feedings = feeds.filter { f ->
@@ -475,7 +302,7 @@ class BabyBuddyRepository {
         if (!summary.isEmpty) _handoff.value = summary
     }
 
-    private fun myName(): String? = _caregiverName.value.ifBlank { null }
+    private fun myName(): String? = settings.caregiverName.value.ifBlank { null }
 
     // Offline test toggle to view disconnected state exactly like the screenshot
     private val _isServerDisconnectedView = MutableStateFlow(false)
@@ -501,16 +328,15 @@ class BabyBuddyRepository {
             ?.remove(PREF_CHILD_NAME)?.remove(PREF_BIRTH_DATE)
             ?.putBoolean(PREF_DEMO_MODE, true)?.apply()
 
-        _caregiverName.value = "Sarah"
-        prefs?.edit()?.putString(PREF_CAREGIVER, "Sarah")?.apply()
+        settings.setCaregiverName("Sarah")
 
         _isServerDisconnectedView.value = false
-        setThemeMode(ThemeMode.LIGHT)
+        settings.setThemeMode(ThemeMode.LIGHT)
         showDemoBaby()
         // Show every feature: growth charts, reminders and the rhythm models (fitted on the demo data and in use)
-        if (_babySex.value == null) setBabySex(BabySex.BOY)
-        if (!_reminders.value.anyOn) setReminders(ReminderSettings(feedAfterMinutes = 180, awakeAfterMinutes = 120, sleepAfterMinutes = 150, diaperAfterMinutes = 180, earlyMinutes = 15))
-        setModelsTab(true)
+        if (settings.babySex.value == null) settings.setBabySex(BabySex.BOY)
+        if (!settings.reminders.value.anyOn) settings.setReminders(ReminderSettings(feedAfterMinutes = 180, awakeAfterMinutes = 120, sleepAfterMinutes = 150, diaperAfterMinutes = 180, earlyMinutes = 15))
+        settings.setModelsTab(true)
         syncScope.launch(Dispatchers.Default) {
             val now = System.currentTimeMillis()
             val from = now - 60 * 86_400_000L
@@ -520,7 +346,7 @@ class BabyBuddyRepository {
                 allDemoSleeps.filter { it.timeMillis >= from },
                 birthMillis = runCatching { SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(_babyProfile.value.birthDate)!!.time }.getOrNull() ?: from
             )
-            val r = _reminders.value
+            val r = settings.reminders.value
             val defaults = mapOf(
                 RhythmTarget.FEED_GAP to r.feedAfterMinutes,
                 RhythmTarget.DIAPER_GAP to r.diaperAfterMinutes,
@@ -582,7 +408,7 @@ class BabyBuddyRepository {
         _temperatures.value = listOf(
             TemperatureEvent(id = 900L, temperature = 36.8, timeMillis = temperatureAt, timeFormatted = formatClock(temperatureAt), caregiver = "Sarah")
         )
-        _dashboardWidgets.update { list -> list.map { it.copy(isEnabled = true) } }
+        settings.showAllCards()
     }
 
     suspend fun testConnection(
@@ -765,7 +591,7 @@ class BabyBuddyRepository {
             _notes.value = mergeWithPending(ENDPOINT_NOTES, remote, _notes.value, { it.id }, { it.serverId }, { it.timeMillis })
         }
 
-        if (TrackedItem.GROWTH !in _hiddenItems.value) {
+        if (TrackedItem.GROWTH !in settings.hiddenItems.value) {
             GrowthKind.entries.forEach { kind ->
                 runCatching {
                     api.getGrowth(authHeader, kind.endpoint, childId).body()!!.results.map { mapGrowth(kind, it) }
@@ -981,7 +807,7 @@ class BabyBuddyRepository {
                 delay(60_000L)
             }
         }
-        combine(_rhythmPredictions, _hiddenItems, _liveTimerState.map { it.isRunning }, minutes) { _, hidden, feeding, now ->
+        combine(_rhythmPredictions, settings.hiddenItems, _liveTimerState.map { it.isRunning }, minutes) { _, hidden, feeding, now ->
             val sleep = _sleepTimer.value
             buildMap {
                 val feedsShown = TrackedItem.BREASTFEEDING !in hidden || TrackedItem.BOTTLE !in hidden
@@ -1006,10 +832,10 @@ class BabyBuddyRepository {
     val nextUpTimes: StateFlow<Map<RhythmTarget, Long>> by lazy {
         combine(
             modelNextTimes,
-            _reminders,
+            settings.reminders,
             combine(lastFeedMillis, lastDiaper.map { it?.timeMillis }) { feed, diaper -> feed to diaper },
             _liveTimerState.map { it.isRunning },
-            _hiddenItems
+            settings.hiddenItems
         ) { model, reminders, (lastFeed, lastChange), feeding, hidden ->
             buildMap {
                 putAll(model)
@@ -1074,7 +900,7 @@ class BabyBuddyRepository {
                 val events = async { fetchEvents(firstDay.timeInMillis - 12 * 60 * 60_000L) }
                 val pumps = async {
                     when {
-                        TrackedItem.PUMPING in _hiddenItems.value -> emptyList()
+                        TrackedItem.PUMPING in settings.hiddenItems.value -> emptyList()
 
                         isDemo -> allDemoPumpings
 
@@ -1228,10 +1054,7 @@ class BabyBuddyRepository {
         _lastBathRemote.value = null
         _noteTags.value = emptyList()
         _stashBase.value = null
-        setFeedTimerRemoteId(null)
-        setSleepTimerRemoteId(null)
-        setFeedTimerToDelete(null)
-        setSleepTimerToDelete(null)
+        timers.reset()
         _temperatures.value = emptyList()
         _notes.value = emptyList()
         _growth.value = emptyList()
@@ -1289,7 +1112,7 @@ class BabyBuddyRepository {
                 _liveTimerState.value = t.copy(isPaused = false, activeBreast = side, pausedAtMillis = 0L, lastActiveMillis = 0L)
         }
         syncLiveFeeding()
-        feedChanged()
+        timers.feedChanged()
     }
 
     /** Manually corrects one side's time on the running feed (e.g. the timer was started late). */
@@ -1302,7 +1125,7 @@ class BabyBuddyRepository {
             else -> t.copy(rightSeconds = s, editCount = t.editCount + 1)
         }
         syncLiveFeeding()
-        feedChanged()
+        timers.feedChanged()
     }
 
     /**
@@ -1323,7 +1146,7 @@ class BabyBuddyRepository {
             editCount = t.editCount + 1
         )
         syncLiveFeeding()
-        feedChanged()
+        timers.feedChanged()
     }
 
     /** The last moment a side was running: now while running, else when it was paused. */
@@ -1338,9 +1161,7 @@ class BabyBuddyRepository {
     fun endFeed() {
         syncLiveFeeding()
         _liveTimerState.value = LiveTimerState(softChimeEnabled = _liveTimerState.value.softChimeEnabled)
-        feedEndedAt = System.currentTimeMillis()
-        prefs?.edit()?.putLong(PREF_FEED_ENDED_AT, feedEndedAt)?.apply()
-        feedTimerDirty.trySend(Unit)
+        timers.feedEnded()
     }
 
     private fun startFeedOn(side: BreastSide, now: Long) {
@@ -1499,6 +1320,8 @@ class BabyBuddyRepository {
         val event = _feedings.value.firstOrNull { it.id == id } ?: return
         _feedings.update { list -> list.filterNot { it.id == id } }
         _recentFeedsRemote.update { list -> list.filterNot { it.id == id } }
+        // The server's "last breastfeed" may have been this one: fall back to the one before it
+        _lastBreastfeedRemote.update { last -> if (last?.id == id) _recentFeedsRemote.value.firstOrNull { it.type == FeedType.NURSING } else last }
         enqueue(QueuedWrite(ENDPOINT_FEEDINGS, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
     }
 
@@ -1798,7 +1621,7 @@ class BabyBuddyRepository {
     fun startSleep(startMillis: Long = System.currentTimeMillis()) {
         if (_sleepTimer.value.isRunning) return
         setSleepTimer(SleepTimerState(startMillis = startMillis, changedAtMillis = nextChangeMillis(_sleepTimer.value.changedAtMillis)))
-        sleepTimerDirty.trySend(Unit)
+        timers.sleepChanged()
     }
 
     /** Corrects when the running sleep started (never in the future). */
@@ -1811,7 +1634,7 @@ class BabyBuddyRepository {
                 changedAtMillis = nextChangeMillis(t.changedAtMillis)
             )
         )
-        sleepTimerDirty.trySend(Unit)
+        timers.sleepChanged()
     }
 
     fun setSleepNotes(notes: String) {
@@ -1832,9 +1655,7 @@ class BabyBuddyRepository {
 
     private fun sleepEnded() {
         setSleepTimer(SleepTimerState())
-        sleepEndedAt = System.currentTimeMillis()
-        prefs?.edit()?.putLong(PREF_SLEEP_ENDED_AT, sleepEndedAt)?.apply()
-        sleepTimerDirty.trySend(Unit)
+        timers.sleepEnded()
     }
 
     private fun setSleepTimer(state: SleepTimerState) {
@@ -1846,313 +1667,22 @@ class BabyBuddyRepository {
             ?.apply()
     }
 
-    // --- Shared timers: a running feed or sleep is mirrored to a Baby Buddy timer (see SharedTimers),
-    // so every phone shows it and can continue or end it. Newest change wins. ---
-
-    private var feedTimerRemoteId: Long? = null
-    private var sleepTimerRemoteId: Long? = null
-
-    // The timer of a feed/sleep that ended here, until its delete goes through. Kept apart from the
-    // current id so a new feed never takes it as its own (its 404 or absence would end the new feed).
-    private var feedTimerToDelete: Long? = null
-    private var sleepTimerToDelete: Long? = null
-    private var feedEndedAt = 0L // a remote snapshot older than this is a feed already ended here
-    private var sleepEndedAt = 0L
-    private val feedTimerDirty = Channel<Unit>(Channel.CONFLATED)
-    private val sleepTimerDirty = Channel<Unit>(Channel.CONFLATED)
-    private val timerMutex = Mutex()
-
-    /** A change time later than now and than the last known change, so it wins even if this phone's clock is behind. */
-    private fun nextChangeMillis(previous: Long): Long = maxOf(System.currentTimeMillis(), previous + 1)
-
-    private fun feedChanged() {
-        _liveTimerState.update { it.copy(changedAtMillis = nextChangeMillis(it.changedAtMillis)) }
-        feedTimerDirty.trySend(Unit)
-    }
-
-    private fun setFeedTimerRemoteId(id: Long?) {
-        feedTimerRemoteId = id
-        prefs?.edit()?.putLong(PREF_FEED_TIMER_ID, id ?: -1L)?.apply()
-    }
-
-    private fun setSleepTimerRemoteId(id: Long?) {
-        sleepTimerRemoteId = id
-        prefs?.edit()?.putLong(PREF_SLEEP_TIMER_ID, id ?: -1L)?.apply()
-    }
-
-    private fun setFeedTimerToDelete(id: Long?) {
-        feedTimerToDelete = id
-        prefs?.edit()?.putLong(PREF_FEED_TIMER_TO_DELETE, id ?: -1L)?.apply()
-    }
-
-    private fun setSleepTimerToDelete(id: Long?) {
-        sleepTimerToDelete = id
-        prefs?.edit()?.putLong(PREF_SLEEP_TIMER_TO_DELETE, id ?: -1L)?.apply()
-    }
-
-    private fun startTimerPushers() {
-        syncScope.launch { for (signal in feedTimerDirty) timerMutex.withLock { pushFeedTimer() } }
-        syncScope.launch { for (signal in sleepTimerDirty) timerMutex.withLock { pushSleepTimer() } }
-    }
-
-    private fun retryTimerPush(channel: Channel<Unit>) {
-        syncScope.launch {
-            delay(15_000L)
-            channel.trySend(Unit)
-        }
-    }
-
-    private fun feedSnapshot(t: LiveTimerState) = FeedSnapshot(
-        feedingServerId = t.feedingServerId ?: t.feedingLocalId?.let { id ->
-            writeQueue.knownServerId(id) ?: _feedings.value.firstOrNull { it.id == id }?.serverId
-        },
-        side = if (t.activeBreast == BreastSide.RIGHT) BreastSide.RIGHT else BreastSide.LEFT,
-        paused = t.isPaused,
-        leftSeconds = t.leftSeconds,
-        rightSeconds = t.rightSeconds,
-        firstSide = t.firstSide,
-        startMillis = t.sessionStartMillis,
-        pausedAtMillis = t.pausedAtMillis,
-        lastActiveMillis = t.lastActiveMillis,
-        changedAtMillis = t.changedAtMillis
-    )
-
-    private suspend fun pushFeedTimer() {
-        val t = _liveTimerState.value
-        val running = t.isRunning && t.feedingLocalId != null
-        pushTimer(
-            name = if (running) SharedTimers.encodeFeed(feedSnapshot(t)) else null,
-            startMillis = t.sessionStartMillis,
-            remoteId = feedTimerRemoteId,
-            isOurs = { SharedTimers.decodeFeed(it) != null },
-            setRemoteId = ::setFeedTimerRemoteId,
-            toDelete = feedTimerToDelete,
-            setToDelete = ::setFeedTimerToDelete,
-            channel = feedTimerDirty,
-            onGone = { feedEndedElsewhere(System.currentTimeMillis()) }
+    /** Mirrors the running feed and sleep to the server's timers ([SharedTimerSync]). */
+    private val timers: SharedTimerSync by lazy {
+        SharedTimerSync(
+            scope = syncScope,
+            target = { remoteApi?.let { api -> remoteChildId?.let { child -> WriteQueue.Target(api, remoteAuthHeader, child) } } },
+            feed = _liveTimerState,
+            sleep = _sleepTimer,
+            setSleep = ::setSleepTimer,
+            feedings = _feedings,
+            writeQueue = writeQueue,
+            syncToday = { syncToday(it.api, it.auth, it.child) }
         )
     }
 
-    private suspend fun pushSleepTimer() {
-        val t = _sleepTimer.value
-        pushTimer(
-            name = if (t.isRunning) SharedTimers.encodeSleep(SleepSnapshot(t.startMillis, t.changedAtMillis)) else null,
-            startMillis = t.startMillis,
-            remoteId = sleepTimerRemoteId,
-            isOurs = { SharedTimers.decodeSleep(it) != null },
-            setRemoteId = ::setSleepTimerRemoteId,
-            toDelete = sleepTimerToDelete,
-            setToDelete = ::setSleepTimerToDelete,
-            channel = sleepTimerDirty,
-            onGone = { sleepEndedElsewhere(System.currentTimeMillis()) }
-        )
-    }
-
-    /** Creates/renames the server timer for [name], or deletes it when [name] is null (the feed/sleep ended). */
-    private suspend fun pushTimer(
-        name: String?,
-        startMillis: Long,
-        remoteId: Long?,
-        isOurs: (String?) -> Boolean,
-        setRemoteId: (Long?) -> Unit,
-        toDelete: Long?,
-        setToDelete: (Long?) -> Unit,
-        channel: Channel<Unit>,
-        onGone: () -> Unit
-    ) {
-        val api = remoteApi ?: return
-        val child = remoteChildId ?: return
-        val auth = remoteAuthHeader
-        var pendingDelete = toDelete
-        var currentId = remoteId
-        if (name == null && currentId != null) {
-            // The feed/sleep ended: its timer is no longer the current one, even before the delete succeeds
-            pendingDelete = currentId
-            setToDelete(currentId)
-            setRemoteId(null)
-            currentId = null
-        }
-        try {
-            if (pendingDelete != null) {
-                val response = api.deleteRecord(auth, ENDPOINT_TIMERS, pendingDelete)
-                when {
-                    response.isSuccessful || response.code() == 404 -> setToDelete(null)
-
-                    response.code() >= 500 -> {
-                        retryTimerPush(channel)
-                        return
-                    }
-
-                    else -> setToDelete(null) // refused for good; don't keep retrying
-                }
-            }
-            if (name == null) return
-            // Reuse our timer, or one another phone made, before creating a new one
-            val id = currentId ?: api.getTimers(auth, child).body()?.results.orEmpty()
-                .firstOrNull { isOurs(it.name) }?.id
-            if (id != null) {
-                val response = api.updateRecord(auth, ENDPOINT_TIMERS, id, mapOf("name" to name))
-                if (response.isSuccessful) {
-                    setRemoteId(id)
-                    return
-                }
-                if (response.code() >= 500) {
-                    retryTimerPush(channel)
-                    return
-                }
-                if (response.code() != 404) return
-                if (id == currentId) {
-                    // Our timer was deleted: the feed/sleep was ended on another phone. Recreating it would bring
-                    // it back on every phone, so end it here too and fetch the finished entry.
-                    onGone()
-                    syncToday(api, auth, child)
-                    return
-                }
-            }
-            // The server rejects starts in the future, so allow for this phone's clock being ahead
-            val now = System.currentTimeMillis()
-            val start = minOf(startMillis.takeIf { it > 0 } ?: now, now - 60_000L)
-            val response = api.createRecord(auth, ENDPOINT_TIMERS, mapOf("child" to child, "name" to name, "start" to isoUtc(start)))
-            if (response.isSuccessful) {
-                setRemoteId((response.body()?.get("id") as? Number)?.toLong())
-            } else if (response.code() >= 500) {
-                retryTimerPush(channel)
-            }
-        } catch (e: IOException) {
-            retryTimerPush(channel)
-        } catch (e: Exception) {
-            // Malformed reply; the next change pushes again
-        }
-    }
-
-    /**
-     * Picks up feeds and sleeps started, changed or ended on other phones. Called on refresh and every
-     * few seconds while the app is open.
-     */
-    suspend fun pollSharedTimers() {
-        val api = remoteApi ?: return
-        val child = remoteChildId ?: return
-        val auth = remoteAuthHeader
-        // A timer pushed while the list below is being fetched is missing from it. Only a timer that was
-        // already ours before the fetch, and still is, can have been ended elsewhere.
-        val feedIdAtFetch = feedTimerRemoteId
-        val sleepIdAtFetch = sleepTimerRemoteId
-        val timers = try {
-            api.getTimers(auth, child).takeIf { it.isSuccessful }?.body()?.results
-        } catch (e: Exception) {
-            null
-        } ?: return
-        val feed = timers.firstNotNullOfOrNull { dto -> SharedTimers.decodeFeed(dto.name)?.let { dto.id to it } }
-        val sleep = timers.firstNotNullOfOrNull { dto -> SharedTimers.decodeSleep(dto.name)?.let { dto.id to it } }
-
-        // A feed started elsewhere: make sure its record is in the local list so taps here update it
-        val feedServerId = feed?.second?.feedingServerId
-        if (feedServerId != null && _feedings.value.none { it.serverId == feedServerId }) {
-            syncToday(api, auth, child)
-        }
-
-        val endedElsewhere = timerMutex.withLock {
-            val now = System.currentTimeMillis()
-            // Both run: a feed and a sleep may change on the same poll
-            val feedEnded = applyRemoteFeed(feed, feedIdAtFetch, now)
-            val sleepEnded = applyRemoteSleep(sleep, sleepIdAtFetch, now)
-            feedEnded || sleepEnded
-        }
-        if (endedElsewhere) syncToday(api, auth, child) // fetch the finished feed/sleep
-    }
-
-    /**
-     * The shared feed timer as just fetched ([feed]: its id and state, or null when there is none): adopt newer
-     * remote state, or end the local feed when our timer is gone. Returns whether it ended elsewhere.
-     * Called under [timerMutex].
-     */
-    private fun applyRemoteFeed(feed: Pair<Long?, FeedSnapshot>?, feedIdAtFetch: Long?, now: Long): Boolean {
-        val local = _liveTimerState.value
-        if (feed == null) {
-            if (!local.isRunning || feedTimerRemoteId == null || feedTimerRemoteId != feedIdAtFetch) return false
-            feedEndedElsewhere(now)
-            return true
-        }
-        val (remoteId, snap) = feed
-        val fresh = now - snap.changedAtMillis < 6 * 60 * 60_000L // ignore timers abandoned long ago
-        if (fresh && snap.changedAtMillis > local.changedAtMillis && snap.changedAtMillis > feedEndedAt) {
-            adoptFeed(remoteId, snap, now)
-        } else if (local.isRunning && snap.feedingServerId != null && _feedings.value.none { it.id == local.feedingLocalId }) {
-            // Adopted before its record arrived: link to it now
-            _feedings.value.firstOrNull { it.serverId == snap.feedingServerId }?.let { record ->
-                _liveTimerState.update { it.copy(feedingLocalId = record.id, feedingServerId = record.serverId) }
-            }
-        }
-        return false
-    }
-
-    /** Like [applyRemoteFeed], for the shared sleep timer. Called under [timerMutex]. */
-    private fun applyRemoteSleep(sleep: Pair<Long?, SleepSnapshot>?, sleepIdAtFetch: Long?, now: Long): Boolean {
-        val localSleep = _sleepTimer.value
-        if (sleep == null) {
-            if (!localSleep.isRunning || sleepTimerRemoteId == null || sleepTimerRemoteId != sleepIdAtFetch) return false
-            sleepEndedElsewhere(now)
-            return true
-        }
-        val (remoteId, snap) = sleep
-        val fresh = now - snap.changedAtMillis < 24 * 60 * 60_000L
-        if (fresh && snap.changedAtMillis > localSleep.changedAtMillis && snap.changedAtMillis > sleepEndedAt) {
-            setSleepTimer(
-                SleepTimerState(
-                    startMillis = snap.startMillis,
-                    notes = if (localSleep.startMillis == snap.startMillis) localSleep.notes else "",
-                    changedAtMillis = snap.changedAtMillis
-                )
-            )
-            setSleepTimerRemoteId(remoteId)
-        }
-        return false
-    }
-
-    /**
-     * The feed's shared timer is gone: another phone ended it and saved its final times. Stop here without
-     * writing anything, and drop this phone's queued minute-saves, which would overwrite those times.
-     */
-    private fun feedEndedElsewhere(now: Long) {
-        val local = _liveTimerState.value
-        local.feedingLocalId?.let { writeQueue.dropUpdates(ENDPOINT_FEEDINGS, it) }
-        setFeedTimerRemoteId(null)
-        feedEndedAt = now
-        _liveTimerState.value = LiveTimerState(softChimeEnabled = local.softChimeEnabled)
-    }
-
-    /** The sleep's shared timer is gone: it was stopped (and saved) on another phone. */
-    private fun sleepEndedElsewhere(now: Long) {
-        setSleepTimerRemoteId(null)
-        setSleepTimer(SleepTimerState())
-        sleepEndedAt = now
-    }
-
-    /** Takes over a feed from another phone, counting the running side forward from the snapshot. */
-    private fun adoptFeed(remoteId: Long?, snap: FeedSnapshot, now: Long) {
-        val local = _liveTimerState.value
-        val elapsed = if (snap.paused) 0 else ((now - snap.changedAtMillis) / 1000L).toInt().coerceAtLeast(0)
-        val record = snap.feedingServerId?.let { sid -> _feedings.value.firstOrNull { it.serverId == sid } }
-        _liveTimerState.value = LiveTimerState(
-            isRunning = true,
-            isPaused = snap.paused,
-            activeBreast = snap.side,
-            leftSeconds = snap.leftSeconds + if (snap.side == BreastSide.LEFT) elapsed else 0,
-            rightSeconds = snap.rightSeconds + if (snap.side == BreastSide.RIGHT) elapsed else 0,
-            sessionStartedTime = formatClock(snap.startMillis),
-            softChimeEnabled = local.softChimeEnabled,
-            // Without the record yet, a placeholder id; it's linked on a later poll
-            feedingLocalId = record?.id ?: local.feedingLocalId?.takeIf { local.isRunning } ?: nextLocalId(),
-            sessionStartMillis = snap.startMillis,
-            pausedAtMillis = snap.pausedAtMillis,
-            firstSide = snap.firstSide,
-            lastActiveMillis = snap.lastActiveMillis,
-            editCount = local.editCount + 1,
-            changedAtMillis = snap.changedAtMillis,
-            feedingServerId = snap.feedingServerId
-        )
-        setFeedTimerRemoteId(remoteId)
-    }
+    /** Picks up feeds and sleeps started, changed or ended on other phones (see [SharedTimerSync.poll]). */
+    suspend fun pollSharedTimers() = timers.poll()
 
     private fun clearRemote() {
         // Unsent entries belong to the server being left
@@ -2183,7 +1713,7 @@ class BabyBuddyRepository {
             if (write.endpoint == ENDPOINT_FEEDINGS && write.localId == _liveTimerState.value.feedingLocalId) {
                 // Other phones following this feed can now update its record
                 _liveTimerState.update { it.copy(feedingServerId = serverId) }
-                feedTimerDirty.trySend(Unit)
+                timers.feedRecordCreated()
             }
             localStore(write.endpoint).setServerId(write.localId, serverId)
         }
@@ -2297,30 +1827,10 @@ class BabyBuddyRepository {
         val p = context.applicationContext.getSharedPreferences("baby_buddy", Context.MODE_PRIVATE)
         prefs = p
         p.edit().remove(LEGACY_PREF_TOKEN).apply() // earlier builds stored the token in plain text
-        _caregiverName.value = p.getString(PREF_CAREGIVER, "").orEmpty()
-        _feedNotificationEnabled.value = p.getBoolean(PREF_FEED_NOTIFICATION, true)
-        _nextUpNotification.value = p.getBoolean(PREF_NEXT_UP_NOTIFICATION, false)
-        _use24h.value = p.getBoolean(PREF_USE_24H, true)
-        _modelsTab.value = p.getBoolean(PREF_MODELS_TAB, false)
+        settings.load(p, syncScope)
         val mp = context.applicationContext.getSharedPreferences(MODEL_PREFS, Context.MODE_PRIVATE)
         modelPrefs = mp
         _usedModels.value = mp.all.values.mapNotNull { (it as? String)?.let(SavedRhythmModel::fromText) }.associateBy { it.target }
-        TimeFormat.use24h = _use24h.value
-        DayHours.dayStartHour = p.getInt(PREF_DAY_START, DayHours.DEFAULT_DAY_START)
-        DayHours.nightStartHour = p.getInt(PREF_NIGHT_START, DayHours.DEFAULT_NIGHT_START)
-        DayHours.trendsDayStartHour = p.getInt(PREF_TRENDS_DAY_START, 0)
-        TimeFormat.useWheel = p.getBoolean(PREF_WHEEL_INPUT, false)
-        syncScope.launch {
-            // Remember the wheel/keyboard choice made in any picker
-            snapshotFlow { TimeFormat.useWheel }.collect { p.edit().putBoolean(PREF_WHEEL_INPUT, it).apply() }
-        }
-        _startSide.value = p.getString(PREF_START_SIDE, null)?.let { runCatching { StartSide.valueOf(it) }.getOrNull() } ?: StartSide.OPPOSITE
-        _themeMode.value = p.getString(PREF_THEME_MODE, null)
-            ?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } } ?: ThemeMode.BY_TIME
-        p.getString(PREF_QUICK_ACTIONS, null)?.let { saved ->
-            _quickActions.value = saved.split(",").filter { it.isNotBlank() }
-                .mapNotNull { name -> QuickAction.entries.firstOrNull { it.name == name } }
-        }
         val offline = OfflineStore(File(context.applicationContext.filesDir, "offline"))
         store = offline
         writeQueue.store = offline
@@ -2328,37 +1838,8 @@ class BabyBuddyRepository {
         p.getLong(PREF_SLEEP_START, 0L).takeIf { it > 0 }?.let { start ->
             _sleepTimer.value = SleepTimerState(start, p.getString(PREF_SLEEP_NOTES, "").orEmpty(), p.getLong(PREF_SLEEP_CHANGED, 0L))
         }
-        feedTimerRemoteId = p.getLong(PREF_FEED_TIMER_ID, -1L).takeIf { it >= 0 }
-        sleepTimerRemoteId = p.getLong(PREF_SLEEP_TIMER_ID, -1L).takeIf { it >= 0 }
-        feedTimerToDelete = p.getLong(PREF_FEED_TIMER_TO_DELETE, -1L).takeIf { it >= 0 }
-        sleepTimerToDelete = p.getLong(PREF_SLEEP_TIMER_TO_DELETE, -1L).takeIf { it >= 0 }
-        feedEndedAt = p.getLong(PREF_FEED_ENDED_AT, 0L)
-        sleepEndedAt = p.getLong(PREF_SLEEP_ENDED_AT, 0L)
-        _reminders.value = ReminderSettings(
-            p.getInt(PREF_REMIND_FEED, 0),
-            p.getInt(PREF_REMIND_AWAKE, 0),
-            p.getInt(PREF_REMIND_SLEEP, 0),
-            p.getInt(PREF_REMIND_DIAPER, 0),
-            p.getInt(PREF_REMIND_EARLY, 0)
-        )
-        _babySex.value = p.getString(PREF_BABY_SEX, null)?.let { name -> BabySex.entries.firstOrNull { it.name == name } }
-        _hiddenItems.value = p.getString(PREF_HIDDEN_ITEMS, null).orEmpty().split(",")
-            .mapNotNull { name -> TrackedItem.entries.firstOrNull { it.name == name } }.toSet()
-        _hiddenTodayTiles.value = p.getString(PREF_HIDDEN_SUMMARY_TILES, null).orEmpty().split(",")
-            .mapNotNull { name -> TodayTile.entries.firstOrNull { it.name == name } }.toSet()
-        _todayOrder.value = TodaySection.order(p.getString(PREF_TODAY_ORDER, null).orEmpty().split(","))
-        _hiddenWakeWindowParts.value = p.getString(PREF_HIDDEN_WAKE_PARTS, null).orEmpty().split(",")
-            .mapNotNull { name -> WakeWindowPart.entries.firstOrNull { it.name == name } }.toSet()
-        p.getString(PREF_DASHBOARD_WIDGETS, null)?.let { saved ->
-            val enabled = saved.split(",").map { if (it == "WEIGHT") "GROWTH" else it }.toSet()
-            // Cards added since the choice was saved keep their default (saves from before this list knew only these four)
-            val known = p.getString(PREF_DASHBOARD_WIDGETS_KNOWN, null)?.split(",")?.toSet()
-                ?: setOf("TUMMY_TIME_GOAL", "HEALTH_VITALS", "CAREGIVER_NOTES", "GROWTH")
-            _dashboardWidgets.update { list ->
-                list.map { if (it.type.name in known) it.copy(isEnabled = it.type.name in enabled) else it }
-            }
-        }
-        startTimerPushers()
+        timers.load(p)
+        timers.start()
         startTimerTicker()
         syncScope.launch {
             // Save the timer whenever it starts/stops/switches; the ticks in between are recomputed from the clock
@@ -2431,7 +1912,7 @@ class BabyBuddyRepository {
     /** Restores the saved login; returns false if there is none (or the token can't be decrypted). */
     private fun restoreConnection(p: SharedPreferences): Boolean {
         if (p.getBoolean(PREF_DEMO_MODE, false)) {
-            _caregiverName.value = p.getString(PREF_CAREGIVER, "Sarah").orEmpty().ifBlank { "Sarah" }
+            if (settings.caregiverName.value.isBlank()) settings.setCaregiverName("Sarah", save = false)
             showDemoBaby()
             return true
         }
@@ -2544,15 +2025,6 @@ class BabyBuddyRepository {
     }
 
     companion object {
-        fun defaultDashboardWidgets() = listOf(
-            DashboardWidgetConfig(DashboardWidgetType.LAST_FEED, DashboardWidgetType.LAST_FEED.displayName, AppText.get(R.string.card_last_feed_desc), isEnabled = true),
-            DashboardWidgetConfig(DashboardWidgetType.LAST_DIAPER, DashboardWidgetType.LAST_DIAPER.displayName, AppText.get(R.string.card_last_diaper_desc), isEnabled = true),
-            DashboardWidgetConfig(DashboardWidgetType.WAKE_WINDOWS, DashboardWidgetType.WAKE_WINDOWS.displayName, AppText.get(R.string.card_wake_windows_desc), isEnabled = true),
-            DashboardWidgetConfig(DashboardWidgetType.TUMMY_TIME_GOAL, DashboardWidgetType.TUMMY_TIME_GOAL.displayName, AppText.get(R.string.card_tummy_time_desc), isEnabled = false),
-            DashboardWidgetConfig(DashboardWidgetType.HEALTH_VITALS, DashboardWidgetType.HEALTH_VITALS.displayName, AppText.get(R.string.card_temperature_desc), isEnabled = false),
-            DashboardWidgetConfig(DashboardWidgetType.CAREGIVER_NOTES, DashboardWidgetType.CAREGIVER_NOTES.displayName, AppText.get(R.string.card_notes_desc), isEnabled = false),
-            DashboardWidgetConfig(DashboardWidgetType.GROWTH, DashboardWidgetType.GROWTH.displayName, AppText.get(R.string.card_growth_desc), isEnabled = false)
-        )
 
         val instance: BabyBuddyRepository by lazy { BabyBuddyRepository() }
 
@@ -2567,44 +2039,13 @@ class BabyBuddyRepository {
         private const val ENDPOINT_NOTES = "notes"
         private const val ENDPOINT_SLEEP = "sleep"
         private val GROWTH_ENDPOINTS = GrowthKind.entries.map { it.endpoint }.toSet()
-        private const val PREF_BABY_SEX = "baby_sex"
-        private const val PREF_DASHBOARD_WIDGETS = "dashboard_widgets"
-        private const val PREF_DASHBOARD_WIDGETS_KNOWN = "dashboard_widgets_known"
-        private const val ENDPOINT_TIMERS = "timers"
         private const val PREF_SLEEP_CHANGED = "sleep_timer_changed_at"
-        private const val PREF_FEED_TIMER_ID = "feed_timer_remote_id"
-        private const val PREF_SLEEP_TIMER_ID = "sleep_timer_remote_id"
-        private const val PREF_FEED_TIMER_TO_DELETE = "feed_timer_to_delete"
-        private const val PREF_SLEEP_TIMER_TO_DELETE = "sleep_timer_to_delete"
-        private const val PREF_FEED_ENDED_AT = "feed_ended_at"
-        private const val PREF_SLEEP_ENDED_AT = "sleep_ended_at"
-        private const val PREF_REMIND_FEED = "remind_feed_minutes"
-        private const val PREF_HIDDEN_ITEMS = "hidden_items"
-        private const val PREF_HIDDEN_SUMMARY_TILES = "hidden_summary_tiles"
-        private const val PREF_HIDDEN_WAKE_PARTS = "hidden_wake_window_parts"
-        private const val PREF_TODAY_ORDER = "today_order"
-        private const val PREF_REMIND_SLEEP = "remind_sleep_minutes"
-        private const val PREF_WHEEL_INPUT = "time_input_wheel_v2" // v2: typing became the default
-        private const val PREF_REMIND_AWAKE = "remind_awake_minutes"
-        private const val PREF_REMIND_DIAPER = "remind_diaper_minutes"
-        private const val PREF_REMIND_EARLY = "remind_early_minutes"
-        private const val PREF_MODELS_TAB = "trends_models_tab"
         private const val MODEL_PREFS = "rhythm_models"
         private const val PAGE = 1000
         private const val MAX_FETCH = 20_000
         private const val PREF_SLEEP_START = "sleep_timer_start"
         private const val PREF_SLEEP_NOTES = "sleep_timer_notes"
-        private const val PREF_CAREGIVER = "caregiver_name"
-        private const val PREF_FEED_NOTIFICATION = "feed_notification"
-        private const val PREF_NEXT_UP_NOTIFICATION = "next_up_notification"
         private const val PREF_AWAY_SINCE = "away_since"
-        private const val PREF_QUICK_ACTIONS = "quick_actions"
-        private const val PREF_USE_24H = "use_24h"
-        private const val PREF_DAY_START = "day_start_hour"
-        private const val PREF_NIGHT_START = "night_start_hour"
-        private const val PREF_TRENDS_DAY_START = "trends_day_start_hour"
-        private const val PREF_THEME_MODE = "theme_mode"
-        private const val PREF_START_SIDE = "start_side"
         private const val PREF_SELF_SIGNED = "allow_self_signed"
         private const val PREF_CERT_PIN = "pinned_cert_sha256"
         private const val PREF_CF_ID = "cf_access_client_id"
@@ -2614,40 +2055,6 @@ class BabyBuddyRepository {
         private const val PREF_BIRTH_DATE = "birth_date"
         private const val PREF_DEMO_MODE = "is_demo_mode"
         private const val SESSION_TIMEOUT_MS = 30 * 60_000L
-    }
-
-    // Widget Management Operations
-    fun toggleWidget(type: DashboardWidgetType) {
-        _dashboardWidgets.update { list ->
-            list.map {
-                if (it.type == type) it.copy(isEnabled = !it.isEnabled) else it
-            }
-        }
-        saveDashboardWidgets()
-    }
-
-    fun addWidget(type: DashboardWidgetType) {
-        _dashboardWidgets.update { list ->
-            list.map {
-                if (it.type == type) it.copy(isEnabled = true) else it
-            }
-        }
-        saveDashboardWidgets()
-    }
-
-    fun removeWidget(type: DashboardWidgetType) {
-        _dashboardWidgets.update { list ->
-            list.map {
-                if (it.type == type) it.copy(isEnabled = false) else it
-            }
-        }
-        saveDashboardWidgets()
-    }
-
-    private fun saveDashboardWidgets() {
-        val enabled = _dashboardWidgets.value.filter { it.isEnabled }.joinToString(",") { it.type.name }
-        prefs?.edit()?.putString(PREF_DASHBOARD_WIDGETS, enabled)
-            ?.putString(PREF_DASHBOARD_WIDGETS_KNOWN, DashboardWidgetType.entries.joinToString(",") { it.name })?.apply()
     }
 
     /** Logs a tummy-time session that just ended; returns its id (for undo). */

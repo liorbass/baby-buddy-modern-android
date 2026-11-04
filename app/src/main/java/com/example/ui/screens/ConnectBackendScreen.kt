@@ -43,6 +43,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -74,6 +75,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.AppLanguage
 import com.example.BuildConfig
@@ -94,7 +96,10 @@ import com.example.ui.components.SegmentedToggle
 import com.example.ui.theme.OnPrimary
 import com.example.ui.theme.OutlineColor
 import com.example.ui.theme.PrimaryColor
+import com.example.ui.theme.SecondaryColor
 import com.example.ui.theme.SurfaceContainerLow
+import com.example.update.AppUpdater
+import com.example.update.UpdateState
 import kotlinx.coroutines.delay
 
 /**
@@ -316,7 +321,8 @@ data class SettingsState(
     val themeMode: ThemeMode = ThemeMode.BY_TIME,
     val reminders: ReminderSettings = ReminderSettings(),
     val hiddenItems: Set<TrackedItem> = emptySet(),
-    val certificatePrompt: CertificatePrompt? = null
+    val certificatePrompt: CertificatePrompt? = null,
+    val update: UpdateState = UpdateState.Idle
 )
 
 /** What Settings can do. */
@@ -339,7 +345,10 @@ data class SettingsActions(
     val onItemTrackedChange: (TrackedItem, Boolean) -> Unit = { _, _ -> },
     val onEnterDemoMode: () -> Unit = {},
     val onTrustCertificate: () -> Unit = {},
-    val onDismissCertificate: () -> Unit = {}
+    val onDismissCertificate: () -> Unit = {},
+    val onCheckForUpdate: () -> Unit = {},
+    val onInstallUpdate: () -> Unit = {},
+    val onAllowInstalls: () -> Unit = {}
 )
 
 @Composable
@@ -944,6 +953,7 @@ private fun AboutSettings(state: SettingsState, actions: SettingsActions, openLi
                     Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                 }
             }
+            if (AppUpdater.isEnabled) UpdateSettings(update, onCheckForUpdate, onInstallUpdate, onAllowInstalls, openLink)
             Column {
                 TextButton(onClick = { openLink(APP_REPO) }, contentPadding = PaddingValues(0.dp), shape = RectangleShape, modifier = Modifier.testTag("app_repo_link")) {
                     Text(stringResource(R.string.about_source), color = PrimaryColor, fontWeight = FontWeight.Medium)
@@ -951,6 +961,91 @@ private fun AboutSettings(state: SettingsState, actions: SettingsActions, openLi
                 TextButton(onClick = { openLink(BABY_BUDDY_REPO) }, contentPadding = PaddingValues(0.dp), shape = RectangleShape, modifier = Modifier.testTag("baby_buddy_repo_link")) {
                     Text(stringResource(R.string.about_server), color = PrimaryColor, fontWeight = FontWeight.Medium)
                 }
+            }
+        }
+    }
+}
+
+/** Settings → About → Updates: checks this app's GitHub releases, then downloads and installs a newer one. */
+@Composable
+private fun UpdateSettings(
+    update: UpdateState,
+    onCheck: () -> Unit,
+    onInstall: () -> Unit,
+    onAllowInstalls: () -> Unit,
+    openLink: (String) -> Unit
+) {
+    SettingsGroupTitle(stringResource(R.string.update_title), stringResource(R.string.update_desc))
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.testTag("update_settings")) {
+        val bodyStyle = MaterialTheme.typography.bodyMedium
+        val release = when (update) {
+            is UpdateState.Available -> update.release
+            is UpdateState.Downloading -> update.release
+            is UpdateState.NeedsPermission -> update.release
+            is UpdateState.Installing -> update.release
+            is UpdateState.Failed -> update.release
+            else -> null
+        }
+        when (update) {
+            UpdateState.Idle -> Unit
+
+            UpdateState.Checking -> Text(stringResource(R.string.update_checking), style = bodyStyle)
+
+            UpdateState.UpToDate -> Text(stringResource(R.string.update_up_to_date), style = bodyStyle, color = SecondaryColor)
+
+            is UpdateState.Available -> {
+                Text(stringResource(R.string.update_available, update.release.versionName), style = bodyStyle, fontWeight = FontWeight.Medium)
+                if (update.release.notes.isNotBlank()) {
+                    Text(update.release.notes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 8, overflow = TextOverflow.Ellipsis)
+                }
+            }
+
+            is UpdateState.Downloading -> {
+                val progress = update.progress
+                Text(
+                    if (progress == null) stringResource(R.string.update_downloading) else stringResource(R.string.update_downloading_percent, (progress * 100).toInt()),
+                    style = bodyStyle
+                )
+                if (progress == null) {
+                    LinearProgressIndicator(color = PrimaryColor, modifier = Modifier.fillMaxWidth())
+                } else {
+                    LinearProgressIndicator(progress = { progress }, color = PrimaryColor, modifier = Modifier.fillMaxWidth())
+                }
+            }
+
+            is UpdateState.NeedsPermission -> Text(stringResource(R.string.update_needs_permission), style = bodyStyle)
+
+            is UpdateState.Installing -> Text(stringResource(R.string.update_confirm), style = bodyStyle)
+
+            is UpdateState.Failed -> Text(update.message, style = bodyStyle, color = MaterialTheme.colorScheme.error)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            when {
+                update is UpdateState.NeedsPermission -> {
+                    Button(onClick = onAllowInstalls, colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor, contentColor = OnPrimary), modifier = Modifier.testTag("update_allow_btn")) {
+                        Text(stringResource(R.string.update_allow))
+                    }
+                    OutlinedButton(onClick = onInstall) { Text(stringResource(R.string.update_install_short)) }
+                }
+
+                update is UpdateState.Available || (update is UpdateState.Failed && release != null) -> Button(
+                    onClick = onInstall,
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor, contentColor = OnPrimary),
+                    modifier = Modifier.testTag("update_install_btn")
+                ) {
+                    Text(stringResource(if (update is UpdateState.Failed) R.string.update_try_again else R.string.update_install))
+                }
+
+                update is UpdateState.Checking || update is UpdateState.Downloading || update is UpdateState.Installing -> Unit
+
+                else -> OutlinedButton(onClick = onCheck, modifier = Modifier.testTag("update_check_btn")) {
+                    Text(stringResource(if (update is UpdateState.Idle) R.string.update_check else R.string.update_check_again))
+                }
+            }
+        }
+        if (release != null) {
+            TextButton(onClick = { openLink(release.pageUrl) }, contentPadding = PaddingValues(0.dp), shape = RectangleShape) {
+                Text(stringResource(R.string.update_whats_new), color = PrimaryColor, fontWeight = FontWeight.Medium)
             }
         }
     }

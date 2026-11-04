@@ -691,6 +691,27 @@
     <string name="about_app_id">ID de l\'appli</string>
     <string name="about_source">Code source, tickets et versions sur GitHub →</string>
     <string name="about_server">Baby Buddy, le serveur avec lequel fonctionne cette appli →</string>
+    <string name="update_title">Mises à jour</string>
+    <string name="update_desc">Les nouvelles versions publiées sur GitHub</string>
+    <string name="update_check">Rechercher des mises à jour</string>
+    <string name="update_check_again">Vérifier à nouveau</string>
+    <string name="update_checking">Recherche de mises à jour…</string>
+    <string name="update_up_to_date">Vous avez la dernière version.</string>
+    <string name="update_available">La version %1$s est disponible.</string>
+    <string name="update_install">Télécharger et installer</string>
+    <string name="update_install_short">Installer</string>
+    <string name="update_whats_new">Nouveautés de cette version →</string>
+    <string name="update_downloading">Téléchargement de la mise à jour…</string>
+    <string name="update_downloading_percent">Téléchargement de la mise à jour… %1$d %%</string>
+    <string name="update_needs_permission">Pour installer la mise à jour, autorisez cette appli à installer des applis, puis revenez et appuyez sur Installer.</string>
+    <string name="update_allow">Autoriser</string>
+    <string name="update_confirm">Confirmez la mise à jour dans la fenêtre qui s\'ouvre.</string>
+    <string name="update_try_again">Réessayer</string>
+    <string name="update_failed_check">Impossible de rechercher des mises à jour : %1$s</string>
+    <string name="update_failed_download">Impossible de télécharger la mise à jour : %1$s</string>
+    <string name="update_failed_install">La mise à jour n\'a pas été installée : %1$s</string>
+    <string name="update_corrupt">Le fichier téléchargé ne correspond pas à la version publiée. Réessayez.</string>
+    <string name="update_other_signer">Cette mise à jour est signée avec une autre clé que l\'appli installée (installée depuis une autre source, comme F-Droid) : Android ne peut pas l\'installer par-dessus. Mettez à jour depuis la source d\'installation.</string>
 
     <!-- Customize Today -->
     <string name="customize_title">Personnaliser Aujourd\'hui</string>
