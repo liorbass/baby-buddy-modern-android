@@ -1,0 +1,5 @@
+- Rearrange the Today screen: move sections up or down in Customize Today
+- Next card shows only the next feed, plus the next sleep while awake
+- Wake windows count daytime only; night wakings are left out
+- Trends daily numbers: pumped amount and average wake window
+- Set your day and night hours, and where Trends splits days, in Settings
