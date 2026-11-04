@@ -30,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -58,9 +59,12 @@ import com.example.ui.screens.HistoryScreen
 import com.example.ui.screens.NursingTimerScreen
 import com.example.ui.screens.QuickLogModal
 import com.example.ui.screens.RhythmModelsTab
+import com.example.ui.screens.SleepActions
 import com.example.ui.screens.SleepScreen
 import com.example.ui.screens.TodayDashboardScreen
+import com.example.ui.screens.TrendsActions
 import com.example.ui.screens.TrendsScreen
+import com.example.ui.screens.TrendsState
 import com.example.ui.theme.AppTheme
 import com.example.ui.theme.MyApplicationTheme
 import com.example.widget.AppShortcuts
@@ -258,6 +262,26 @@ fun BabyBuddyApp(
     val hiddenTodayTiles by viewModel.hiddenTodayTiles.collectAsState()
     val hiddenWakeWindowParts by viewModel.hiddenWakeWindowParts.collectAsState()
     val todayOrder by viewModel.todayOrder.collectAsState()
+    val trendsActions = remember(viewModel) {
+        TrendsActions(
+            onSelectRange = { days -> viewModel.loadTrends(days) },
+            onRetry = { viewModel.loadTrends() },
+            onConnect = { viewModel.navigateTo(ScreenDestination.CONNECT_SERVER) },
+            onBabySexChange = { viewModel.setBabySex(it) },
+            onUpdateGrowth = { viewModel.updateGrowth(it) },
+            onDeleteGrowth = { viewModel.deleteGrowth(it) }
+        )
+    }
+    val sleepActions = remember(viewModel) {
+        SleepActions(
+            onStart = { viewModel.startSleep() },
+            onSetStart = { viewModel.setSleepStart(it) },
+            onNotesChange = { viewModel.setSleepNotes(it) },
+            onStop = { isNap -> viewModel.stopSleep(isNap) },
+            onCancel = { viewModel.cancelSleep() },
+            onLogPast = { start, end, isNap, notes -> viewModel.logSleep(start, end, isNap, notes) }
+        )
+    }
 
     // Nothing to show without a server: until logged in (or a saved login is restored), only the login screen
     val needsLogin = !connectionConfig.isConnected
@@ -373,20 +397,17 @@ fun BabyBuddyApp(
 
                 ScreenDestination.TRENDS -> {
                     TrendsScreen(
-                        days = trendsDays,
-                        isLoading = trendsLoading,
-                        error = trendsError,
-                        rangeDays = trendsRange,
-                        onSelectRange = { days -> viewModel.loadTrends(days) },
-                        onRetry = { viewModel.loadTrends() },
-                        onConnect = { viewModel.navigateTo(ScreenDestination.CONNECT_SERVER) },
-                        hiddenItems = hiddenItems,
-                        growth = growth,
-                        birthDate = babyProfile.birthDate,
-                        babySex = babySex,
-                        onBabySexChange = { viewModel.setBabySex(it) },
-                        onUpdateGrowth = { viewModel.updateGrowth(it) },
-                        onDeleteGrowth = { viewModel.deleteGrowth(it) },
+                        state = TrendsState(
+                            days = trendsDays,
+                            isLoading = trendsLoading,
+                            error = trendsError,
+                            rangeDays = trendsRange,
+                            hiddenItems = hiddenItems,
+                            growth = growth,
+                            birthDate = babyProfile.birthDate,
+                            babySex = babySex
+                        ),
+                        actions = trendsActions,
                         modelsTab = if (modelsTab) {
                             {
                                 RhythmModelsTab(
@@ -492,15 +513,12 @@ fun BabyBuddyApp(
                             viewModel.navigateTo(ScreenDestination.TODAY_DASHBOARD)
                         },
                         sleepTimer = sleepTimer,
-                        onStartSleep = { viewModel.startSleep() },
-                        onSetSleepStart = { viewModel.setSleepStart(it) },
-                        onSleepNotesChange = { viewModel.setSleepNotes(it) },
-                        onStopSleep = { isNap -> viewModel.stopSleep(isNap) },
-                        onCancelSleep = { viewModel.cancelSleep() },
-                        onLogPastSleep = { start, end, isNap, notes ->
-                            viewModel.logSleep(start, end, isNap, notes)
-                            viewModel.navigateTo(ScreenDestination.TODAY_DASHBOARD)
-                        },
+                        sleepActions = sleepActions.copy(
+                            onLogPast = { start, end, isNap, notes ->
+                                viewModel.logSleep(start, end, isNap, notes)
+                                viewModel.navigateTo(ScreenDestination.TODAY_DASHBOARD)
+                            }
+                        ),
                         growth = growth,
                         onLogGrowth = { values, date, notes ->
                             viewModel.logGrowth(values, date, notes)
@@ -543,13 +561,8 @@ fun BabyBuddyApp(
                     SleepScreen(
                         timer = sleepTimer,
                         todaysSleeps = recentSleeps,
+                        actions = sleepActions,
                         onBack = { viewModel.navigateTo(ScreenDestination.TODAY_DASHBOARD) },
-                        onStart = { viewModel.startSleep() },
-                        onSetStart = { viewModel.setSleepStart(it) },
-                        onNotesChange = { viewModel.setSleepNotes(it) },
-                        onStop = { isNap -> viewModel.stopSleep(isNap) },
-                        onCancel = { viewModel.cancelSleep() },
-                        onLogPast = { start, end, isNap, notes -> viewModel.logSleep(start, end, isNap, notes) },
                         onUpdate = { viewModel.updateSleep(it) },
                         onDelete = { viewModel.deleteSleep(it) }
                     )

@@ -106,27 +106,37 @@ private const val TABULAR_NUMS = "tnum"
 
 private val SectionShape = RoundedCornerShape(20.dp)
 
+/** What Trends shows. */
+data class TrendsState(
+    val days: List<DayStats>?, // null = not loaded yet; oldest first, today last
+    val isLoading: Boolean,
+    val error: String?, // non-null when loading failed (e.g. not connected)
+    val rangeDays: Int, // 7 or 30
+    val hiddenItems: Set<TrackedItem> = emptySet(), // charts for untracked items are left out
+    val growth: List<GrowthEvent> = emptyList(),
+    val birthDate: String? = null,
+    val babySex: BabySex? = null
+)
+
+/** What Trends can do: change the range, retry, open server settings, set the sex, edit or delete a measurement. */
+data class TrendsActions(
+    val onSelectRange: (Int) -> Unit = {},
+    val onRetry: () -> Unit = {},
+    val onConnect: () -> Unit = {}, // navigate to server settings
+    val onBabySexChange: (BabySex) -> Unit = {},
+    val onUpdateGrowth: (GrowthEvent) -> Unit = {},
+    val onDeleteGrowth: (GrowthEvent) -> Unit = {}
+)
+
 @Composable
 fun TrendsScreen(
-    days: List<DayStats>?, // null = not loaded yet; oldest first, today last
-    isLoading: Boolean,
-    error: String?, // non-null when loading failed (e.g. not connected)
-    rangeDays: Int, // 7 or 30
-    onSelectRange: (Int) -> Unit,
-    onRetry: () -> Unit,
-    onConnect: () -> Unit, // navigate to server settings
+    state: TrendsState,
+    actions: TrendsActions,
     modifier: Modifier = Modifier,
-    hiddenItems: Set<TrackedItem> = emptySet(), // charts for untracked items are left out
-    growth: List<GrowthEvent> = emptyList(),
-    birthDate: String? = null,
-    babySex: BabySex? = null,
-    onBabySexChange: (BabySex) -> Unit = {},
-    onUpdateGrowth: (GrowthEvent) -> Unit = {},
-    onDeleteGrowth: (GrowthEvent) -> Unit = {},
     modelsTab: (@Composable () -> Unit)? = null // the Models tab's content, when turned on in Settings
 ) {
     var showModels by rememberSaveable { mutableStateOf(false) }
-    val feedingShown = TrackedItem.BREASTFEEDING !in hiddenItems || TrackedItem.BOTTLE !in hiddenItems
+    val feedingShown = TrackedItem.BREASTFEEDING !in state.hiddenItems || TrackedItem.BOTTLE !in state.hiddenItems
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
@@ -144,7 +154,7 @@ fun TrendsScreen(
                     Segmented(options = listOf(stringResource(R.string.trends_charts), stringResource(R.string.trends_models)), selected = if (showModels) 1 else 0, onSelect = { showModels = it == 1 })
                 }
                 if (!showModels || modelsTab == null) {
-                    RangeSelector(selected = rangeDays, onSelect = onSelectRange)
+                    RangeSelector(selected = state.rangeDays, onSelect = actions.onSelectRange)
                 }
             }
         }
@@ -153,11 +163,11 @@ fun TrendsScreen(
             item(key = "models") { modelsTab() }
         } else {
             when {
-                error != null -> item {
-                    ErrorCard(message = error, onRetry = onRetry, onConnect = onConnect)
+                state.error != null -> item {
+                    ErrorCard(message = state.error, onRetry = actions.onRetry, onConnect = actions.onConnect)
                 }
 
-                isLoading || days == null -> item {
+                state.isLoading || state.days == null -> item {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -168,7 +178,7 @@ fun TrendsScreen(
                     }
                 }
 
-                days.isEmpty() -> item {
+                state.days.isEmpty() -> item {
                     Text(
                         text = stringResource(R.string.trends_no_data),
                         style = MaterialTheme.typography.bodyMedium,
@@ -182,33 +192,33 @@ fun TrendsScreen(
 
                 else -> {
                     if (feedingShown) {
-                        item { FeedingRhythmSection(days = days, rangeDays = rangeDays) }
+                        item { FeedingRhythmSection(days = state.days, rangeDays = state.rangeDays) }
                     }
-                    if (TrackedItem.SLEEP !in hiddenItems && days.any { it.sleepMarks.isNotEmpty() }) {
-                        item { SleepRhythmSection(days = days, rangeDays = rangeDays) }
+                    if (TrackedItem.SLEEP !in state.hiddenItems && state.days.any { it.sleepMarks.isNotEmpty() }) {
+                        item { SleepRhythmSection(days = state.days, rangeDays = state.rangeDays) }
                     }
-                    if (TrackedItem.DIAPERS !in hiddenItems && days.any { it.diaperMarks.isNotEmpty() }) {
-                        item { DiaperRhythmSection(days = days) }
+                    if (TrackedItem.DIAPERS !in state.hiddenItems && state.days.any { it.diaperMarks.isNotEmpty() }) {
+                        item { DiaperRhythmSection(days = state.days) }
                     }
-                    item { DailyNumbersSection(days = days, hidden = hiddenItems) }
-                    val leftTotal = days.sumOf { it.leftMinutes.coerceAtLeast(0) }
-                    val rightTotal = days.sumOf { it.rightMinutes.coerceAtLeast(0) }
-                    if (leftTotal + rightTotal > 0 && TrackedItem.BREASTFEEDING !in hiddenItems) {
+                    item { DailyNumbersSection(days = state.days, hidden = state.hiddenItems) }
+                    val leftTotal = state.days.sumOf { it.leftMinutes.coerceAtLeast(0) }
+                    val rightTotal = state.days.sumOf { it.rightMinutes.coerceAtLeast(0) }
+                    if (leftTotal + rightTotal > 0 && TrackedItem.BREASTFEEDING !in state.hiddenItems) {
                         item { LeftRightSection(leftMinutes = leftTotal, rightMinutes = rightTotal) }
                     }
                 }
             }
 
             // By age, not by the selected range, so it shows whatever the range or loading state
-            if (TrackedItem.GROWTH !in hiddenItems) {
+            if (TrackedItem.GROWTH !in state.hiddenItems) {
                 item(key = "growth") {
                     GrowthSection(
-                        growth = growth,
-                        birthDate = birthDate,
-                        sex = babySex,
-                        onSexChange = onBabySexChange,
-                        onUpdate = onUpdateGrowth,
-                        onDelete = onDeleteGrowth
+                        growth = state.growth,
+                        birthDate = state.birthDate,
+                        sex = state.babySex,
+                        onSexChange = actions.onBabySexChange,
+                        onUpdate = actions.onUpdateGrowth,
+                        onDelete = actions.onDeleteGrowth
                     )
                 }
             }

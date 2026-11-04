@@ -108,12 +108,7 @@ fun QuickLogModal(
     hiddenItems: Set<TrackedItem> = emptySet(),
     onLogBath: (notes: String, timeMillis: Long?) -> Unit = { _, _ -> },
     sleepTimer: SleepTimerState = SleepTimerState(),
-    onStartSleep: () -> Unit = {},
-    onSetSleepStart: (Long) -> Unit = {},
-    onSleepNotesChange: (String) -> Unit = {},
-    onStopSleep: (isNap: Boolean) -> Unit = {},
-    onCancelSleep: () -> Unit = {},
-    onLogPastSleep: (start: Long, end: Long, isNap: Boolean, notes: String) -> Unit = { _, _, _, _ -> },
+    sleepActions: SleepActions = SleepActions(),
     growth: List<GrowthEvent> = emptyList(),
     onLogGrowth: (values: Map<GrowthKind, Double>, dateMillis: Long, notes: String) -> Unit = { _, _, _ -> },
     modifier: Modifier = Modifier
@@ -238,15 +233,12 @@ fun QuickLogModal(
                 ) {
                     SleepPanel(
                         timer = sleepTimer,
-                        onStart = onStartSleep,
-                        onSetStart = onSetSleepStart,
-                        onNotesChange = onSleepNotesChange,
-                        onStop = onStopSleep,
-                        onCancel = onCancelSleep,
-                        onLogPast = { start, end, isNap, notes ->
-                            open = null
-                            onLogPastSleep(start, end, isNap, notes)
-                        },
+                        actions = sleepActions.copy(
+                            onLogPast = { start, end, isNap, notes ->
+                                open = null
+                                sleepActions.onLogPast(start, end, isNap, notes)
+                            }
+                        ),
                         framed = false
                     )
                 }

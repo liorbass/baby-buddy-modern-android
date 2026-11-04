@@ -71,13 +71,8 @@ private fun elapsed(totalSeconds: Long): String {
 fun SleepScreen(
     timer: SleepTimerState,
     todaysSleeps: List<SleepEvent>,
+    actions: SleepActions,
     onBack: () -> Unit,
-    onStart: () -> Unit,
-    onSetStart: (Long) -> Unit,
-    onNotesChange: (String) -> Unit,
-    onStop: (isNap: Boolean) -> Unit,
-    onCancel: () -> Unit,
-    onLogPast: (start: Long, end: Long, isNap: Boolean, notes: String) -> Unit,
     onUpdate: (SleepEvent) -> Unit,
     onDelete: (Long) -> Unit,
     modifier: Modifier = Modifier
@@ -118,7 +113,7 @@ fun SleepScreen(
             Text(stringResource(R.string.item_sleep), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
 
-        SleepPanel(timer, onStart, onSetStart, onNotesChange, onStop, onCancel, onLogPast)
+        SleepPanel(timer, actions)
 
         if (todaysSleeps.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -153,27 +148,28 @@ fun SleepScreen(
     }
 }
 
+/** What the sleep controls do: start, correct the start, notes, stop (nap or night), cancel, or log a past sleep. */
+data class SleepActions(
+    val onStart: () -> Unit = {},
+    val onSetStart: (Long) -> Unit = {},
+    val onNotesChange: (String) -> Unit = {},
+    val onStop: (isNap: Boolean) -> Unit = {},
+    val onCancel: () -> Unit = {},
+    val onLogPast: (start: Long, end: Long, isNap: Boolean, notes: String) -> Unit = { _, _, _, _ -> }
+)
+
 /**
  * The sleep controls: the running timer (fell asleep, nap, notes, woke up), or a start button and a form
  * for a past sleep. Shared by the Sleep screen and the Log screen ([framed] = false inside a Log entry).
  */
 @Composable
-fun SleepPanel(
-    timer: SleepTimerState,
-    onStart: () -> Unit,
-    onSetStart: (Long) -> Unit,
-    onNotesChange: (String) -> Unit,
-    onStop: (isNap: Boolean) -> Unit,
-    onCancel: () -> Unit,
-    onLogPast: (start: Long, end: Long, isNap: Boolean, notes: String) -> Unit,
-    framed: Boolean = true
-) {
+fun SleepPanel(timer: SleepTimerState, actions: SleepActions, framed: Boolean = true) {
     Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
         if (timer.isRunning) {
-            RunningSleep(timer, onSetStart, onNotesChange, onStop, onCancel, framed)
+            RunningSleep(timer, actions.onSetStart, actions.onNotesChange, actions.onStop, actions.onCancel, framed)
         } else {
             Button(
-                onClick = onStart,
+                onClick = actions.onStart,
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor, contentColor = OnPrimary),
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
@@ -188,7 +184,7 @@ fun SleepPanel(
                     modifier = Modifier.padding(start = 10.dp)
                 )
             }
-            PastSleepForm(onLogPast)
+            PastSleepForm(actions.onLogPast)
         }
     }
 }

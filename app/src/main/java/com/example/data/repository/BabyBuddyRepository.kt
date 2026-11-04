@@ -2360,52 +2360,62 @@ class BabyBuddyRepository {
             syncToday(api, auth, child)
         }
 
-        var endedElsewhere = false
-        timerMutex.withLock {
+        val endedElsewhere = timerMutex.withLock {
             val now = System.currentTimeMillis()
-            val local = _liveTimerState.value
-            if (feed == null) {
-                if (local.isRunning && feedTimerRemoteId != null && feedTimerRemoteId == feedIdAtFetch) {
-                    feedEndedElsewhere(now)
-                    endedElsewhere = true
-                }
-            } else {
-                val (remoteId, snap) = feed
-                val fresh = now - snap.changedAtMillis < 6 * 60 * 60_000L // ignore timers abandoned long ago
-                if (fresh && snap.changedAtMillis > local.changedAtMillis && snap.changedAtMillis > feedEndedAt) {
-                    adoptFeed(remoteId, snap, now)
-                } else if (local.isRunning && snap.feedingServerId != null &&
-                    _feedings.value.none { it.id == local.feedingLocalId }
-                ) {
-                    // Adopted before its record arrived: link to it now
-                    _feedings.value.firstOrNull { it.serverId == snap.feedingServerId }?.let { record ->
-                        _liveTimerState.update { it.copy(feedingLocalId = record.id, feedingServerId = record.serverId) }
-                    }
-                }
-            }
-
-            val localSleep = _sleepTimer.value
-            if (sleep == null) {
-                if (localSleep.isRunning && sleepTimerRemoteId != null && sleepTimerRemoteId == sleepIdAtFetch) {
-                    sleepEndedElsewhere(now)
-                    endedElsewhere = true
-                }
-            } else {
-                val (remoteId, snap) = sleep
-                val fresh = now - snap.changedAtMillis < 24 * 60 * 60_000L
-                if (fresh && snap.changedAtMillis > localSleep.changedAtMillis && snap.changedAtMillis > sleepEndedAt) {
-                    setSleepTimer(
-                        SleepTimerState(
-                            startMillis = snap.startMillis,
-                            notes = if (localSleep.startMillis == snap.startMillis) localSleep.notes else "",
-                            changedAtMillis = snap.changedAtMillis
-                        )
-                    )
-                    setSleepTimerRemoteId(remoteId)
-                }
-            }
+            // Both run: a feed and a sleep may change on the same poll
+            val feedEnded = applyRemoteFeed(feed, feedIdAtFetch, now)
+            val sleepEnded = applyRemoteSleep(sleep, sleepIdAtFetch, now)
+            feedEnded || sleepEnded
         }
         if (endedElsewhere) syncToday(api, auth, child) // fetch the finished feed/sleep
+    }
+
+    /**
+     * The shared feed timer as just fetched ([feed]: its id and state, or null when there is none): adopt newer
+     * remote state, or end the local feed when our timer is gone. Returns whether it ended elsewhere.
+     * Called under [timerMutex].
+     */
+    private fun applyRemoteFeed(feed: Pair<Long?, FeedSnapshot>?, feedIdAtFetch: Long?, now: Long): Boolean {
+        val local = _liveTimerState.value
+        if (feed == null) {
+            if (!local.isRunning || feedTimerRemoteId == null || feedTimerRemoteId != feedIdAtFetch) return false
+            feedEndedElsewhere(now)
+            return true
+        }
+        val (remoteId, snap) = feed
+        val fresh = now - snap.changedAtMillis < 6 * 60 * 60_000L // ignore timers abandoned long ago
+        if (fresh && snap.changedAtMillis > local.changedAtMillis && snap.changedAtMillis > feedEndedAt) {
+            adoptFeed(remoteId, snap, now)
+        } else if (local.isRunning && snap.feedingServerId != null && _feedings.value.none { it.id == local.feedingLocalId }) {
+            // Adopted before its record arrived: link to it now
+            _feedings.value.firstOrNull { it.serverId == snap.feedingServerId }?.let { record ->
+                _liveTimerState.update { it.copy(feedingLocalId = record.id, feedingServerId = record.serverId) }
+            }
+        }
+        return false
+    }
+
+    /** Like [applyRemoteFeed], for the shared sleep timer. Called under [timerMutex]. */
+    private fun applyRemoteSleep(sleep: Pair<Long?, SleepSnapshot>?, sleepIdAtFetch: Long?, now: Long): Boolean {
+        val localSleep = _sleepTimer.value
+        if (sleep == null) {
+            if (!localSleep.isRunning || sleepTimerRemoteId == null || sleepTimerRemoteId != sleepIdAtFetch) return false
+            sleepEndedElsewhere(now)
+            return true
+        }
+        val (remoteId, snap) = sleep
+        val fresh = now - snap.changedAtMillis < 24 * 60 * 60_000L
+        if (fresh && snap.changedAtMillis > localSleep.changedAtMillis && snap.changedAtMillis > sleepEndedAt) {
+            setSleepTimer(
+                SleepTimerState(
+                    startMillis = snap.startMillis,
+                    notes = if (localSleep.startMillis == snap.startMillis) localSleep.notes else "",
+                    changedAtMillis = snap.changedAtMillis
+                )
+            )
+            setSleepTimerRemoteId(remoteId)
+        }
+        return false
     }
 
     /**
@@ -2721,20 +2731,31 @@ class BabyBuddyRepository {
         }
     }
 
-    private fun resolveServerId(write: QueuedWrite): Long? {
-        write.serverId?.let { return it }
-        serverIds[write.localId]?.let { return it }
-        return when (write.endpoint) {
-            ENDPOINT_FEEDINGS -> _feedings.value.firstOrNull { it.id == write.localId }?.serverId
-            ENDPOINT_CHANGES -> _diapers.value.firstOrNull { it.id == write.localId }?.serverId
-            ENDPOINT_PUMPING -> _pumpings.value.firstOrNull { it.id == write.localId }?.serverId
-            ENDPOINT_TEMPERATURE -> _temperatures.value.firstOrNull { it.id == write.localId }?.serverId
-            ENDPOINT_NOTES -> _notes.value.firstOrNull { it.id == write.localId }?.serverId
-            ENDPOINT_SLEEP -> _sleeps.value.firstOrNull { it.id == write.localId }?.serverId
-            in GROWTH_ENDPOINTS -> _growth.value.firstOrNull { it.id == write.localId && it.kind.endpoint == write.endpoint }?.serverId
-            else -> _tummyTimes.value.firstOrNull { it.id == write.localId }?.serverId
-        }
+    /** One endpoint's local entries, for filling in and looking up server ids. */
+    private class LocalStore<T>(
+        private val flow: MutableStateFlow<List<T>>,
+        private val localId: (T) -> Long,
+        private val serverId: (T) -> Long?,
+        private val withServerId: (T, Long) -> T,
+        private val sameKind: (T) -> Boolean = { true } // growth: one flow for several endpoints
+    ) {
+        fun serverIdOf(id: Long): Long? = flow.value.firstOrNull { localId(it) == id && sameKind(it) }?.let(serverId)
+
+        fun setServerId(id: Long, server: Long) = flow.update { list -> list.map { if (localId(it) == id && sameKind(it)) withServerId(it, server) else it } }
     }
+
+    private fun localStore(endpoint: String): LocalStore<*> = when (endpoint) {
+        ENDPOINT_FEEDINGS -> LocalStore(_feedings, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+        ENDPOINT_CHANGES -> LocalStore(_diapers, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+        ENDPOINT_PUMPING -> LocalStore(_pumpings, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+        ENDPOINT_TEMPERATURE -> LocalStore(_temperatures, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+        ENDPOINT_NOTES -> LocalStore(_notes, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+        ENDPOINT_SLEEP -> LocalStore(_sleeps, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+        in GROWTH_ENDPOINTS -> LocalStore(_growth, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) }) { it.kind.endpoint == endpoint }
+        else -> LocalStore(_tummyTimes, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+    }
+
+    private fun resolveServerId(write: QueuedWrite): Long? = write.serverId ?: serverIds[write.localId] ?: localStore(write.endpoint).serverIdOf(write.localId)
 
     /** Looks for a record a lost-response create may already have made, by its exact start/time. */
     private suspend fun findExisting(write: QueuedWrite, api: BabyBuddyApiService, auth: String, child: Int): Long? {
@@ -2796,16 +2817,7 @@ class BabyBuddyRepository {
             _liveTimerState.update { it.copy(feedingServerId = serverId) }
             feedTimerDirty.trySend(Unit)
         }
-        when (write.endpoint) {
-            ENDPOINT_FEEDINGS -> _feedings.update { l -> l.map { if (it.id == write.localId) it.copy(serverId = serverId) else it } }
-            ENDPOINT_CHANGES -> _diapers.update { l -> l.map { if (it.id == write.localId) it.copy(serverId = serverId) else it } }
-            ENDPOINT_PUMPING -> _pumpings.update { l -> l.map { if (it.id == write.localId) it.copy(serverId = serverId) else it } }
-            ENDPOINT_TEMPERATURE -> _temperatures.update { l -> l.map { if (it.id == write.localId) it.copy(serverId = serverId) else it } }
-            ENDPOINT_NOTES -> _notes.update { l -> l.map { if (it.id == write.localId) it.copy(serverId = serverId) else it } }
-            ENDPOINT_SLEEP -> _sleeps.update { l -> l.map { if (it.id == write.localId) it.copy(serverId = serverId) else it } }
-            in GROWTH_ENDPOINTS -> _growth.update { l -> l.map { if (it.id == write.localId && it.kind.endpoint == write.endpoint) it.copy(serverId = serverId) else it } }
-            else -> _tummyTimes.update { l -> l.map { if (it.id == write.localId) it.copy(serverId = serverId) else it } }
-        }
+        localStore(write.endpoint).setServerId(write.localId, serverId)
         synchronized(pendingWrites) {
             var changed = false
             pendingWrites.replaceAll { w ->
