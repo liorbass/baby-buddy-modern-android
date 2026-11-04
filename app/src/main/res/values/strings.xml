@@ -50,7 +50,7 @@
     <string name="start_side_right">Always right</string>
     <string name="start_side_right_desc">Start every feed on the right</string>
     <string name="theme_by_time">By time of day</string>
-    <string name="theme_by_time_desc">Dark from 20:00 to 07:00</string>
+    <string name="theme_by_time_desc">Dark from %1$s to %2$s</string>
     <string name="theme_system">Same as phone</string>
     <string name="theme_system_desc">Follows the phone\'s dark theme</string>
     <string name="theme_light">Light</string>
@@ -624,6 +624,14 @@
     <string name="settings_theme">Theme</string>
     <string name="settings_language">Language</string>
     <string name="settings_language_phone">Same as phone</string>
+    <string name="settings_day_night">Day and night</string>
+    <string name="settings_day_night_desc">Night is when the theme by time of day is dark, the Trends charts are shaded, a new sleep counts as night sleep, and waking up from night sleep is a night waking rather than a wake window.</string>
+    <string name="settings_day_starts">Day starts</string>
+    <string name="settings_night_starts">Night starts</string>
+    <string name="settings_trends_day_start">Trends days start at</string>
+    <string name="settings_trends_day_start_desc">Where Trends splits one day from the next, e.g. 18:00 to keep each night on one row.</string>
+    <string name="hour_earlier">%s: an hour earlier</string>
+    <string name="hour_later">%s: an hour later</string>
     <string name="settings_24h">24-hour clock</string>
     <string name="settings_24h_on">Times show as 19:06</string>
     <string name="settings_24h_off">Times show as 7:06 PM</string>
@@ -679,6 +687,11 @@
     <string name="customize_cards_hint">Turn cards on or off for your Today view.</string>
     <string name="customize_summary_tiles">Summary tiles</string>
     <string name="customize_summary_tiles_desc">The \"Today\" grid of totals. Items you don\'t track stay hidden.</string>
+    <string name="customize_order">Order on Today</string>
+    <string name="customize_order_desc">Move sections up or down. A running feed or sleep stays at the top.</string>
+    <string name="section_shortcuts">Shortcuts</string>
+    <string name="section_last_entries">Last feed &amp; diaper</string>
+    <string name="section_next">Next feed &amp; sleep</string>
     <string name="customize_show">Show</string>
     <string name="customize_added">Added</string>
     <string name="customize_home_title">📱 Android Home Screen Widgets</string>
@@ -774,6 +787,7 @@
     <string name="trends_metric_naps">Naps</string>
     <string name="trends_unit_per_day">per day</string>
     <string name="trends_unit_min_day">min/day</string>
+    <string name="trends_unit_min_avg">min avg</string>
     <string name="trends_unit_ml_day">ml/day</string>
     <string name="trends_unit_h_day">h/day</string>
     <string name="trends_daily_numbers">Daily numbers</string>

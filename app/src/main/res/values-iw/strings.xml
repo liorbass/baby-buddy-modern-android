@@ -50,7 +50,7 @@
     <string name="start_side_right">תמיד ימין</string>
     <string name="start_side_right_desc">להתחיל כל האכלה בצד ימין</string>
     <string name="theme_by_time">לפי שעה ביום</string>
-    <string name="theme_by_time_desc">כהה מ־20:00 עד 07:00</string>
+    <string name="theme_by_time_desc">כהה מ־%1$s עד %2$s</string>
     <string name="theme_system">כמו בטלפון</string>
     <string name="theme_system_desc">לפי העיצוב הכהה של הטלפון</string>
     <string name="theme_light">בהיר</string>
@@ -634,6 +634,14 @@
     <string name="settings_theme">עיצוב</string>
     <string name="settings_language">שפה</string>
     <string name="settings_language_phone">כמו בטלפון</string>
+    <string name="settings_day_night">יום ולילה</string>
+    <string name="settings_day_night_desc">בלילה ערכת הנושא לפי שעה כהה, תרשימי המגמות מוצללים, שינה חדשה נחשבת לשינת לילה, והתעוררות משינת לילה היא התעוררות לילית ולא חלון ערות.</string>
+    <string name="settings_day_starts">היום מתחיל</string>
+    <string name="settings_night_starts">הלילה מתחיל</string>
+    <string name="settings_trends_day_start">ימי המגמות מתחילים ב־</string>
+    <string name="settings_trends_day_start_desc">היכן המגמות מפרידות בין יום ליום, למשל 18:00 כדי שכל לילה יישאר בשורה אחת.</string>
+    <string name="hour_earlier">%s: שעה מוקדם יותר</string>
+    <string name="hour_later">%s: שעה מאוחר יותר</string>
     <string name="settings_24h">שעון 24 שעות</string>
     <string name="settings_24h_on">השעות יוצגו כ־19:06</string>
     <string name="settings_24h_off">השעות יוצגו כ־7:06 אחה״צ</string>
@@ -689,6 +697,11 @@
     <string name="customize_cards_hint">הפעלה או כיבוי של כרטיסים במסך היום.</string>
     <string name="customize_summary_tiles">אריחי סיכום</string>
     <string name="customize_summary_tiles_desc">רשת הסיכומים של ״היום״. פריטים שלא נמצאים במעקב נשארים מוסתרים.</string>
+    <string name="customize_order">סדר במסך היום</string>
+    <string name="customize_order_desc">הזיזו חלקים למעלה או למטה. האכלה או שינה פעילה נשארות למעלה.</string>
+    <string name="section_shortcuts">קיצורי דרך</string>
+    <string name="section_last_entries">האכלה וחיתול אחרונים</string>
+    <string name="section_next">האכלה ושינה הבאות</string>
     <string name="customize_show">הצגה</string>
     <string name="customize_added">נוסף</string>
     <string name="customize_home_title">📱 ווידג׳טים למסך הבית של Android</string>
@@ -784,6 +797,7 @@
     <string name="trends_metric_naps">נמנומים</string>
     <string name="trends_unit_per_day">ליום</string>
     <string name="trends_unit_min_day">דק׳/יום</string>
+    <string name="trends_unit_min_avg">דק׳ בממוצע</string>
     <string name="trends_unit_ml_day">מ״ל/יום</string>
     <string name="trends_unit_h_day">ש׳/יום</string>
     <string name="trends_daily_numbers">נתונים יומיים</string>

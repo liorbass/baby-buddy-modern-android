@@ -55,7 +55,7 @@
     <string name="start_side_right">Toujours à droite</string>
     <string name="start_side_right_desc">Commencer chaque tétée à droite</string>
     <string name="theme_by_time">Selon l\'heure</string>
-    <string name="theme_by_time_desc">Sombre de 20:00 à 07:00</string>
+    <string name="theme_by_time_desc">Sombre de %1$s à %2$s</string>
     <string name="theme_system">Comme le téléphone</string>
     <string name="theme_system_desc">Suit le thème sombre du téléphone</string>
     <string name="theme_light">Clair</string>
@@ -633,6 +633,14 @@
     <string name="settings_theme">Thème</string>
     <string name="settings_language">Langue</string>
     <string name="settings_language_phone">Comme le téléphone</string>
+    <string name="settings_day_night">Jour et nuit</string>
+    <string name="settings_day_night_desc">La nuit, le thème selon l\'heure est sombre, les graphiques des tendances sont ombrés, un nouveau sommeil compte comme sommeil de nuit, et un réveil pendant le sommeil de nuit est un réveil nocturne plutôt qu\'une période d\'éveil.</string>
+    <string name="settings_day_starts">Début du jour</string>
+    <string name="settings_night_starts">Début de la nuit</string>
+    <string name="settings_trends_day_start">Les jours des tendances commencent à</string>
+    <string name="settings_trends_day_start_desc">L\'heure à laquelle les tendances séparent un jour du suivant, p. ex. 18:00 pour garder chaque nuit sur une ligne.</string>
+    <string name="hour_earlier">%s : une heure plus tôt</string>
+    <string name="hour_later">%s : une heure plus tard</string>
     <string name="settings_24h">Horloge 24 h</string>
     <string name="settings_24h_on">Les heures s\'affichent ainsi : 19:06</string>
     <string name="settings_24h_off">Les heures s\'affichent ainsi : 7:06 PM</string>
@@ -688,6 +696,11 @@
     <string name="customize_cards_hint">Activez ou désactivez les cartes de votre vue Aujourd\'hui.</string>
     <string name="customize_summary_tiles">Tuiles de résumé</string>
     <string name="customize_summary_tiles_desc">La grille des totaux « Aujourd\'hui ». Les éléments non suivis restent masqués.</string>
+    <string name="customize_order">Ordre sur Aujourd\'hui</string>
+    <string name="customize_order_desc">Déplacez les sections vers le haut ou le bas. Une tétée ou un sommeil en cours reste en haut.</string>
+    <string name="section_shortcuts">Raccourcis</string>
+    <string name="section_last_entries">Dernière tétée et couche</string>
+    <string name="section_next">Prochaine tétée et sommeil</string>
     <string name="customize_show">Afficher</string>
     <string name="customize_added">Ajouté</string>
     <string name="customize_home_title">📱 Widgets d\'écran d\'accueil Android</string>
@@ -772,6 +785,7 @@
     <string name="trends_metric_naps">Siestes</string>
     <string name="trends_unit_per_day">par jour</string>
     <string name="trends_unit_min_day">min/jour</string>
+    <string name="trends_unit_min_avg">min en moy.</string>
     <string name="trends_unit_ml_day">ml/jour</string>
     <string name="trends_unit_h_day">h/jour</string>
     <string name="trends_daily_numbers">Chiffres du jour</string>

@@ -45,42 +45,45 @@ object Reminders {
     private const val MISSED_GRACE_MS = 2 * 60 * 60_000L // a reminder missed by more than this is skipped
     private const val EARLY_ALARM_SLACK_MS = 60_000L // an alarm a little early still counts as on time
 
+    /** One reminder's inputs: its interval (0 = off), whether its item is tracked, what it counts from, and its model. */
+    private class ReminderRhythm(val afterMinutes: Int, val tracked: Boolean, val anchor: Long?, val target: RhythmTarget)
+
+    private fun rhythm(kind: String): ReminderRhythm {
+        val repo = BabyBuddyRepository.instance
+        val settings = repo.reminders.value
+        val hidden = repo.hiddenItems.value
+        val sleep = repo.sleepTimer.value
+        return when (kind) {
+            KIND_FEED -> ReminderRhythm(
+                settings.feedAfterMinutes,
+                TrackedItem.BREASTFEEDING !in hidden || TrackedItem.BOTTLE !in hidden,
+                repo.lastFeedMillis.value.takeUnless { repo.liveTimerState.value.isRunning },
+                RhythmTarget.FEED_GAP
+            )
+
+            KIND_DIAPER -> ReminderRhythm(settings.diaperAfterMinutes, TrackedItem.DIAPERS !in hidden, repo.lastDiaper.value?.timeMillis, RhythmTarget.DIAPER_GAP)
+
+            // Long sleep: counts from the start of the sleep being timed (on any phone)
+            KIND_SLEEP -> ReminderRhythm(settings.sleepAfterMinutes, TrackedItem.SLEEP !in hidden, sleep.startMillis.takeIf { sleep.isRunning }, RhythmTarget.SLEEP_LENGTH)
+
+            else -> ReminderRhythm(
+                settings.awakeAfterMinutes,
+                TrackedItem.SLEEP !in hidden,
+                repo.lastSleepEndMillis.value.takeUnless { sleep.isRunning },
+                RhythmTarget.AWAKE_WINDOW
+            )
+        }
+    }
+
     /**
      * (anchor, due time): the last feed/change/wake-up/sleep start and when to remind, or null when off or not
      * applicable. A model picked in Trends → Models for that rhythm sets the due time instead of the fixed interval.
      */
     private fun due(kind: String): Pair<Long, Long>? {
-        val repo = BabyBuddyRepository.instance
-        val settings = repo.reminders.value
-        val hidden = repo.hiddenItems.value
-        return when (kind) {
-            KIND_FEED -> {
-                if (settings.feedAfterMinutes <= 0 || repo.liveTimerState.value.isRunning) return null
-                if (TrackedItem.BREASTFEEDING in hidden && TrackedItem.BOTTLE in hidden) return null
-                val last = repo.lastFeedMillis.value ?: return null
-                last to (repo.modelDue(RhythmTarget.FEED_GAP, last) ?: (last + settings.feedAfterMinutes * 60_000L))
-            }
-
-            KIND_DIAPER -> {
-                if (settings.diaperAfterMinutes <= 0 || TrackedItem.DIAPERS in hidden) return null
-                val last = repo.lastDiaper.value?.timeMillis ?: return null
-                last to (repo.modelDue(RhythmTarget.DIAPER_GAP, last) ?: (last + settings.diaperAfterMinutes * 60_000L))
-            }
-
-            KIND_SLEEP -> {
-                // Long sleep: counts from the start of the sleep being timed (on any phone)
-                val sleep = repo.sleepTimer.value
-                if (settings.sleepAfterMinutes <= 0 || !sleep.isRunning || TrackedItem.SLEEP in hidden) return null
-                sleep.startMillis to (repo.modelDue(RhythmTarget.SLEEP_LENGTH, sleep.startMillis) ?: (sleep.startMillis + settings.sleepAfterMinutes * 60_000L))
-            }
-
-            else -> {
-                if (settings.awakeAfterMinutes <= 0 || repo.sleepTimer.value.isRunning) return null
-                if (TrackedItem.SLEEP in hidden) return null
-                val woke = repo.lastSleepEndMillis.value ?: return null
-                woke to (repo.modelDue(RhythmTarget.AWAKE_WINDOW, woke) ?: (woke + settings.awakeAfterMinutes * 60_000L))
-            }
-        }
+        val r = rhythm(kind)
+        if (r.afterMinutes <= 0 || !r.tracked) return null
+        val anchor = r.anchor ?: return null
+        return anchor to (BabyBuddyRepository.instance.modelDue(r.target, anchor) ?: (anchor + r.afterMinutes * 60_000L))
     }
 
     /** Sets (or clears) every reminder's alarm from the current entries and settings. */

@@ -39,6 +39,7 @@ import com.example.data.model.StartSide
 import com.example.data.model.TemperatureEvent
 import com.example.data.model.ThemeMode
 import com.example.data.model.TimeFormat
+import com.example.data.model.TodaySection
 import com.example.data.model.TodayTile
 import com.example.data.model.TrackedItem
 import com.example.data.model.TummyTimeEvent
@@ -776,6 +777,14 @@ class MainViewModel(
     fun setTodayTileShown(tile: TodayTile, shown: Boolean) = repository.setTodayTileShown(tile, shown)
     val hiddenWakeWindowParts: StateFlow<Set<WakeWindowPart>> = repository.hiddenWakeWindowParts
     fun setWakeWindowPartShown(part: WakeWindowPart, shown: Boolean) = repository.setWakeWindowPartShown(part, shown)
+    val todayOrder: StateFlow<List<TodaySection>> = repository.todayOrder
+    fun moveTodaySection(section: TodaySection, delta: Int) = repository.moveTodaySection(section, delta)
+    fun resetTodayOrder() = repository.resetTodayOrder()
+    fun setDayHours(dayStartHour: Int, nightStartHour: Int) = repository.setDayHours(dayStartHour, nightStartHour)
+    fun setTrendsDayStart(hour: Int) {
+        repository.setTrendsDayStart(hour)
+        loadTrends()
+    }
     fun setReminders(settings: ReminderSettings) = repository.setReminders(settings)
 
     fun setMilkStash(ml: Int) {

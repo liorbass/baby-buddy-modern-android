@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,12 +27,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
@@ -71,6 +74,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.AppLanguage
 import com.example.BuildConfig
@@ -78,6 +82,7 @@ import com.example.R
 import com.example.data.ml.RhythmTarget
 import com.example.data.model.AppText
 import com.example.data.model.BabySex
+import com.example.data.model.DayHours
 import com.example.data.model.ReminderSettings
 import com.example.data.model.ServerConnectionConfig
 import com.example.data.model.StartSide
@@ -148,6 +153,55 @@ private fun SwitchSetting(title: String, description: String, checked: Boolean, 
             onCheckedChange = onChange,
             colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = PrimaryColor)
         )
+    }
+}
+
+/** Settings → Appearance → Day and night ([DayHours]), and the hour Trends' days start at. */
+@Composable
+private fun DayNightSetting(onDayHoursChange: (Int, Int) -> Unit, onTrendsDayStartChange: (Int) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(stringResource(R.string.settings_day_night), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            stringResource(R.string.settings_day_night_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        val day = DayHours.dayStartHour
+        val night = DayHours.nightStartHour
+
+        // Day and night can't start at the same hour: step past the other one
+        fun step(hour: Int, delta: Int, other: Int) = (hour + delta).mod(24).let { if (it == other) (it + delta).mod(24) else it }
+        HourStepper(stringResource(R.string.settings_day_starts), day) { delta -> onDayHoursChange(step(day, delta, night), night) }
+        HourStepper(stringResource(R.string.settings_night_starts), night) { delta -> onDayHoursChange(day, step(night, delta, day)) }
+        Spacer(modifier = Modifier.height(8.dp))
+        val trendsStart = DayHours.trendsDayStartHour
+        HourStepper(stringResource(R.string.settings_trends_day_start), trendsStart) { delta -> onTrendsDayStartChange((trendsStart + delta).mod(24)) }
+        Text(
+            stringResource(R.string.settings_trends_day_start_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/** A label and an hour with − / + buttons (one hour per tap). */
+@Composable
+private fun HourStepper(label: String, hour: Int, onStep: (Int) -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        IconButton(onClick = { onStep(-1) }) {
+            Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.hour_earlier, label))
+        }
+        Text(
+            DayHours.label(hour),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.widthIn(min = 64.dp),
+            textAlign = TextAlign.Center
+        )
+        IconButton(onClick = { onStep(1) }) {
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.hour_later, label))
+        }
     }
 }
 
@@ -230,6 +284,8 @@ fun ConnectBackendScreen(
     onNextUpNotificationChange: (Boolean) -> Unit = {},
     use24h: Boolean = true,
     onUse24hChange: (Boolean) -> Unit = {},
+    onDayHoursChange: (dayStartHour: Int, nightStartHour: Int) -> Unit = { _, _ -> },
+    onTrendsDayStartChange: (Int) -> Unit = {},
     modelsTab: Boolean = false,
     modelTargets: Set<RhythmTarget> = emptySet(), // rhythms whose reminders a saved model times (Trends → Models)
     onModelsTabChange: (Boolean) -> Unit = {},
@@ -689,6 +745,7 @@ fun ConnectBackendScreen(
                     }
                 }
             }
+            DayNightSetting(onDayHoursChange = onDayHoursChange, onTrendsDayStartChange = onTrendsDayStartChange)
             LanguageSetting()
             SwitchSetting(
                 title = stringResource(R.string.settings_24h),

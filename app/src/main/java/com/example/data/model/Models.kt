@@ -95,7 +95,7 @@ data class SleepTimerState(
 }
 
 /** Daytime starts count as naps by default (Baby Buddy's own default is similar). */
-fun isNapTime(startMillis: Long): Boolean = java.util.Calendar.getInstance().apply { timeInMillis = startMillis }.get(java.util.Calendar.HOUR_OF_DAY) in 7..18
+fun isNapTime(startMillis: Long): Boolean = !DayHours.isNightAt(startMillis)
 
 /** "45m", "2h 05m". */
 fun formatMinutes(minutes: Int): String {
@@ -268,7 +268,12 @@ enum class ThemeMode(private val labelRes: Int, private val descriptionRes: Int)
     DARK(R.string.theme_dark, R.string.theme_dark_desc);
 
     val label: String get() = AppText.get(labelRes)
-    val description: String get() = AppText.get(descriptionRes)
+    val description: String
+        get() = if (this == BY_TIME) {
+            AppText.get(descriptionRes, DayHours.label(DayHours.nightStartHour), DayHours.label(DayHours.dayStartHour))
+        } else {
+            AppText.get(descriptionRes)
+        }
 }
 
 /** Shortcut buttons at the top of Today; which ones show, and their order, is up to the user. */
@@ -301,7 +306,7 @@ enum class DashboardWidgetType(private val nameRes: Int, private val categoryRes
 }
 
 /** The tiles in Today's summary grid; which show is chosen in Customize Today (and tracked items still apply). */
-enum class TodayTile(private val labelRes: Int, val item: TrackedItem?) {
+enum class TodayTile(val labelRes: Int, val item: TrackedItem?) {
     FEEDS(R.string.tile_feeds, null), // shown while breast or bottle feeds are tracked
     DIAPERS(R.string.tile_diapers, TrackedItem.DIAPERS),
     SLEEP(R.string.tile_sleep, TrackedItem.SLEEP),
@@ -312,6 +317,84 @@ enum class TodayTile(private val labelRes: Int, val item: TrackedItem?) {
     BATH(R.string.tile_last_bath, TrackedItem.BATH);
 
     val label: String get() = AppText.get(labelRes)
+
+    /** Whether its item is tracked (Feeds: breast or bottle feeds). */
+    fun isTracked(hidden: Set<TrackedItem>): Boolean = item?.let { it !in hidden } ?: (TrackedItem.BREASTFEEDING !in hidden || TrackedItem.BOTTLE !in hidden)
+
+    /** The item whose colors it uses. */
+    val colorItem: TrackedItem get() = item ?: TrackedItem.BREASTFEEDING
+}
+
+/** The sections of Today, in the order the user picked in Customize Today (prefs `today_order`). */
+enum class TodaySection(private val labelRes: Int) {
+    QUICK_ACTIONS(R.string.section_shortcuts),
+    LAST_ENTRIES(R.string.section_last_entries),
+    WAKE_WINDOWS(R.string.card_wake_windows),
+    NEXT_UP(R.string.section_next),
+    SUMMARY_TILES(R.string.customize_summary_tiles),
+    QUICK_NOTES(R.string.item_quick_notes),
+    LAST_PUMP(R.string.today_last_pump),
+    FEED_INTERVAL(R.string.today_time_between_feeds),
+    TUMMY_TIME(R.string.card_tummy_time),
+    TEMPERATURE(R.string.card_temperature),
+    NOTES(R.string.card_notes),
+    GROWTH(R.string.card_growth);
+
+    val label: String get() = AppText.get(labelRes)
+
+    /**
+     * Whether this section can show on Today with these tracked items and cards: Customize Today lists only these, and
+     * Today draws only these (a shown section may still be empty, e.g. Last pump before any pumping).
+     */
+    fun isShown(hidden: Set<TrackedItem>, cardOn: (DashboardWidgetType) -> Boolean): Boolean {
+        val feeds = TrackedItem.BREASTFEEDING !in hidden || TrackedItem.BOTTLE !in hidden
+        val sleep = TrackedItem.SLEEP !in hidden
+        return when (this) {
+            QUICK_ACTIONS, SUMMARY_TILES -> true
+            LAST_ENTRIES -> (feeds && cardOn(DashboardWidgetType.LAST_FEED)) || (TrackedItem.DIAPERS !in hidden && cardOn(DashboardWidgetType.LAST_DIAPER))
+            WAKE_WINDOWS -> sleep && cardOn(DashboardWidgetType.WAKE_WINDOWS)
+            NEXT_UP -> feeds || sleep
+            QUICK_NOTES -> TrackedItem.QUICK_NOTES !in hidden
+            LAST_PUMP -> TrackedItem.PUMPING !in hidden
+            FEED_INTERVAL -> feeds
+            TUMMY_TIME -> TrackedItem.TUMMY_TIME !in hidden && cardOn(DashboardWidgetType.TUMMY_TIME_GOAL)
+            TEMPERATURE -> cardOn(DashboardWidgetType.HEALTH_VITALS)
+            NOTES -> cardOn(DashboardWidgetType.CAREGIVER_NOTES)
+            GROWTH -> TrackedItem.GROWTH !in hidden && cardOn(DashboardWidgetType.GROWTH)
+        }
+    }
+
+    companion object {
+        /**
+         * A saved order (names) made whole: unknown names are dropped, and sections it doesn't have yet (added in a
+         * later version) go in at their default place, after the section that precedes them by default.
+         */
+        fun order(saved: List<String>): List<TodaySection> {
+            val result = saved.mapNotNull { name -> entries.firstOrNull { it.name == name } }.distinct().toMutableList()
+            entries.forEachIndexed { index, section ->
+                if (section !in result) {
+                    val before = entries.take(index).lastOrNull { it in result }
+                    result.add(before?.let { result.indexOf(it) + 1 } ?: 0, section)
+                }
+            }
+            return result
+        }
+
+        /**
+         * [order] with [section] moved [delta] places among the sections that are [shown] (clamped to the ends), so a
+         * move never just swaps it with a section that isn't on Today; the others keep their places.
+         */
+        fun move(order: List<TodaySection>, section: TodaySection, delta: Int, shown: (TodaySection) -> Boolean = { true }): List<TodaySection> {
+            val visible = order.filter { it == section || shown(it) }
+            val from = visible.indexOf(section)
+            val to = (from + delta).coerceIn(0, visible.size - 1)
+            if (from < 0 || from == to) return order
+            val result = order.toMutableList().apply { remove(section) }
+            val target = result.indexOf(visible[to])
+            result.add(if (delta > 0) target + 1 else target, section)
+            return result
+        }
+    }
 }
 
 data class DashboardWidgetConfig(
@@ -457,7 +540,10 @@ data class DayStats(
     val sleepMarks: List<SleepMark> = emptyList(),
     val sleepMinutes: Int = 0,
     val naps: Int = 0, // naps that started this day
-    val longestSleepMinutes: Int = 0 // longest sleep that started this day
+    val longestSleepMinutes: Int = 0, // longest sleep that started this day
+    /** Average daytime wake window that ended this day (night wakings left out), or 0 when there were none. */
+    val wakeWindowMinutes: Int = 0,
+    val pumpedMl: Int = 0
 )
 
 /** One diaper change's position within its day, for the diaper-rhythm chart. */

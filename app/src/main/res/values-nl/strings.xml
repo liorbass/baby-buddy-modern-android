@@ -50,7 +50,7 @@
     <string name="start_side_right">Altijd rechts</string>
     <string name="start_side_right_desc">Begin elke voeding rechts</string>
     <string name="theme_by_time">Op tijdstip</string>
-    <string name="theme_by_time_desc">Donker van 20:00 tot 07:00</string>
+    <string name="theme_by_time_desc">Donker van %1$s tot %2$s</string>
     <string name="theme_system">Zelfde als telefoon</string>
     <string name="theme_system_desc">Volgt het donkere thema van de telefoon</string>
     <string name="theme_light">Licht</string>
@@ -624,6 +624,14 @@
     <string name="settings_theme">Thema</string>
     <string name="settings_language">Taal</string>
     <string name="settings_language_phone">Zelfde als telefoon</string>
+    <string name="settings_day_night">Dag en nacht</string>
+    <string name="settings_day_night_desc">\'s Nachts is het thema op tijd van de dag donker, zijn de trendgrafieken gearceerd, telt een nieuwe slaap als nachtslaap en is wakker worden uit de nachtslaap nachtelijk wakker worden in plaats van een wakkere periode.</string>
+    <string name="settings_day_starts">Dag begint</string>
+    <string name="settings_night_starts">Nacht begint</string>
+    <string name="settings_trends_day_start">Trenddagen beginnen om</string>
+    <string name="settings_trends_day_start_desc">Waar Trends de ene dag van de volgende scheidt, bijv. 18:00 om elke nacht op één rij te houden.</string>
+    <string name="hour_earlier">%s: een uur eerder</string>
+    <string name="hour_later">%s: een uur later</string>
     <string name="settings_24h">24-uursklok</string>
     <string name="settings_24h_on">Tijden worden getoond als 19:06</string>
     <string name="settings_24h_off">Tijden worden getoond als 7:06 PM</string>
@@ -679,6 +687,11 @@
     <string name="customize_cards_hint">Zet kaarten aan of uit voor je weergave Vandaag.</string>
     <string name="customize_summary_tiles">Overzichtstegels</string>
     <string name="customize_summary_tiles_desc">Het raster met totalen op \"Vandaag\". Onderdelen die je niet bijhoudt blijven verborgen.</string>
+    <string name="customize_order">Volgorde op Vandaag</string>
+    <string name="customize_order_desc">Verplaats onderdelen omhoog of omlaag. Een lopende voeding of slaap blijft bovenaan.</string>
+    <string name="section_shortcuts">Snelkoppelingen</string>
+    <string name="section_last_entries">Laatste voeding &amp; luier</string>
+    <string name="section_next">Volgende voeding &amp; slaap</string>
     <string name="customize_show">Tonen</string>
     <string name="customize_added">Toegevoegd</string>
     <string name="customize_home_title">📱 Android-startschermwidgets</string>
@@ -774,6 +787,7 @@
     <string name="trends_metric_naps">Dutjes</string>
     <string name="trends_unit_per_day">per dag</string>
     <string name="trends_unit_min_day">min/dag</string>
+    <string name="trends_unit_min_avg">min gem.</string>
     <string name="trends_unit_ml_day">ml/dag</string>
     <string name="trends_unit_h_day">u/dag</string>
     <string name="trends_daily_numbers">Dagcijfers</string>

@@ -31,6 +31,7 @@ import com.example.data.model.BabySex
 import com.example.data.model.BreastSide
 import com.example.data.model.DashboardWidgetConfig
 import com.example.data.model.DashboardWidgetType
+import com.example.data.model.DayHours
 import com.example.data.model.DayStats
 import com.example.data.model.DiaperEvent
 import com.example.data.model.DiaperMark
@@ -58,17 +59,22 @@ import com.example.data.model.StartSide
 import com.example.data.model.TemperatureEvent
 import com.example.data.model.ThemeMode
 import com.example.data.model.TimeFormat
+import com.example.data.model.TodaySection
 import com.example.data.model.TodayTile
 import com.example.data.model.TrackedItem
 import com.example.data.model.TummyTimeEvent
 import com.example.data.model.TummyTimeGoal
 import com.example.data.model.WakeWindowPart
+import com.example.data.model.averageMinutes
+import com.example.data.model.daytimeWakeWindows
 import com.example.data.model.isNapTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -301,6 +307,20 @@ class BabyBuddyRepository {
         prefs?.edit()?.putBoolean(PREF_MODELS_TAB, enabled)?.apply()
     }
 
+    /** Settings → Appearance → Day and night; ignored when both are the same hour. */
+    fun setDayHours(dayStartHour: Int, nightStartHour: Int) {
+        if (dayStartHour == nightStartHour) return
+        DayHours.dayStartHour = dayStartHour.mod(24)
+        DayHours.nightStartHour = nightStartHour.mod(24)
+        prefs?.edit()?.putInt(PREF_DAY_START, DayHours.dayStartHour)?.putInt(PREF_NIGHT_START, DayHours.nightStartHour)?.apply()
+    }
+
+    /** The hour Trends' days start at (Settings → Appearance). */
+    fun setTrendsDayStart(hour: Int) {
+        DayHours.trendsDayStartHour = hour.mod(24)
+        prefs?.edit()?.putInt(PREF_TRENDS_DAY_START, DayHours.trendsDayStartHour)?.apply()
+    }
+
     fun setUse24h(enabled: Boolean) {
         _use24h.value = enabled
         TimeFormat.use24h = enabled
@@ -348,6 +368,21 @@ class BabyBuddyRepository {
 
     private val _hiddenWakeWindowParts = MutableStateFlow<Set<WakeWindowPart>>(emptySet())
     val hiddenWakeWindowParts: StateFlow<Set<WakeWindowPart>> = _hiddenWakeWindowParts.asStateFlow()
+
+    private val _todayOrder = MutableStateFlow(TodaySection.entries.toList())
+    val todayOrder: StateFlow<List<TodaySection>> = _todayOrder.asStateFlow()
+
+    fun moveTodaySection(section: TodaySection, delta: Int) {
+        val cards = _dashboardWidgets.value.filter { it.isEnabled }.map { it.type }.toSet()
+        saveTodayOrder(TodaySection.move(_todayOrder.value, section, delta) { it.isShown(_hiddenItems.value) { type -> type in cards } })
+    }
+
+    fun resetTodayOrder() = saveTodayOrder(TodaySection.entries.toList())
+
+    private fun saveTodayOrder(order: List<TodaySection>) {
+        _todayOrder.value = order
+        prefs?.edit()?.putString(PREF_TODAY_ORDER, order.joinToString(",") { it.name })?.apply()
+    }
 
     fun setWakeWindowPartShown(part: WakeWindowPart, shown: Boolean) {
         val hidden = if (shown) _hiddenWakeWindowParts.value - part else _hiddenWakeWindowParts.value + part
@@ -1356,15 +1391,35 @@ class BabyBuddyRepository {
             return@withContext Result.failure(IllegalStateException(AppText.get(R.string.error_connect_for_trends)))
         }
         try {
+            // Days start at the hour picked in Settings (midnight by default); the last one is the day running now
+            val now = System.currentTimeMillis()
             val firstDay = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.HOUR_OF_DAY, DayHours.trendsDayStartHour)
                 set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
+                if (timeInMillis > now) add(Calendar.DAY_OF_YEAR, -1)
                 add(Calendar.DAY_OF_YEAR, -(days - 1))
             }
 
-            val (feeds, changes, sleeps) = fetchEvents(firstDay.timeInMillis)
+            // From 12 hours earlier, so the first day's morning wake window has the night sleep before it
+            val (events, pumps) = coroutineScope {
+                val events = async { fetchEvents(firstDay.timeInMillis - 12 * 60 * 60_000L) }
+                val pumps = async {
+                    when {
+                        TrackedItem.PUMPING in _hiddenItems.value -> emptyList()
+
+                        isDemo -> allDemoPumpings
+
+                        else -> allPages("pumping") { offset ->
+                            api!!.getPumping(remoteAuthHeader, child, since = isoUtc(firstDay.timeInMillis), limit = PAGE, offset = offset)
+                        }.map(::mapPumping)
+                    }
+                }
+                events.await() to pumps.await()
+            }
+            val (feeds, changes, sleeps) = events
+            val wakeWindows = daytimeWakeWindows(sleeps.filter { it.id != -1L })
 
             fun endOf(f: FeedingEvent) = f.timeMillis + (f.leftDurationSec + f.rightDurationSec) * 1000L
             // Gaps between consecutive feeds, keyed by the time the gap starts
@@ -1418,7 +1473,9 @@ class BabyBuddyRepository {
                     sleepMinutes = daySleep.sumOf { it.durationMinutes },
                     naps = sleeps.count { it.isNap && it.timeMillis in dayStart until dayEnd },
                     longestSleepMinutes = sleeps.filter { it.timeMillis in dayStart until dayEnd }
-                        .maxOfOrNull { it.durationMinutes } ?: 0
+                        .maxOfOrNull { it.durationMinutes } ?: 0,
+                    wakeWindowMinutes = wakeWindows.filter { it.endMillis in dayStart until dayEnd }.averageMinutes(),
+                    pumpedMl = pumps.filter { it.timeMillis in dayStart until dayEnd }.sumOf { it.amountMl }
                 )
             }
             Result.success(stats)
@@ -2787,6 +2844,9 @@ class BabyBuddyRepository {
         modelPrefs = mp
         _usedModels.value = mp.all.values.mapNotNull { (it as? String)?.let(SavedRhythmModel::fromText) }.associateBy { it.target }
         TimeFormat.use24h = _use24h.value
+        DayHours.dayStartHour = p.getInt(PREF_DAY_START, DayHours.DEFAULT_DAY_START)
+        DayHours.nightStartHour = p.getInt(PREF_NIGHT_START, DayHours.DEFAULT_NIGHT_START)
+        DayHours.trendsDayStartHour = p.getInt(PREF_TRENDS_DAY_START, 0)
         TimeFormat.useWheel = p.getBoolean(PREF_WHEEL_INPUT, false)
         syncScope.launch {
             // Remember the wheel/keyboard choice made in any picker
@@ -2823,6 +2883,7 @@ class BabyBuddyRepository {
             .mapNotNull { name -> TrackedItem.entries.firstOrNull { it.name == name } }.toSet()
         _hiddenTodayTiles.value = p.getString(PREF_HIDDEN_SUMMARY_TILES, null).orEmpty().split(",")
             .mapNotNull { name -> TodayTile.entries.firstOrNull { it.name == name } }.toSet()
+        _todayOrder.value = TodaySection.order(p.getString(PREF_TODAY_ORDER, null).orEmpty().split(","))
         _hiddenWakeWindowParts.value = p.getString(PREF_HIDDEN_WAKE_PARTS, null).orEmpty().split(",")
             .mapNotNull { name -> WakeWindowPart.entries.firstOrNull { it.name == name } }.toSet()
         p.getString(PREF_DASHBOARD_WIDGETS, null)?.let { saved ->
@@ -3084,6 +3145,7 @@ class BabyBuddyRepository {
         private const val PREF_HIDDEN_ITEMS = "hidden_items"
         private const val PREF_HIDDEN_SUMMARY_TILES = "hidden_summary_tiles"
         private const val PREF_HIDDEN_WAKE_PARTS = "hidden_wake_window_parts"
+        private const val PREF_TODAY_ORDER = "today_order"
         private const val PREF_REMIND_SLEEP = "remind_sleep_minutes"
         private const val PREF_WHEEL_INPUT = "time_input_wheel_v2" // v2: typing became the default
         private const val PREF_REMIND_AWAKE = "remind_awake_minutes"
@@ -3101,6 +3163,9 @@ class BabyBuddyRepository {
         private const val PREF_AWAY_SINCE = "away_since"
         private const val PREF_QUICK_ACTIONS = "quick_actions"
         private const val PREF_USE_24H = "use_24h"
+        private const val PREF_DAY_START = "day_start_hour"
+        private const val PREF_NIGHT_START = "night_start_hour"
+        private const val PREF_TRENDS_DAY_START = "trends_day_start_hour"
         private const val PREF_THEME_MODE = "theme_mode"
         private const val PREF_START_SIDE = "start_side"
         private val SERVER_COLORS = setOf("black", "brown", "gray", "green", "orange", "red", "white", "yellow")

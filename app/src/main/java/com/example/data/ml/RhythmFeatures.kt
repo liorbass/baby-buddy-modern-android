@@ -8,6 +8,8 @@ import com.example.data.model.FeedType
 import com.example.data.model.FeedingEvent
 import com.example.data.model.SleepEvent
 import com.example.data.model.formatMinutes
+import com.example.data.model.isLikelyNightWaking
+import com.example.data.model.isNightWaking
 import java.util.Calendar
 import kotlin.math.PI
 import kotlin.math.cos
@@ -149,11 +151,13 @@ object RhythmFeatures {
             "Awake before it (min)" to (if (i >= 1) minutes(sleeps[i - 1].endMillis, sleeps[i].timeMillis).coerceIn(0.0, CAP_MINUTES) else typicalAwake)
         ) + context(sleeps[i].endMillis, "sleep")
         val awake = sleeps.zipWithNext { a, b -> minutes(a.endMillis, b.timeMillis) }
+        val awakeNow = events.runningSleepStart == null && sleeps.lastOrNull()?.let(::isLikelyNightWaking) != true
         val awakeSet = dataset(
             RhythmTarget.AWAKE_WINDOW,
-            awake.indices.filter { awake[it] in 5.0..720.0 }.map { wakeRow(it) to awake[it] },
-            sleeps.indices.lastOrNull()?.takeIf { events.runningSleepStart == null }?.let(::wakeRow),
-            sleeps.lastOrNull()?.endMillis?.takeIf { events.runningSleepStart == null }
+            // Daytime only: night wakings are neither learned from nor predicted
+            awake.indices.filter { awake[it] in 5.0..720.0 && !isNightWaking(sleeps[it], sleeps[it + 1]) }.map { wakeRow(it) to awake[it] },
+            sleeps.indices.lastOrNull()?.takeIf { awakeNow }?.let(::wakeRow),
+            sleeps.lastOrNull()?.endMillis?.takeIf { awakeNow }
         )
         return listOf(feedSet, changeSet, awakeSet, lengthSet)
     }

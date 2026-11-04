@@ -50,7 +50,7 @@
     <string name="start_side_right">Siempre derecho</string>
     <string name="start_side_right_desc">Empezar cada toma por el derecho</string>
     <string name="theme_by_time">Según la hora</string>
-    <string name="theme_by_time_desc">Oscuro de 20:00 a 07:00</string>
+    <string name="theme_by_time_desc">Oscuro de %1$s a %2$s</string>
     <string name="theme_system">Como el teléfono</string>
     <string name="theme_system_desc">Sigue el tema oscuro del teléfono</string>
     <string name="theme_light">Claro</string>
@@ -634,6 +634,14 @@
     <string name="settings_theme">Tema</string>
     <string name="settings_language">Idioma</string>
     <string name="settings_language_phone">Como el teléfono</string>
+    <string name="settings_day_night">Día y noche</string>
+    <string name="settings_day_night_desc">De noche, el tema según la hora es oscuro, los gráficos de tendencias se sombrean, un sueño nuevo cuenta como sueño nocturno y despertar del sueño nocturno es un despertar nocturno y no una ventana de vigilia.</string>
+    <string name="settings_day_starts">Empieza el día</string>
+    <string name="settings_night_starts">Empieza la noche</string>
+    <string name="settings_trends_day_start">Los días de tendencias empiezan a las</string>
+    <string name="settings_trends_day_start_desc">Dónde separan las tendencias un día del siguiente, p. ej. 18:00 para mantener cada noche en una fila.</string>
+    <string name="hour_earlier">%s: una hora antes</string>
+    <string name="hour_later">%s: una hora después</string>
     <string name="settings_24h">Reloj de 24 horas</string>
     <string name="settings_24h_on">Las horas se muestran como 19:06</string>
     <string name="settings_24h_off">Las horas se muestran como 7:06 p. m.</string>
@@ -689,6 +697,11 @@
     <string name="customize_cards_hint">Activa o desactiva las tarjetas de tu vista Hoy.</string>
     <string name="customize_summary_tiles">Casillas de resumen</string>
     <string name="customize_summary_tiles_desc">La cuadrícula de totales de «Hoy». Los elementos que no registras siguen ocultos.</string>
+    <string name="customize_order">Orden en Hoy</string>
+    <string name="customize_order_desc">Mueve las secciones arriba o abajo. Una toma o un sueño en curso se queda arriba.</string>
+    <string name="section_shortcuts">Accesos directos</string>
+    <string name="section_last_entries">Última toma y pañal</string>
+    <string name="section_next">Próxima toma y sueño</string>
     <string name="customize_show">Mostrar</string>
     <string name="customize_added">Añadido</string>
     <string name="customize_home_title">📱 Widgets de la pantalla de inicio de Android</string>
@@ -784,6 +797,7 @@
     <string name="trends_metric_naps">Siestas</string>
     <string name="trends_unit_per_day">al día</string>
     <string name="trends_unit_min_day">min/día</string>
+    <string name="trends_unit_min_avg">min de media</string>
     <string name="trends_unit_ml_day">ml/día</string>
     <string name="trends_unit_h_day">h/día</string>
     <string name="trends_daily_numbers">Cifras diarias</string>

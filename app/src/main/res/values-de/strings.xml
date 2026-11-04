@@ -50,7 +50,7 @@
     <string name="start_side_right">Immer rechts</string>
     <string name="start_side_right_desc">Jede Mahlzeit rechts beginnen</string>
     <string name="theme_by_time">Nach Tageszeit</string>
-    <string name="theme_by_time_desc">Dunkel von 20:00 bis 07:00</string>
+    <string name="theme_by_time_desc">Dunkel von %1$s bis %2$s</string>
     <string name="theme_system">Wie das Handy</string>
     <string name="theme_system_desc">Folgt dem dunklen Design des Handys</string>
     <string name="theme_light">Hell</string>
@@ -624,6 +624,14 @@
     <string name="settings_theme">Design</string>
     <string name="settings_language">Sprache</string>
     <string name="settings_language_phone">Wie das Handy</string>
+    <string name="settings_day_night">Tag und Nacht</string>
+    <string name="settings_day_night_desc">Nachts ist das Design nach Tageszeit dunkel, die Trend-Diagramme sind schattiert, ein neuer Schlaf zählt als Nachtschlaf, und Aufwachen aus dem Nachtschlaf ist nächtliches Aufwachen statt eines Wachfensters.</string>
+    <string name="settings_day_starts">Tag beginnt</string>
+    <string name="settings_night_starts">Nacht beginnt</string>
+    <string name="settings_trends_day_start">Trend-Tage beginnen um</string>
+    <string name="settings_trends_day_start_desc">Wo Trends einen Tag vom nächsten trennt, z. B. 18:00, damit jede Nacht in einer Zeile bleibt.</string>
+    <string name="hour_earlier">%s: eine Stunde früher</string>
+    <string name="hour_later">%s: eine Stunde später</string>
     <string name="settings_24h">24-Stunden-Format</string>
     <string name="settings_24h_on">Zeiten erscheinen als 19:06</string>
     <string name="settings_24h_off">Zeiten erscheinen als 7:06 PM</string>
@@ -679,6 +687,11 @@
     <string name="customize_cards_hint">Schalte Karten für deine Heute-Ansicht ein oder aus.</string>
     <string name="customize_summary_tiles">Übersichtskacheln</string>
     <string name="customize_summary_tiles_desc">Das „Heute“-Raster mit den Summen. Bereiche, die du nicht erfasst, bleiben ausgeblendet.</string>
+    <string name="customize_order">Reihenfolge auf Heute</string>
+    <string name="customize_order_desc">Abschnitte nach oben oder unten verschieben. Eine laufende Mahlzeit oder ein laufender Schlaf bleibt oben.</string>
+    <string name="section_shortcuts">Verknüpfungen</string>
+    <string name="section_last_entries">Letzte Mahlzeit &amp; Windel</string>
+    <string name="section_next">Nächste Mahlzeit &amp; Schlaf</string>
     <string name="customize_show">Anzeigen</string>
     <string name="customize_added">Hinzugefügt</string>
     <string name="customize_home_title">📱 Android-Startbildschirm-Widgets</string>
@@ -774,6 +787,7 @@
     <string name="trends_metric_naps">Nickerchen</string>
     <string name="trends_unit_per_day">pro Tag</string>
     <string name="trends_unit_min_day">min/Tag</string>
+    <string name="trends_unit_min_avg">Min. ⌀</string>
     <string name="trends_unit_ml_day">ml/Tag</string>
     <string name="trends_unit_h_day">h/Tag</string>
     <string name="trends_daily_numbers">Tageswerte</string>

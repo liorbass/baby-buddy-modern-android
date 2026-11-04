@@ -32,6 +32,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.HourglassBottom
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.NoteAlt
 import androidx.compose.material.icons.filled.Opacity
@@ -62,6 +64,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -85,6 +88,7 @@ import com.example.R
 import com.example.data.model.AppText
 import com.example.data.model.DashboardWidgetConfig
 import com.example.data.model.DashboardWidgetType
+import com.example.data.model.TodaySection
 import com.example.data.model.TodayTile
 import com.example.data.model.TrackedItem
 import com.example.data.model.WakeWindowPart
@@ -115,7 +119,11 @@ fun AddWidgetModal(
     hiddenTiles: Set<TodayTile> = emptySet(),
     onToggleTile: (TodayTile) -> Unit = {},
     hiddenWakeParts: Set<WakeWindowPart> = emptySet(),
-    onToggleWakePart: (WakeWindowPart) -> Unit = {}
+    onToggleWakePart: (WakeWindowPart) -> Unit = {},
+    todayOrder: List<TodaySection> = TodaySection.entries,
+    hiddenItems: Set<TrackedItem> = emptySet(),
+    onMoveSection: (TodaySection, Int) -> Unit = { _, _ -> },
+    onResetOrder: () -> Unit = {}
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -262,7 +270,11 @@ fun AddWidgetModal(
                         hiddenTiles = hiddenTiles,
                         onToggleTile = onToggleTile,
                         hiddenWakeParts = hiddenWakeParts,
-                        onToggleWakePart = onToggleWakePart
+                        onToggleWakePart = onToggleWakePart,
+                        todayOrder = todayOrder,
+                        hiddenItems = hiddenItems,
+                        onMoveSection = onMoveSection,
+                        onResetOrder = onResetOrder
                     )
                 } else {
                     HomeScreenWidgetsTab(
@@ -281,7 +293,11 @@ private fun DashboardWidgetsTab(
     hiddenTiles: Set<TodayTile>,
     onToggleTile: (TodayTile) -> Unit,
     hiddenWakeParts: Set<WakeWindowPart>,
-    onToggleWakePart: (WakeWindowPart) -> Unit
+    onToggleWakePart: (WakeWindowPart) -> Unit,
+    todayOrder: List<TodaySection>,
+    hiddenItems: Set<TrackedItem>,
+    onMoveSection: (TodaySection, Int) -> Unit,
+    onResetOrder: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -339,6 +355,16 @@ private fun DashboardWidgetsTab(
             }
         }
 
+        item {
+            val cards = widgets.filter { it.isEnabled }.map { it.type }.toSet()
+            TodayOrderCard(
+                order = todayOrder.filter { section -> section.isShown(hiddenItems) { it in cards } },
+                isDefault = todayOrder == TodaySection.entries,
+                onMove = onMoveSection,
+                onReset = onResetOrder
+            )
+        }
+
         items(widgets) { widget ->
             DashboardWidgetItemCard(
                 widget = widget,
@@ -361,6 +387,53 @@ private fun DashboardWidgetsTab(
 
         item {
             Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+/** The order of Today's sections ([order]: those that can show), moved one place at a time. */
+@Composable
+private fun TodayOrderCard(order: List<TodaySection>, isDefault: Boolean, onMove: (TodaySection, Int) -> Unit, onReset: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
+        border = androidx.compose.foundation.BorderStroke(1.dp, OutlineVariant),
+        modifier = Modifier.fillMaxWidth().testTag("today_order_card")
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.customize_order),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                if (!isDefault) {
+                    TextButton(onClick = onReset) { Text(stringResource(R.string.reset)) }
+                }
+            }
+            Text(
+                stringResource(R.string.customize_order_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            order.forEachIndexed { index, section ->
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        section.label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = { onMove(section, -1) }, enabled = index > 0, modifier = Modifier.size(40.dp)) {
+                        Icon(Icons.Default.KeyboardArrowUp, contentDescription = stringResource(R.string.dialog_move_up, section.label))
+                    }
+                    IconButton(onClick = { onMove(section, 1) }, enabled = index < order.size - 1, modifier = Modifier.size(40.dp)) {
+                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = stringResource(R.string.dialog_move_down, section.label))
+                    }
+                }
+            }
         }
     }
 }

@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.data.model.AppText
 import com.example.data.model.BabySex
+import com.example.data.model.DayHours
 import com.example.data.model.DayStats
 import com.example.data.model.GrowthEvent
 import com.example.data.model.GrowthKind
@@ -70,6 +71,7 @@ import com.example.data.model.WhoGrowthStandards
 import com.example.data.model.ageInDays
 import com.example.data.model.formatGrowth
 import com.example.data.model.growthPercentile
+import com.example.data.model.nightRanges
 import com.example.data.model.ordinal
 import com.example.data.model.ordinalPercentile
 import com.example.ui.components.EditGrowthDialog
@@ -93,8 +95,13 @@ import kotlin.math.floor
 import kotlin.math.roundToInt
 
 private const val MINUTES_PER_DAY = 1440f
-private const val NIGHT_MORNING_END = 360f // 06:00
-private const val NIGHT_EVENING_START = 1140f // 19:00
+
+/** The night (Settings → Appearance → Day and night) as minute ranges within a chart row (rows start at the Trends day start). */
+private fun chartNight(): List<Pair<Float, Float>> = nightRanges(DayHours.trendsDayStartHour, DayHours.dayStartHour, DayHours.nightStartHour)
+    .map { it.first.toFloat() to it.second.toFloat() }
+
+/** Hour labels every 3 hours across a chart row, starting at the Trends day start. */
+private fun chartAxisLabels(): List<String> = (0..8).map { TimeFormat.hour((DayHours.trendsDayStartHour + it * 3) % 24) }
 private const val TABULAR_NUMS = "tnum"
 
 private val SectionShape = RoundedCornerShape(20.dp)
@@ -443,19 +450,13 @@ private fun RhythmChart(days: List<DayStats>) {
 
         fun xOf(minute: Float): Float = areaLeft + areaWidth * (minute.coerceIn(0f, MINUTES_PER_DAY) / MINUTES_PER_DAY)
 
-        fun isNight(minute: Float): Boolean = minute < NIGHT_MORNING_END || minute >= NIGHT_EVENING_START
+        val night = chartNight()
+        fun isNight(minute: Float): Boolean = night.any { minute >= it.first && minute < it.second }
 
-        // Night shading (00:00-06:00 and 19:00-24:00) behind all rows.
-        drawRect(
-            color = SurfaceContainerLow,
-            topLeft = Offset(areaLeft, 0f),
-            size = Size(xOf(NIGHT_MORNING_END) - areaLeft, rowsBottom)
-        )
-        drawRect(
-            color = SurfaceContainerLow,
-            topLeft = Offset(xOf(NIGHT_EVENING_START), 0f),
-            size = Size(areaRight - xOf(NIGHT_EVENING_START), rowsBottom)
-        )
+        // Night shading behind all rows.
+        night.forEach { (from, to) ->
+            drawRect(color = SurfaceContainerLow, topLeft = Offset(xOf(from), 0f), size = Size(xOf(to) - xOf(from), rowsBottom))
+        }
 
         // Grid lines every 3 h.
         (1..7).map { it * 180f }.forEach { minute ->
@@ -591,7 +592,7 @@ private fun RhythmChart(days: List<DayStats>) {
 
         // Hour axis aligned to the row area.
         val axisTop = rowsBottom + axisGap.toPx()
-        val axisLabels = (0..8).map { TimeFormat.hour(it * 3) } // 00, 03 … 24 or 12a, 3a … 12a
+        val axisLabels = chartAxisLabels() // 00, 03 … 24 or 12a, 3a … 12a (from the Trends day start)
         axisLabels.forEachIndexed { i, label ->
             val layout = textMeasurer.measure(
                 text = label,
@@ -645,6 +646,7 @@ private fun rhythmCaption(days: List<DayStats>, rangeDays: Int): String? {
 private val NursingColor: Color get() = ItemColors.tint(TrackedItem.BREASTFEEDING)
 private val BottleColor: Color get() = ItemColors.tint(TrackedItem.BOTTLE)
 private val NightSleepColor: Color get() = ItemColors.tint(TrackedItem.SLEEP)
+private val PumpingColor: Color get() = ItemColors.tint(TrackedItem.PUMPING)
 private val NapColor: Color get() = ItemColors.tint(TrackedItem.SLEEP).copy(alpha = 0.45f)
 private val DirtyColor: Color get() = ItemColors.tint(TrackedItem.DIAPERS)
 private val WetColor: Color get() = ItemColors.tint(TrackedItem.DIAPERS).copy(alpha = 0.4f)
@@ -691,16 +693,9 @@ private fun DayTimeChart(days: List<DayStats>, drawRow: DrawScope.(DayStats, Row
         val rowsBottom = rowCount * rowH + (rowCount - 1).coerceAtLeast(0) * gapPx
         val axis = RowGeometry(0f, rowsBottom, areaLeft, areaRight)
 
-        drawRect(
-            color = SurfaceContainerLow,
-            topLeft = Offset(areaLeft, 0f),
-            size = Size(axis.xOf(NIGHT_MORNING_END) - areaLeft, rowsBottom)
-        )
-        drawRect(
-            color = SurfaceContainerLow,
-            topLeft = Offset(axis.xOf(NIGHT_EVENING_START), 0f),
-            size = Size(areaRight - axis.xOf(NIGHT_EVENING_START), rowsBottom)
-        )
+        chartNight().forEach { (from, to) ->
+            drawRect(color = SurfaceContainerLow, topLeft = Offset(axis.xOf(from), 0f), size = Size(axis.xOf(to) - axis.xOf(from), rowsBottom))
+        }
         (1..7).map { it * 180f }.forEach { minute ->
             val x = axis.xOf(minute)
             drawLine(color = hairlineColor, start = Offset(x, 0f), end = Offset(x, rowsBottom), strokeWidth = 1f)
@@ -721,7 +716,7 @@ private fun DayTimeChart(days: List<DayStats>, drawRow: DrawScope.(DayStats, Row
         }
 
         val axisTop = rowsBottom + axisGap.toPx()
-        val axisLabels = (0..8).map { TimeFormat.hour(it * 3) }
+        val axisLabels = chartAxisLabels()
         axisLabels.forEachIndexed { i, label ->
             val layout = textMeasurer.measure(text = label, style = axisStyle, maxLines = 1, softWrap = false)
             val x = areaLeft + (areaRight - areaLeft) * i / (axisLabels.size - 1).toFloat()
@@ -861,6 +856,8 @@ private class DailyMetric(
     val decimals: Int,
     val color: Color,
     val reference: Float?,
+    /** Days without any (e.g. no wake windows logged) are left out of the average. */
+    val skipEmptyDays: Boolean = false,
     val value: (DayStats) -> Float
 )
 
@@ -877,6 +874,9 @@ private fun DailyNumbersSection(days: List<DayStats>, hidden: Set<TrackedItem> =
         if (showBottle) {
             add(DailyMetric(stringResource(R.string.log_bottle), stringResource(R.string.trends_unit_ml_day), 0, BottleColor, null) { it.bottleMl.toFloat() })
         }
+        if (TrackedItem.PUMPING !in hidden && days.any { it.pumpedMl > 0 }) {
+            add(DailyMetric(stringResource(R.string.tile_pumped), stringResource(R.string.trends_unit_ml_day), 0, PumpingColor, null) { it.pumpedMl.toFloat() })
+        }
         if (TrackedItem.DIAPERS !in hidden) {
             add(DailyMetric(stringResource(R.string.trends_metric_wet), stringResource(R.string.trends_unit_per_day), 1, DirtyColor, 6f) { it.wet.toFloat() })
             add(DailyMetric(stringResource(R.string.trends_metric_dirty), stringResource(R.string.trends_unit_per_day), 1, DirtyColor, null) { it.dirty.toFloat() })
@@ -884,6 +884,13 @@ private fun DailyNumbersSection(days: List<DayStats>, hidden: Set<TrackedItem> =
         if (TrackedItem.SLEEP !in hidden && days.any { it.sleepMarks.isNotEmpty() }) {
             add(DailyMetric(stringResource(R.string.item_sleep), stringResource(R.string.trends_unit_h_day), 1, NightSleepColor, null) { it.sleepMinutes / 60f })
             add(DailyMetric(stringResource(R.string.trends_metric_naps), stringResource(R.string.trends_unit_per_day), 1, NightSleepColor, null) { it.naps.toFloat() })
+            if (days.any { it.wakeWindowMinutes > 0 }) {
+                add(
+                    DailyMetric(stringResource(R.string.tile_wake_window), stringResource(R.string.trends_unit_min_avg), 0, NightSleepColor, null, skipEmptyDays = true) {
+                        it.wakeWindowMinutes.toFloat()
+                    }
+                )
+            }
         }
     }
 
@@ -910,7 +917,7 @@ private fun DailyNumbersSection(days: List<DayStats>, hidden: Set<TrackedItem> =
 @Composable
 private fun MetricRow(metric: DailyMetric, days: List<DayStats>) {
     val values = days.map { metric.value(it) }
-    val basisValues = averageBasis(days).map { metric.value(it) }
+    val basisValues = averageBasis(days).map { metric.value(it) }.filter { !metric.skipEmptyDays || it > 0f }
     val average = if (basisValues.isEmpty()) 0f else basisValues.average().toFloat()
     val lastIsPartial = days.lastOrNull()?.isToday == true
 

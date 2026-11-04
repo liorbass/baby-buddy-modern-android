@@ -273,7 +273,8 @@ interface BabyBuddyApiService {
         @Query("child") child: Int? = null,
         @Query("start_min") since: String? = null,
         @Query("start_max") until: String? = null,
-        @Query("limit") limit: Int = 100
+        @Query("limit") limit: Int = 100,
+        @Query("offset") offset: Int? = null
     ): Response<PaginatedResponse<BabyBuddyPumpingDto>>
 
     @GET("api/tummy-times/")

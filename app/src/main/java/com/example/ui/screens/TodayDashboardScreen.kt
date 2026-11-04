@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -94,6 +95,7 @@ import com.example.data.model.SleepEvent
 import com.example.data.model.SleepTimerState
 import com.example.data.model.TemperatureEvent
 import com.example.data.model.TimeFormat
+import com.example.data.model.TodaySection
 import com.example.data.model.TodayTile
 import com.example.data.model.TrackedItem
 import com.example.data.model.TummyTimeEvent
@@ -105,6 +107,7 @@ import com.example.data.model.completedWakeWindows
 import com.example.data.model.dayAndTime
 import com.example.data.model.diaperTypeLabel
 import com.example.data.model.formatMinutes
+import com.example.data.model.isLikelyNightWaking
 import com.example.ui.HistoryFilter
 import com.example.ui.ScreenDestination
 import com.example.ui.components.BathDialog
@@ -170,6 +173,7 @@ fun TodayDashboardScreen(
     hiddenItems: Set<TrackedItem> = emptySet(),
     hiddenTiles: Set<TodayTile> = emptySet(), // summary tiles turned off in Customize Today
     hiddenWakeParts: Set<WakeWindowPart> = emptySet(), // Wake windows card parts turned off there
+    todayOrder: List<TodaySection> = TodaySection.entries, // section order picked in Customize Today
     lastBathMillis: Long? = null,
     onLogBath: (notes: String, timeMillis: Long?) -> Unit = { _, _ -> },
     onOpenHistory: (HistoryFilter) -> Unit = {},
@@ -323,94 +327,10 @@ fun TodayDashboardScreen(
         ) {
             item { Spacer(modifier = Modifier.height(4.dp)) }
 
-            // Logging buttons first, then the running feed (if any), then the last feed / last diaper pair
-            item {
-                QuickActionsRow(
-                    actions = quickActions.filter { it in availableActions },
-                    onAction = { action ->
-                        when (action) {
-                            QuickAction.FEEDING -> when {
-                                // Only one kind of feed tracked: skip the chooser
-                                TrackedItem.BOTTLE in hiddenItems -> onNavigate(ScreenDestination.ACTIVE_NURSING_TIMER)
-
-                                TrackedItem.BREASTFEEDING in hiddenItems -> showBottleDialog = true
-
-                                else -> showFeedChooser = true
-                            }
-
-                            QuickAction.DIAPER -> onNavigate(ScreenDestination.LOG_DIAPER)
-
-                            QuickAction.PUMP -> showPumpDialog = true
-
-                            QuickAction.TUMMY_TIME -> showTummyDialog = true
-
-                            QuickAction.SLEEP -> onNavigate(ScreenDestination.SLEEP)
-
-                            QuickAction.BATH -> showBathDialog = true
-                        }
-                    },
-                    onEdit = { showActionsEditor = true }
-                )
-            }
-
-            if (liveTimerState.isRunning) {
-                item(key = "live_feed") {
-                    LiveFeedingBanner(
-                        liveTimerState = liveTimerState,
-                        onTapSide = onTapSide,
-                        onEndFeed = onEndFeed,
-                        onOpenFullTimer = { onNavigate(ScreenDestination.ACTIVE_NURSING_TIMER) },
-                        previousFeedMillis = previousFeedMillis
-                    )
-                }
-            }
-
-            if (sleepTimer.isRunning) {
-                item(key = "live_sleep") {
-                    SleepingBanner(startMillis = sleepTimer.startMillis, onClick = { onNavigate(ScreenDestination.SLEEP) })
-                }
-            }
-
-            if (handoff != null) {
-                item(key = "handoff") {
-                    HandoffCard(summary = handoff, onOpen = { onOpenHistory(HistoryFilter.ALL) }, onDismiss = onDismissHandoff)
-                }
-            }
-
-            // Cards (Customize Today), side by side when both are on
+            // Shown everywhere below (Customize Today picks the order)
             fun cardOn(type: DashboardWidgetType) = dashboardWidgets.any { it.type == type && it.isEnabled }
             val showLastFeed = feedingShown && cardOn(DashboardWidgetType.LAST_FEED)
             val showLastDiaper = TrackedItem.DIAPERS !in hiddenItems && cardOn(DashboardWidgetType.LAST_DIAPER)
-            if (showLastFeed || showLastDiaper) {
-                item(key = "last_entries") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        if (showLastFeed) {
-                            LastFeedCard(
-                                recentFeedings = visibleFeedings,
-                                latestFeed = lastFeed?.takeIf {
-                                    (if (it.type == FeedType.NURSING) TrackedItem.BREASTFEEDING else TrackedItem.BOTTLE) !in hiddenItems
-                                },
-                                lastBreastfeed = lastBreastfeed.takeIf { TrackedItem.BREASTFEEDING !in hiddenItems },
-                                onClick = { onOpenHistory(HistoryFilter.FEEDS) },
-                                onRemove = { onRemoveDashboardWidget(DashboardWidgetType.LAST_FEED) },
-                                modifier = Modifier.weight(1f).fillMaxHeight()
-                            )
-                        }
-                        if (showLastDiaper) {
-                            LastDiaperCard(
-                                lastDiaper = lastDiaper,
-                                onClick = { onOpenHistory(HistoryFilter.DIAPERS) },
-                                onRemove = { onRemoveDashboardWidget(DashboardWidgetType.LAST_DIAPER) },
-                                modifier = Modifier.weight(1f).fillMaxHeight()
-                            )
-                        }
-                    }
-                }
-            }
-
             // Awake for … / next feed around …
             val feedEvery = reminders.feedAfterMinutes.takeIf { it > 0 } ?: feedIntervals?.thisWeekAverageMinutes
             // (a sleep ending later than now, e.g. one entered with a wrong date, would leave the card empty)
@@ -418,20 +338,7 @@ fun TodayDashboardScreen(
                 !sleepTimer.isRunning && TrackedItem.SLEEP !in hiddenItems && it != null && it <= System.currentTimeMillis()
             }
             val showWakeWindows = TrackedItem.SLEEP !in hiddenItems && cardOn(DashboardWidgetType.WAKE_WINDOWS)
-            if (showWakeWindows) {
-                item(key = "wake_windows") {
-                    WakeWindowsWidgetCard(
-                        awakeSince = awakeSince,
-                        sleepingSince = sleepTimer.startMillis.takeIf { sleepTimer.isRunning },
-                        nextSleepAt = modelNext[RhythmTarget.AWAKE_WINDOW]
-                            ?: awakeSince?.let { since -> reminders.awakeAfterMinutes.takeIf { it > 0 }?.let { since + it * 60_000L } },
-                        windows = wakeWindows,
-                        parts = WakeWindowPart.entries.toSet() - hiddenWakeParts,
-                        onOpenSleep = { onNavigate(ScreenDestination.SLEEP) },
-                        onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.WAKE_WINDOWS) }
-                    )
-                }
-            }
+            val nightWaking = awakeSince != null && recentSleeps.maxByOrNull { it.endMillis }?.let(::isLikelyNightWaking) == true
             val nextFeedAt = modelNext[RhythmTarget.FEED_GAP]
                 ?: if (!feedingShown || liveTimerState.isRunning || lastFeedMillis == null || feedEvery == null) {
                     null
@@ -440,98 +347,230 @@ fun TodayDashboardScreen(
                 }
             // Left out when the Wake windows card already shows them
             val wakeCardShows = { part: WakeWindowPart -> showWakeWindows && part !in hiddenWakeParts }
+            // Only the next feed and, while awake, the next sleep (diaper and wake-up estimates were noise here)
             val otherNext = listOfNotNull(
-                modelNext[RhythmTarget.DIAPER_GAP]?.let { AppText.get(R.string.rhythm_diaper_gap) to it },
-                modelNext[RhythmTarget.AWAKE_WINDOW]?.takeUnless { wakeCardShows(WakeWindowPart.NAP_DUE) }?.let { AppText.get(R.string.rhythm_awake_window) to it },
-                modelNext[RhythmTarget.SLEEP_LENGTH]?.let { AppText.get(R.string.rhythm_sleep_length) to it }
+                modelNext[RhythmTarget.AWAKE_WINDOW]?.takeIf { awakeSince != null }?.takeUnless { wakeCardShows(WakeWindowPart.NAP_DUE) }
+                    ?.let { AppText.get(R.string.rhythm_awake_window) to it }
             )
             val nextUpAwakeSince = awakeSince.takeUnless { wakeCardShows(WakeWindowPart.AWAKE_FOR) }
-            if (nextUpAwakeSince != null || nextFeedAt != null || otherNext.isNotEmpty()) {
-                item(key = "next_up") {
-                    NextUpCard(
-                        awakeSince = nextUpAwakeSince,
-                        nextFeedAt = nextFeedAt,
-                        onSleepClick = { onNavigate(ScreenDestination.SLEEP) },
-                        modelNext = otherNext
-                    )
+
+            // A running feed or sleep (and While you were away) stays at the top, under the shortcuts when they're first
+            fun LazyListScope.banners() {
+                if (liveTimerState.isRunning) {
+                    item(key = "live_feed") {
+                        LiveFeedingBanner(
+                            liveTimerState = liveTimerState,
+                            onTapSide = onTapSide,
+                            onEndFeed = onEndFeed,
+                            onOpenFullTimer = { onNavigate(ScreenDestination.ACTIVE_NURSING_TIMER) },
+                            previousFeedMillis = previousFeedMillis
+                        )
+                    }
+                }
+
+                if (sleepTimer.isRunning) {
+                    item(key = "live_sleep") {
+                        SleepingBanner(startMillis = sleepTimer.startMillis, onClick = { onNavigate(ScreenDestination.SLEEP) })
+                    }
+                }
+
+                if (handoff != null) {
+                    item(key = "handoff") {
+                        HandoffCard(summary = handoff, onOpen = { onOpenHistory(HistoryFilter.ALL) }, onDismiss = onDismissHandoff)
+                    }
                 }
             }
+            // Sections in the chosen order; each branch below only checks what its data needs
+            val sections = todayOrder.filter { it.isShown(hiddenItems, ::cardOn) }
+            val shortcutsFirst = sections.firstOrNull() == TodaySection.QUICK_ACTIONS
+            if (!shortcutsFirst) banners()
 
-            item {
-                TodaySummaryGrid(
-                    recentFeedings = visibleFeedings,
-                    recentDiapers = recentDiapers,
-                    recentTummyTimes = recentTummyTimes,
-                    recentPumpings = recentPumpings,
-                    recentSleeps = recentSleeps,
-                    hidden = hiddenItems,
-                    hiddenTiles = hiddenTiles,
-                    awakeSince = awakeSince,
-                    wakeWindows = wakeWindows,
-                    onWakeWindowClick = { onNavigate(ScreenDestination.SLEEP) },
-                    sleepTimer = sleepTimer,
-                    milkStash = milkStash,
-                    onMilkStashClick = { showStashDialog = true },
-                    lastBathMillis = lastBathMillis,
-                    onBathClick = { showBathDialog = true },
-                    onOpenHistory = onOpenHistory
-                )
-            }
+            sections.forEach { section ->
+                when (section) {
+                    TodaySection.QUICK_ACTIONS -> {
+                        item(key = "quick_actions") {
+                            QuickActionsRow(
+                                actions = quickActions.filter { it in availableActions },
+                                onAction = { action ->
+                                    when (action) {
+                                        QuickAction.FEEDING -> when {
+                                            // Only one kind of feed tracked: skip the chooser
+                                            TrackedItem.BOTTLE in hiddenItems -> onNavigate(ScreenDestination.ACTIVE_NURSING_TIMER)
 
-            if (TrackedItem.QUICK_NOTES !in hiddenItems) {
-                item(key = "quick_notes") {
-                    QuickNotesCard(
-                        tags = noteTags,
-                        todaysNotes = notes,
-                        onTag = { tag -> onAddTaggedNote(tag.name.replaceFirstChar(Char::uppercase), listOf(tag.name)) },
-                        onAddNote = { showNoteDialog = true }
-                    )
-                }
-            }
+                                            TrackedItem.BREASTFEEDING in hiddenItems -> showBottleDialog = true
 
-            if (recentPumpings.isNotEmpty() && TrackedItem.PUMPING !in hiddenItems) {
-                item { LastPumpCard(recentPumpings = recentPumpings) }
-            }
+                                            else -> showFeedChooser = true
+                                        }
 
-            if (feedIntervals?.thisWeekAverageMinutes != null && feedingShown) {
-                item { FeedIntervalCard(feedIntervals) }
-            }
+                                        QuickAction.DIAPER -> onNavigate(ScreenDestination.LOG_DIAPER)
 
-            dashboardWidgets.filter {
-                it.isEnabled && it.type !in TOP_CARDS && !(it.type == DashboardWidgetType.TUMMY_TIME_GOAL && TrackedItem.TUMMY_TIME in hiddenItems) &&
-                    !(it.type == DashboardWidgetType.GROWTH && TrackedItem.GROWTH in hiddenItems)
-            }.forEach { widget ->
-                item(key = "widget_${widget.type.name}") {
-                    when (widget.type) {
-                        // Shown near the top
-                        DashboardWidgetType.LAST_FEED, DashboardWidgetType.LAST_DIAPER, DashboardWidgetType.WAKE_WINDOWS -> Unit
+                                        QuickAction.PUMP -> showPumpDialog = true
 
-                        DashboardWidgetType.TUMMY_TIME_GOAL -> TummyTimeGoalWidgetCard(
-                            goalMinutes = tummyTimeGoal.dailyGoalMinutes,
-                            todayMinutes = recentTummyTimes.sumOf { it.durationMinutes },
-                            onAddMinutes = onAddTummyTimeMinutes,
-                            onRemoveWidget = { onRemoveDashboardWidget(widget.type) }
-                        )
+                                        QuickAction.TUMMY_TIME -> showTummyDialog = true
 
-                        DashboardWidgetType.HEALTH_VITALS -> TemperatureWidgetCard(
-                            temperatures = temperatures,
-                            onLogTemperature = onLogTemperature,
-                            onRemoveWidget = { onRemoveDashboardWidget(widget.type) }
-                        )
+                                        QuickAction.SLEEP -> onNavigate(ScreenDestination.SLEEP)
 
-                        DashboardWidgetType.GROWTH -> GrowthWidgetCard(
-                            growth = growth,
-                            birthDate = birthDate,
-                            sex = babySex,
-                            onLogGrowth = onLogGrowth,
-                            onRemoveWidget = { onRemoveDashboardWidget(widget.type) }
-                        )
+                                        QuickAction.BATH -> showBathDialog = true
+                                    }
+                                },
+                                onEdit = { showActionsEditor = true }
+                            )
+                        }
+                        if (shortcutsFirst) banners()
+                    }
 
-                        DashboardWidgetType.CAREGIVER_NOTES -> NotesWidgetCard(
-                            notes = notes.filterNot { MILK_STASH_TAG in it.tags },
-                            onAddNote = onAddNote,
-                            onRemoveWidget = { onRemoveDashboardWidget(widget.type) }
-                        )
+                    TodaySection.LAST_ENTRIES -> {
+                        if (showLastFeed || showLastDiaper) {
+                            item(key = "last_entries") {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    if (showLastFeed) {
+                                        LastFeedCard(
+                                            recentFeedings = visibleFeedings,
+                                            latestFeed = lastFeed?.takeIf {
+                                                (if (it.type == FeedType.NURSING) TrackedItem.BREASTFEEDING else TrackedItem.BOTTLE) !in hiddenItems
+                                            },
+                                            lastBreastfeed = lastBreastfeed.takeIf { TrackedItem.BREASTFEEDING !in hiddenItems },
+                                            onClick = { onOpenHistory(HistoryFilter.FEEDS) },
+                                            onRemove = { onRemoveDashboardWidget(DashboardWidgetType.LAST_FEED) },
+                                            modifier = Modifier.weight(1f).fillMaxHeight()
+                                        )
+                                    }
+                                    if (showLastDiaper) {
+                                        LastDiaperCard(
+                                            lastDiaper = lastDiaper,
+                                            onClick = { onOpenHistory(HistoryFilter.DIAPERS) },
+                                            onRemove = { onRemoveDashboardWidget(DashboardWidgetType.LAST_DIAPER) },
+                                            modifier = Modifier.weight(1f).fillMaxHeight()
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    TodaySection.WAKE_WINDOWS -> {
+                        if (showWakeWindows) {
+                            item(key = "wake_windows") {
+                                WakeWindowsWidgetCard(
+                                    awakeSince = awakeSince,
+                                    sleepingSince = sleepTimer.startMillis.takeIf { sleepTimer.isRunning },
+                                    // No nap due during a night waking
+                                    nextSleepAt = modelNext[RhythmTarget.AWAKE_WINDOW]
+                                        ?: awakeSince?.takeUnless { nightWaking }?.let { since -> reminders.awakeAfterMinutes.takeIf { it > 0 }?.let { since + it * 60_000L } },
+                                    windows = wakeWindows,
+                                    parts = WakeWindowPart.entries.toSet() - hiddenWakeParts,
+                                    onOpenSleep = { onNavigate(ScreenDestination.SLEEP) },
+                                    onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.WAKE_WINDOWS) }
+                                )
+                            }
+                        }
+                    }
+
+                    TodaySection.NEXT_UP -> {
+                        if (nextUpAwakeSince != null || nextFeedAt != null || otherNext.isNotEmpty()) {
+                            item(key = "next_up") {
+                                NextUpCard(
+                                    awakeSince = nextUpAwakeSince,
+                                    nextFeedAt = nextFeedAt,
+                                    onSleepClick = { onNavigate(ScreenDestination.SLEEP) },
+                                    modelNext = otherNext
+                                )
+                            }
+                        }
+                    }
+
+                    TodaySection.SUMMARY_TILES -> {
+                        item(key = "summary_tiles") {
+                            TodaySummaryGrid(
+                                recentFeedings = visibleFeedings,
+                                recentDiapers = recentDiapers,
+                                recentTummyTimes = recentTummyTimes,
+                                recentPumpings = recentPumpings,
+                                recentSleeps = recentSleeps,
+                                hidden = hiddenItems,
+                                hiddenTiles = hiddenTiles,
+                                awakeSince = awakeSince,
+                                wakeWindows = wakeWindows,
+                                onWakeWindowClick = { onNavigate(ScreenDestination.SLEEP) },
+                                sleepTimer = sleepTimer,
+                                milkStash = milkStash,
+                                onMilkStashClick = { showStashDialog = true },
+                                lastBathMillis = lastBathMillis,
+                                onBathClick = { showBathDialog = true },
+                                onOpenHistory = onOpenHistory
+                            )
+                        }
+                    }
+
+                    TodaySection.QUICK_NOTES -> {
+                        if (TrackedItem.QUICK_NOTES !in hiddenItems) {
+                            item(key = "quick_notes") {
+                                QuickNotesCard(
+                                    tags = noteTags,
+                                    todaysNotes = notes,
+                                    onTag = { tag -> onAddTaggedNote(tag.name.replaceFirstChar(Char::uppercase), listOf(tag.name)) },
+                                    onAddNote = { showNoteDialog = true }
+                                )
+                            }
+                        }
+                    }
+
+                    TodaySection.LAST_PUMP -> {
+                        if (recentPumpings.isNotEmpty()) {
+                            item(key = "last_pump") { LastPumpCard(recentPumpings = recentPumpings) }
+                        }
+                    }
+
+                    TodaySection.FEED_INTERVAL -> {
+                        if (feedIntervals?.thisWeekAverageMinutes != null) {
+                            item(key = "feed_interval") { FeedIntervalCard(feedIntervals) }
+                        }
+                    }
+
+                    TodaySection.TUMMY_TIME -> {
+                        item(key = "widget_TUMMY_TIME_GOAL") {
+                            TummyTimeGoalWidgetCard(
+                                goalMinutes = tummyTimeGoal.dailyGoalMinutes,
+                                todayMinutes = recentTummyTimes.sumOf { it.durationMinutes },
+                                onAddMinutes = onAddTummyTimeMinutes,
+                                onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.TUMMY_TIME_GOAL) }
+                            )
+                        }
+                    }
+
+                    TodaySection.TEMPERATURE -> {
+                        item(key = "widget_HEALTH_VITALS") {
+                            TemperatureWidgetCard(
+                                temperatures = temperatures,
+                                onLogTemperature = onLogTemperature,
+                                onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.HEALTH_VITALS) }
+                            )
+                        }
+                    }
+
+                    TodaySection.NOTES -> {
+                        item(key = "widget_CAREGIVER_NOTES") {
+                            NotesWidgetCard(
+                                notes = notes.filterNot { MILK_STASH_TAG in it.tags },
+                                onAddNote = onAddNote,
+                                onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.CAREGIVER_NOTES) }
+                            )
+                        }
+                    }
+
+                    TodaySection.GROWTH -> {
+                        item(key = "widget_GROWTH") {
+                            GrowthWidgetCard(
+                                growth = growth,
+                                birthDate = birthDate,
+                                sex = babySex,
+                                onLogGrowth = onLogGrowth,
+                                onRemoveWidget = { onRemoveDashboardWidget(DashboardWidgetType.GROWTH) }
+                            )
+                        }
                     }
                 }
             }
@@ -709,7 +748,6 @@ private fun sinceLabel(elapsedMillis: Long): String {
 }
 
 // Shown near the top of Today rather than with the other cards
-private val TOP_CARDS = setOf(DashboardWidgetType.LAST_FEED, DashboardWidgetType.LAST_DIAPER, DashboardWidgetType.WAKE_WINDOWS)
 
 /** The current time, updated on each minute boundary (for "… ago" labels). */
 @Composable
@@ -994,142 +1032,87 @@ private fun TodaySummaryGrid(
     val naps = recentSleeps.count { it.isNap && it.timeMillis >= todayStart }
     val wet = recentDiapers.count { it.type == DiaperType.WET || it.type == DiaperType.BOTH }
     val dirty = recentDiapers.count { it.type == DiaperType.DIRTY || it.type == DiaperType.BOTH }
-    val tummyMinutes = recentTummyTimes.sumOf { it.durationMinutes }
     val nursingMinutes = recentFeedings.filter { it.type == FeedType.NURSING }.sumOf { it.totalDurationMinutes }
     val bottleMl = recentFeedings.sumOf { it.amountMl ?: 0 }
 
-    // Only the tracked items, two per row
-    val tiles = buildList<@Composable (Modifier) -> Unit> {
-        if ((TrackedItem.BREASTFEEDING !in hidden || TrackedItem.BOTTLE !in hidden) && TodayTile.FEEDS !in hiddenTiles) {
-            add { m ->
-                SummaryTile(
-                    label = stringResource(R.string.tile_feeds),
-                    value = "${recentFeedings.size}",
-                    detail = when {
-                        TrackedItem.BREASTFEEDING in hidden -> stringResource(R.string.amount_ml, bottleMl)
-                        TrackedItem.BOTTLE in hidden || bottleMl == 0 -> stringResource(R.string.history_min_nursing, nursingMinutes)
-                        else -> stringResource(R.string.today_nursing_and_bottle, nursingMinutes, bottleMl)
-                    },
-                    icon = null,
-                    emoji = "🍼",
-                    tint = ItemColors.tint(TrackedItem.BREASTFEEDING),
-                    background = ItemColors.soft(TrackedItem.BREASTFEEDING),
-                    onClick = { onOpenHistory(HistoryFilter.FEEDS) },
-                    modifier = m
-                )
-            }
+    /** Value, detail, icon and tap action of one tile. */
+    @Composable
+    fun content(tile: TodayTile): TileContent = when (tile) {
+        TodayTile.FEEDS -> TileContent(
+            value = "${recentFeedings.size}",
+            detail = when {
+                TrackedItem.BREASTFEEDING in hidden -> stringResource(R.string.amount_ml, bottleMl)
+                TrackedItem.BOTTLE in hidden || bottleMl == 0 -> stringResource(R.string.history_min_nursing, nursingMinutes)
+                else -> stringResource(R.string.today_nursing_and_bottle, nursingMinutes, bottleMl)
+            },
+            icon = null,
+            emoji = "🍼",
+            onClick = { onOpenHistory(HistoryFilter.FEEDS) }
+        )
+
+        TodayTile.DIAPERS -> TileContent(
+            value = "${recentDiapers.size}",
+            detail = stringResource(R.string.widget_wet_dirty, wet, dirty),
+            icon = Icons.Default.WaterDrop,
+            onClick = { onOpenHistory(HistoryFilter.DIAPERS) }
+        )
+
+        TodayTile.SLEEP -> TileContent(
+            value = formatMinutes(sleptMinutes.toInt()),
+            detail = if (sleepTimer.isRunning) stringResource(R.string.today_sleeping_now) else pluralStringResource(R.plurals.naps_count, naps, naps),
+            icon = Icons.Default.Bedtime,
+            onClick = { onOpenHistory(HistoryFilter.SLEEP) }
+        )
+
+        TodayTile.WAKE_WINDOW -> {
+            val minuteNow = rememberMinuteClock()
+            TileContent(
+                value = when {
+                    sleepTimer.isRunning -> stringResource(R.string.today_asleep)
+                    awakeSince != null -> formatMinutes(((minuteNow - awakeSince) / 60_000L).toInt().coerceAtLeast(0))
+                    else -> "–"
+                },
+                detail = if (wakeWindows.isEmpty()) {
+                    stringResource(R.string.today_none_ended)
+                } else {
+                    stringResource(R.string.today_wake_avg, formatMinutes(wakeWindows.averageMinutes()), wakeWindows.size)
+                },
+                icon = Icons.Default.WbSunny,
+                onClick = onWakeWindowClick
+            )
         }
-        if (TrackedItem.DIAPERS !in hidden && TodayTile.DIAPERS !in hiddenTiles) {
-            add { m ->
-                SummaryTile(
-                    label = stringResource(R.string.tile_diapers),
-                    value = "${recentDiapers.size}",
-                    detail = stringResource(R.string.widget_wet_dirty, wet, dirty),
-                    icon = Icons.Default.WaterDrop,
-                    tint = ItemColors.tint(TrackedItem.DIAPERS),
-                    background = ItemColors.soft(TrackedItem.DIAPERS),
-                    onClick = { onOpenHistory(HistoryFilter.DIAPERS) },
-                    modifier = m
-                )
-            }
-        }
-        if (TrackedItem.SLEEP !in hidden && TodayTile.SLEEP !in hiddenTiles) {
-            add { m ->
-                SummaryTile(
-                    label = stringResource(R.string.tile_sleep),
-                    value = formatMinutes(sleptMinutes.toInt()),
-                    detail = when {
-                        sleepTimer.isRunning -> stringResource(R.string.today_sleeping_now)
-                        else -> pluralStringResource(R.plurals.naps_count, naps, naps)
-                    },
-                    icon = Icons.Default.Bedtime,
-                    tint = ItemColors.tint(TrackedItem.SLEEP),
-                    background = ItemColors.soft(TrackedItem.SLEEP),
-                    onClick = { onOpenHistory(HistoryFilter.SLEEP) },
-                    modifier = m
-                )
-            }
-        }
-        if (TrackedItem.SLEEP !in hidden && TodayTile.WAKE_WINDOW !in hiddenTiles) {
-            add { m ->
-                val minuteNow = rememberMinuteClock()
-                SummaryTile(
-                    label = stringResource(R.string.tile_wake_window),
-                    value = when {
-                        sleepTimer.isRunning -> stringResource(R.string.today_asleep)
-                        awakeSince != null -> formatMinutes(((minuteNow - awakeSince) / 60_000L).toInt().coerceAtLeast(0))
-                        else -> "–"
-                    },
-                    detail = if (wakeWindows.isEmpty()) {
-                        stringResource(R.string.today_none_ended)
-                    } else {
-                        stringResource(R.string.today_wake_avg, formatMinutes(wakeWindows.averageMinutes()), wakeWindows.size)
-                    },
-                    icon = Icons.Default.WbSunny,
-                    tint = ItemColors.tint(TrackedItem.SLEEP),
-                    background = ItemColors.soft(TrackedItem.SLEEP),
-                    onClick = onWakeWindowClick,
-                    modifier = m
-                )
-            }
-        }
-        if (TrackedItem.PUMPING !in hidden && TodayTile.PUMPED !in hiddenTiles) {
-            add { m ->
-                SummaryTile(
-                    label = stringResource(R.string.tile_pumped),
-                    value = stringResource(R.string.amount_ml, recentPumpings.sumOf { it.amountMl }),
-                    detail = sessions(recentPumpings.size),
-                    icon = Icons.Default.WaterDrop,
-                    tint = ItemColors.tint(TrackedItem.PUMPING),
-                    background = ItemColors.soft(TrackedItem.PUMPING),
-                    onClick = { onOpenHistory(HistoryFilter.PUMPING) },
-                    modifier = m
-                )
-            }
-        }
-        if (TrackedItem.MILK_STASH !in hidden && TodayTile.MILK_STASH !in hiddenTiles) {
-            add { m ->
-                SummaryTile(
-                    label = stringResource(R.string.tile_milk_stash),
-                    value = milkStash?.let { stringResource(R.string.amount_ml, it) } ?: stringResource(R.string.today_set),
-                    detail = stringResource(if (milkStash == null) R.string.today_tap_to_enter else R.string.today_tap_to_correct),
-                    icon = Icons.Default.Kitchen,
-                    tint = ItemColors.tint(TrackedItem.MILK_STASH),
-                    background = ItemColors.soft(TrackedItem.MILK_STASH),
-                    onClick = onMilkStashClick,
-                    modifier = m
-                )
-            }
-        }
-        if (TrackedItem.TUMMY_TIME !in hidden && TodayTile.TUMMY_TIME !in hiddenTiles) {
-            add { m ->
-                SummaryTile(
-                    label = stringResource(R.string.tile_tummy_time),
-                    value = stringResource(R.string.amount_minutes, tummyMinutes),
-                    detail = sessions(recentTummyTimes.size),
-                    icon = Icons.Default.FitnessCenter,
-                    tint = ItemColors.tint(TrackedItem.TUMMY_TIME),
-                    background = ItemColors.soft(TrackedItem.TUMMY_TIME),
-                    onClick = { onOpenHistory(HistoryFilter.TUMMY) },
-                    modifier = m
-                )
-            }
-        }
-        if (TrackedItem.BATH !in hidden && TodayTile.BATH !in hiddenTiles) {
-            add { m ->
-                SummaryTile(
-                    label = stringResource(R.string.tile_last_bath),
-                    value = lastBathMillis?.let(::bathAgo) ?: stringResource(R.string.none_yet),
-                    detail = lastBathMillis?.let { dayAndTime(it, TimeFormat.clock(it)) } ?: stringResource(R.string.today_tap_to_log_bath),
-                    icon = Icons.Default.Bathtub,
-                    tint = ItemColors.tint(TrackedItem.BATH),
-                    background = ItemColors.soft(TrackedItem.BATH),
-                    onClick = onBathClick,
-                    modifier = m
-                )
-            }
-        }
+
+        TodayTile.PUMPED -> TileContent(
+            value = stringResource(R.string.amount_ml, recentPumpings.sumOf { it.amountMl }),
+            detail = sessions(recentPumpings.size),
+            icon = Icons.Default.WaterDrop,
+            onClick = { onOpenHistory(HistoryFilter.PUMPING) }
+        )
+
+        TodayTile.MILK_STASH -> TileContent(
+            value = milkStash?.let { stringResource(R.string.amount_ml, it) } ?: stringResource(R.string.today_set),
+            detail = stringResource(if (milkStash == null) R.string.today_tap_to_enter else R.string.today_tap_to_correct),
+            icon = Icons.Default.Kitchen,
+            onClick = onMilkStashClick
+        )
+
+        TodayTile.TUMMY_TIME -> TileContent(
+            value = stringResource(R.string.amount_minutes, recentTummyTimes.sumOf { it.durationMinutes }),
+            detail = sessions(recentTummyTimes.size),
+            icon = Icons.Default.FitnessCenter,
+            onClick = { onOpenHistory(HistoryFilter.TUMMY) }
+        )
+
+        TodayTile.BATH -> TileContent(
+            value = lastBathMillis?.let(::bathAgo) ?: stringResource(R.string.none_yet),
+            detail = lastBathMillis?.let { dayAndTime(it, TimeFormat.clock(it)) } ?: stringResource(R.string.today_tap_to_log_bath),
+            icon = Icons.Default.Bathtub,
+            onClick = onBathClick
+        )
     }
+
+    // Only the tracked items, two per row
+    val tiles = TodayTile.entries.filter { it !in hiddenTiles && it.isTracked(hidden) }
     if (tiles.isEmpty()) return
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -1141,16 +1124,32 @@ private fun TodaySummaryGrid(
         )
         tiles.chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                row.forEach { tile -> tile(Modifier.weight(1f)) }
+                row.forEach { tile ->
+                    val c = content(tile)
+                    SummaryTile(
+                        label = stringResource(tile.labelRes),
+                        value = c.value,
+                        detail = c.detail,
+                        icon = c.icon,
+                        emoji = c.emoji,
+                        tint = ItemColors.tint(tile.colorItem),
+                        background = ItemColors.soft(tile.colorItem),
+                        onClick = c.onClick,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
                 if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
 }
 
-/** "Awake for 1h 20m" and "Next feed around 14:30 · in 25m", updated every minute. */
+/** What one summary tile shows (its label and colors come from its [TodayTile]). */
+private class TileContent(val value: String, val detail: String, val icon: ImageVector?, val onClick: () -> Unit, val emoji: String? = null)
+
 private fun sessions(count: Int) = AppText.plural(R.plurals.sessions_count, count, count)
 
+/** "Awake for 1h 20m" and "Next feed around 14:30 · in 25m", updated every minute. */
 @Composable
 private fun NextUpCard(awakeSince: Long?, nextFeedAt: Long?, onSleepClick: () -> Unit, modelNext: List<Pair<String, Long>> = emptyList()) {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }

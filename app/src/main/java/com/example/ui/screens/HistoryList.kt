@@ -142,133 +142,122 @@ private fun entriesOf(
     onNote: (NoteEvent) -> Unit = {},
     onGrowth: (GrowthEvent) -> Unit = {}
 ): List<HistoryEntry> {
-    val out = mutableListOf<HistoryEntry>()
-    if (filter == HistoryFilter.ALL || filter == HistoryFilter.FEEDS) {
-        day.feedings.forEach { f ->
-            val isBottle = f.amountMl != null || f.type == FeedType.BOTTLE
-            out += HistoryEntry(
-                key = "feed_${f.id}",
-                timeMillis = f.timeMillis,
-                time = f.timeFormatted,
-                title = AppText.get(if (isBottle) R.string.log_bottle else R.string.tile_feed_name),
-                detail = if (isBottle) {
-                    AppText.get(if (f.bottleFormula) R.string.history_ml_formula else R.string.history_ml_breast_milk, f.amountMl ?: 0)
-                } else {
-                    AppText.get(R.string.history_minutes_sides, f.totalDurationMinutes, sideLabel(f))
-                },
-                subtitle = whoAndNote(f.caregiver, f.notes),
-                dot = ItemColors.tint(if (isBottle) TrackedItem.BOTTLE else TrackedItem.BREASTFEEDING),
-                onClick = { onFeeding(f) }
-            )
-        }
-    }
-    if (filter == HistoryFilter.ALL || filter == HistoryFilter.DIAPERS) {
-        day.diapers.forEach { d ->
-            out += HistoryEntry(
-                key = "diaper_${d.id}",
-                timeMillis = d.timeMillis,
-                time = d.timeFormatted,
-                title = AppText.get(R.string.log_diaper),
-                detail = diaperDetail(d),
-                subtitle = diaperSubtitle(d),
-                dot = when (d.type) {
-                    DiaperType.WET -> ItemColors.tint(TrackedItem.DIAPERS).copy(alpha = 0.4f)
-                    DiaperType.DIRTY, DiaperType.BOTH -> ItemColors.tint(TrackedItem.DIAPERS)
-                    DiaperType.DRY -> OutlineVariant
-                },
-                onClick = { onDiaper(d) }
-            )
-        }
-    }
-    if (filter == HistoryFilter.ALL || filter == HistoryFilter.PUMPING) {
-        day.pumpings.forEach { p ->
-            out += HistoryEntry(
-                key = "pump_${p.id}",
-                timeMillis = p.timeMillis,
-                time = p.timeFormatted,
-                title = AppText.get(R.string.log_pumping),
-                detail = if (p.durationMinutes > 0) AppText.get(R.string.history_ml_minutes, p.amountMl, p.durationMinutes) else AppText.get(R.string.amount_ml, p.amountMl),
-                subtitle = whoAndNote(p.caregiver, p.notes),
-                dot = ItemColors.tint(TrackedItem.PUMPING),
-                onClick = { onPumping(p) }
-            )
-        }
-    }
-    if (filter == HistoryFilter.ALL || filter == HistoryFilter.TUMMY) {
-        day.tummyTimes.forEach { t ->
-            out += HistoryEntry(
-                key = "tummy_${t.id}",
-                timeMillis = t.timeMillis,
-                time = t.timeFormatted,
-                title = AppText.get(R.string.item_tummy_time),
-                detail = AppText.get(R.string.amount_minutes, t.durationMinutes),
-                subtitle = whoAndNote(t.caregiver, t.milestone),
-                dot = ItemColors.tint(TrackedItem.TUMMY_TIME),
-                onClick = { onTummy(t) }
-            )
-        }
-    }
-    if (filter == HistoryFilter.ALL || filter == HistoryFilter.SLEEP) {
-        day.sleeps.forEach { s ->
-            out += HistoryEntry(
-                key = "sleep_${s.id}",
-                timeMillis = s.timeMillis,
-                time = s.timeFormatted,
-                title = AppText.get(if (s.isNap) R.string.nap else R.string.item_sleep),
-                detail = AppText.get(R.string.history_sleep_until, formatMinutes(s.durationMinutes), TimeFormat.clock(s.endMillis)),
-                subtitle = whoAndNote(s.caregiver, s.notes),
-                dot = ItemColors.tint(TrackedItem.SLEEP),
-                onClick = { onSleep(s) }
-            )
-        }
-    }
-    if (filter == HistoryFilter.ALL || filter == HistoryFilter.BATH) {
-        day.baths.forEach { b ->
-            out += HistoryEntry(
-                key = "bath_${b.id}",
-                timeMillis = b.timeMillis,
-                time = b.timeFormatted,
-                title = AppText.get(R.string.log_bath),
-                detail = "",
-                subtitle = if (b.text == BATH_NOTE_TEXT) "" else whoAndNote(null, b.text),
-                dot = ItemColors.tint(TrackedItem.BATH),
-                onClick = { onBath(b) }
-            )
-        }
-    }
-    if (filter == HistoryFilter.ALL || filter == HistoryFilter.GROWTH) {
-        growth.forEach { g ->
-            out += HistoryEntry(
-                key = "growth_${g.kind.name}_${g.id}", // ids are per kind on the server
-                timeMillis = g.dateMillis,
-                time = "", // the server keeps only the date
-                title = g.kind.label,
-                detail = formatGrowth(g.kind, g.value),
-                subtitle = whoAndNote(g.caregiver, g.notes),
-                dot = ItemColors.tint(TrackedItem.GROWTH),
-                onClick = { onGrowth(g) }
-            )
-        }
-    }
-    if (filter == HistoryFilter.ALL || filter == HistoryFilter.NOTES) {
-        day.notes.forEach { n ->
-            val lines = n.text.lines().filter { it.isNotBlank() }
-            out += HistoryEntry(
-                key = "note_${n.id}",
-                timeMillis = n.timeMillis,
-                time = n.timeFormatted,
-                title = AppText.get(R.string.note),
-                detail = lines.firstOrNull().orEmpty(),
-                subtitle = listOfNotNull(
-                    lines.drop(1).joinToString(" ").takeIf { it.isNotBlank() },
-                    n.tags.takeIf { it.isNotEmpty() }?.joinToString(" ") { "#$it" }
-                ).joinToString(" · "),
-                dot = OutlineVariant,
-                onClick = { onNote(n) }
-            )
-        }
-    }
-    return out.sortedByDescending { it.timeMillis }
+    fun wants(f: HistoryFilter) = filter == HistoryFilter.ALL || filter == f
+    return buildList {
+        if (wants(HistoryFilter.FEEDS)) day.feedings.mapTo(this) { feedingEntry(it) { onFeeding(it) } }
+        if (wants(HistoryFilter.DIAPERS)) day.diapers.mapTo(this) { diaperEntry(it) { onDiaper(it) } }
+        if (wants(HistoryFilter.PUMPING)) day.pumpings.mapTo(this) { pumpingEntry(it) { onPumping(it) } }
+        if (wants(HistoryFilter.TUMMY)) day.tummyTimes.mapTo(this) { tummyEntry(it) { onTummy(it) } }
+        if (wants(HistoryFilter.SLEEP)) day.sleeps.mapTo(this) { sleepEntry(it) { onSleep(it) } }
+        if (wants(HistoryFilter.BATH)) day.baths.mapTo(this) { bathEntry(it) { onBath(it) } }
+        if (wants(HistoryFilter.GROWTH)) growth.mapTo(this) { growthEntry(it) { onGrowth(it) } }
+        if (wants(HistoryFilter.NOTES)) day.notes.mapTo(this) { noteEntry(it) { onNote(it) } }
+    }.sortedByDescending { it.timeMillis }
+}
+
+private fun feedingEntry(f: FeedingEvent, onClick: () -> Unit): HistoryEntry {
+    val isBottle = f.amountMl != null || f.type == FeedType.BOTTLE
+    return HistoryEntry(
+        key = "feed_${f.id}",
+        timeMillis = f.timeMillis,
+        time = f.timeFormatted,
+        title = AppText.get(if (isBottle) R.string.log_bottle else R.string.tile_feed_name),
+        detail = if (isBottle) {
+            AppText.get(if (f.bottleFormula) R.string.history_ml_formula else R.string.history_ml_breast_milk, f.amountMl ?: 0)
+        } else {
+            AppText.get(R.string.history_minutes_sides, f.totalDurationMinutes, sideLabel(f))
+        },
+        subtitle = whoAndNote(f.caregiver, f.notes),
+        dot = ItemColors.tint(if (isBottle) TrackedItem.BOTTLE else TrackedItem.BREASTFEEDING),
+        onClick = onClick
+    )
+}
+
+private fun diaperEntry(d: DiaperEvent, onClick: () -> Unit): HistoryEntry = HistoryEntry(
+    key = "diaper_${d.id}",
+    timeMillis = d.timeMillis,
+    time = d.timeFormatted,
+    title = AppText.get(R.string.log_diaper),
+    detail = diaperDetail(d),
+    subtitle = diaperSubtitle(d),
+    dot = when (d.type) {
+        DiaperType.WET -> ItemColors.tint(TrackedItem.DIAPERS).copy(alpha = 0.4f)
+        DiaperType.DIRTY, DiaperType.BOTH -> ItemColors.tint(TrackedItem.DIAPERS)
+        DiaperType.DRY -> OutlineVariant
+    },
+    onClick = onClick
+)
+
+private fun pumpingEntry(p: PumpingEvent, onClick: () -> Unit): HistoryEntry = HistoryEntry(
+    key = "pump_${p.id}",
+    timeMillis = p.timeMillis,
+    time = p.timeFormatted,
+    title = AppText.get(R.string.log_pumping),
+    detail = if (p.durationMinutes > 0) AppText.get(R.string.history_ml_minutes, p.amountMl, p.durationMinutes) else AppText.get(R.string.amount_ml, p.amountMl),
+    subtitle = whoAndNote(p.caregiver, p.notes),
+    dot = ItemColors.tint(TrackedItem.PUMPING),
+    onClick = onClick
+)
+
+private fun tummyEntry(t: TummyTimeEvent, onClick: () -> Unit): HistoryEntry = HistoryEntry(
+    key = "tummy_${t.id}",
+    timeMillis = t.timeMillis,
+    time = t.timeFormatted,
+    title = AppText.get(R.string.item_tummy_time),
+    detail = AppText.get(R.string.amount_minutes, t.durationMinutes),
+    subtitle = whoAndNote(t.caregiver, t.milestone),
+    dot = ItemColors.tint(TrackedItem.TUMMY_TIME),
+    onClick = onClick
+)
+
+private fun sleepEntry(s: SleepEvent, onClick: () -> Unit): HistoryEntry = HistoryEntry(
+    key = "sleep_${s.id}",
+    timeMillis = s.timeMillis,
+    time = s.timeFormatted,
+    title = AppText.get(if (s.isNap) R.string.nap else R.string.item_sleep),
+    detail = AppText.get(R.string.history_sleep_until, formatMinutes(s.durationMinutes), TimeFormat.clock(s.endMillis)),
+    subtitle = whoAndNote(s.caregiver, s.notes),
+    dot = ItemColors.tint(TrackedItem.SLEEP),
+    onClick = onClick
+)
+
+private fun bathEntry(b: NoteEvent, onClick: () -> Unit): HistoryEntry = HistoryEntry(
+    key = "bath_${b.id}",
+    timeMillis = b.timeMillis,
+    time = b.timeFormatted,
+    title = AppText.get(R.string.log_bath),
+    detail = "",
+    subtitle = if (b.text == BATH_NOTE_TEXT) "" else whoAndNote(null, b.text),
+    dot = ItemColors.tint(TrackedItem.BATH),
+    onClick = onClick
+)
+
+private fun growthEntry(g: GrowthEvent, onClick: () -> Unit): HistoryEntry = HistoryEntry(
+    key = "growth_${g.kind.name}_${g.id}", // ids are per kind on the server
+    timeMillis = g.dateMillis,
+    time = "", // the server keeps only the date
+    title = g.kind.label,
+    detail = formatGrowth(g.kind, g.value),
+    subtitle = whoAndNote(g.caregiver, g.notes),
+    dot = ItemColors.tint(TrackedItem.GROWTH),
+    onClick = onClick
+)
+
+private fun noteEntry(n: NoteEvent, onClick: () -> Unit): HistoryEntry {
+    val lines = n.text.lines().filter { it.isNotBlank() }
+    return HistoryEntry(
+        key = "note_${n.id}",
+        timeMillis = n.timeMillis,
+        time = n.timeFormatted,
+        title = AppText.get(R.string.note),
+        detail = lines.firstOrNull().orEmpty(),
+        subtitle = listOfNotNull(
+            lines.drop(1).joinToString(" ").takeIf { it.isNotBlank() },
+            n.tags.takeIf { it.isNotEmpty() }?.joinToString(" ") { "#$it" }
+        ).joinToString(" · "),
+        dot = OutlineVariant,
+        onClick = onClick
+    )
 }
 
 /** The filters for what this phone tracks. */

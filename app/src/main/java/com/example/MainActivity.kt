@@ -43,6 +43,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.model.AppText
 import com.example.data.model.BreastSide
+import com.example.data.model.DayHours
 import com.example.data.model.ThemeMode
 import com.example.ui.HistoryFilter
 import com.example.ui.MainViewModel
@@ -80,13 +81,13 @@ class MainActivity : ComponentActivity() {
         // Only on a fresh launch; after rotation the ViewModel already has the right screen
         if (savedInstanceState == null) handleWidgetNavigation(intent, mainViewModel)
         setContent {
-            // Light/dark per Settings → Appearance; "by time of day" uses the dim warm palette from 20:00 to 07:00
+            // Light/dark per Settings → Appearance; "by time of day" uses the dim warm palette at night (DayHours)
             val themeMode by mainViewModel.themeMode.collectAsState()
             val systemDark = isSystemInDarkTheme()
-            LaunchedEffect(themeMode, systemDark) {
+            LaunchedEffect(themeMode, systemDark, DayHours.dayStartHour, DayHours.nightStartHour) {
                 while (true) {
                     AppTheme.isNight = when (themeMode) {
-                        ThemeMode.BY_TIME -> isNightHour()
+                        ThemeMode.BY_TIME -> DayHours.isNightAt(System.currentTimeMillis())
                         ThemeMode.SYSTEM -> systemDark
                         ThemeMode.LIGHT -> false
                         ThemeMode.DARK -> true
@@ -140,11 +141,6 @@ class MainActivity : ComponentActivity() {
         ) {
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
-    }
-
-    private fun isNightHour(): Boolean {
-        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-        return hour >= 20 || hour < 7
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -261,6 +257,7 @@ fun BabyBuddyApp(
     val hiddenItems by viewModel.hiddenItems.collectAsState()
     val hiddenTodayTiles by viewModel.hiddenTodayTiles.collectAsState()
     val hiddenWakeWindowParts by viewModel.hiddenWakeWindowParts.collectAsState()
+    val todayOrder by viewModel.todayOrder.collectAsState()
 
     // Nothing to show without a server: until logged in (or a saved login is restored), only the login screen
     val needsLogin = !connectionConfig.isConnected
@@ -356,6 +353,7 @@ fun BabyBuddyApp(
                         hiddenItems = hiddenItems,
                         hiddenTiles = hiddenTodayTiles,
                         hiddenWakeParts = hiddenWakeWindowParts,
+                        todayOrder = todayOrder,
                         lastBathMillis = lastBathMillis,
                         onLogBath = { notes, time -> viewModel.logBath(time, notes) },
                         onOpenHistory = { filter -> viewModel.openHistory(filter) },
@@ -588,6 +586,8 @@ fun BabyBuddyApp(
                             }
                         },
                         onUse24hChange = { viewModel.setUse24h(it) },
+                        onDayHoursChange = { day, night -> viewModel.setDayHours(day, night) },
+                        onTrendsDayStartChange = { viewModel.setTrendsDayStart(it) },
                         modelsTab = modelsTab,
                         modelTargets = usedModels.keys,
                         onModelsTabChange = { viewModel.setModelsTab(it) },
@@ -636,6 +636,10 @@ fun BabyBuddyApp(
             onToggleTile = { tile -> viewModel.setTodayTileShown(tile, tile in hiddenTodayTiles) },
             hiddenWakeParts = hiddenWakeWindowParts,
             onToggleWakePart = { part -> viewModel.setWakeWindowPartShown(part, part in hiddenWakeWindowParts) },
+            todayOrder = todayOrder,
+            hiddenItems = hiddenItems,
+            onMoveSection = viewModel::moveTodaySection,
+            onResetOrder = viewModel::resetTodayOrder,
             onPinHomeScreenWidget = { type -> viewModel.pinHomeScreenWidget(context, type) },
             onDismiss = { viewModel.setAddWidgetModalVisible(false) }
         )
