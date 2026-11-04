@@ -6,14 +6,6 @@ import androidx.compose.runtime.snapshotFlow
 import com.example.R
 import com.example.data.api.BabyBuddyApiClient
 import com.example.data.api.BabyBuddyApiService
-import com.example.data.api.BabyBuddyChangeDto
-import com.example.data.api.BabyBuddyFeedingDto
-import com.example.data.api.BabyBuddyGrowthDto
-import com.example.data.api.BabyBuddyNoteDto
-import com.example.data.api.BabyBuddyPumpingDto
-import com.example.data.api.BabyBuddySleepDto
-import com.example.data.api.BabyBuddyTemperatureDto
-import com.example.data.api.BabyBuddyTummyTimeDto
 import com.example.data.api.PaginatedResponse
 import com.example.data.api.UntrustedCertificateException
 import com.example.data.api.findInChain
@@ -70,7 +62,6 @@ import com.example.data.model.daytimeWakeWindows
 import com.example.data.model.isNapTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -103,8 +94,6 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicLong
 
 class BabyBuddyRepository {
 
@@ -117,25 +106,26 @@ class BabyBuddyRepository {
     private var remoteAuthHeader: String = ""
     private var remoteChildId: Int? = null
 
-    // Local entry id -> Baby Buddy record id, filled as creates succeed
-    private val serverIds = ConcurrentHashMap<Long, Long>()
-    private val localIdSeq = AtomicLong(System.currentTimeMillis())
-    fun nextLocalId(): Long = localIdSeq.incrementAndGet()
+    fun nextLocalId(): Long = newLocalId()
 
-    /** Writes the server hasn't accepted yet, oldest first. Guarded by itself; mirrored to disk on every change. */
-    private val pendingWrites = mutableListOf<QueuedWrite>()
-
-    @Volatile private var pendingSnapshot: List<QueuedWrite> = emptyList()
-    private var flushJob: Job? = null
     private var store: OfflineStore? = null
-
-    /** Number of entries waiting to be saved to the server. */
-    private val _pendingWriteCount = MutableStateFlow(0)
-    val pendingWriteCount: StateFlow<Int> = _pendingWriteCount.asStateFlow()
 
     /** Errors from background writes to the server, for the UI to surface. */
     private val _syncErrors = MutableSharedFlow<String>(extraBufferCapacity = 8)
     val syncErrors: SharedFlow<String> = _syncErrors.asSharedFlow()
+
+    /** Writes the server hasn't accepted yet ([WriteQueue]); they find their local entries through [localEntries]. */
+    private val writeQueue: WriteQueue by lazy {
+        WriteQueue(
+            scope = syncScope,
+            target = { remoteApi?.let { api -> remoteChildId?.let { child -> WriteQueue.Target(api, remoteAuthHeader, child) } } },
+            local = localEntries,
+            reportError = { _syncErrors.tryEmit(it) }
+        )
+    }
+
+    /** Number of entries waiting to be saved to the server. */
+    val pendingWriteCount: StateFlow<Int> get() = writeQueue.count
 
     private val _connectionConfig = MutableStateFlow(ServerConnectionConfig())
     val connectionConfig: StateFlow<ServerConnectionConfig> = _connectionConfig.asStateFlow()
@@ -814,228 +804,17 @@ class BabyBuddyRepository {
         serverId: (T) -> Long?,
         time: (T) -> Long
     ): List<T> {
-        val pending = pendingSnapshot.filter { it.endpoint == endpoint }
+        val pending = writeQueue.snapshot.filter { it.endpoint == endpoint }
         val touchedLocalIds = pending.map { it.localId }.toSet()
         val deletedServerIds = pending.filter { it.action == QueuedWrite.ACTION_DELETE }
-            .mapNotNull { it.serverId ?: serverIds[it.localId] ?: it.localId }.toSet()
+            .mapNotNull { it.serverId ?: writeQueue.knownServerId(it.localId) ?: it.localId }.toSet()
         val keepLocal = local.filter { id(it) in touchedLocalIds }
         val shadowed = keepLocal.mapNotNull(serverId).toSet() + keepLocal.map(id)
         val keepRemote = remote.filter { r -> serverId(r).let { it !in deletedServerIds && it !in shadowed } }
         return (keepRemote + keepLocal).sortedByDescending(time)
     }
 
-    // --- Generated segments in server notes: "Caregiver: Alex", and on breastfeeds "Left: … | Right: … | Sides: …" ---
-
-    /** Removes "Caregiver: X" segments (" | "-separated or on their own line) and returns (caregiver, remaining notes). */
-    private fun splitCaregiver(notes: String): Pair<String?, String> {
-        var caregiver: String? = null
-        val segment = Regex("""^Caregiver:\s*(.+)$""")
-        val lines = notes.lines().mapNotNull { line ->
-            line.split(" | ").filter { seg ->
-                val match = segment.find(seg.trim())
-                if (match != null) caregiver = match.groupValues[1].trim()
-                match == null
-            }.joinToString(" | ").takeIf { it.isNotBlank() }
-        }
-        return caregiver to lines.joinToString("\n").trim()
-    }
-
-    /** Adds "Caregiver: X" as the last line. */
-    private fun withCaregiver(notes: String, caregiver: String?): String = listOfNotNull(notes.ifBlank { null }, caregiver?.let { "Caregiver: $it" }).joinToString("\n")
-
-    /** Removes the generated "Left: … | Right: … | Sides: …" segments; returns (side order, remaining notes). */
-    private fun splitFeedingMeta(notes: String): Pair<String?, String> {
-        var sides: String? = null
-        val generated = Regex("""^(Left|Right):\s*\d+m(\s*\d+s)?$""")
-        val sidesSegment = Regex("""^Sides:\s*(.+)$""")
-        val lines = notes.lines().mapNotNull { line ->
-            line.split(" | ").filter { seg ->
-                val t = seg.trim()
-                sidesSegment.find(t)?.let { sides = it.groupValues[1].trim() }
-                !generated.matches(t) && !sidesSegment.matches(t)
-            }.joinToString(" | ").takeIf { it.isNotBlank() }
-        }
-        return sides to lines.joinToString("\n").trim()
-    }
-
-    /** Server notes for a feed: the generated line (breastfeeds) with the caregiver, then the user's notes. */
-    private fun composeFeedingNotes(e: FeedingEvent): String {
-        if (e.type != FeedType.NURSING) return withCaregiver(e.notes, e.caregiver)
-        val line = listOfNotNull(
-            "Left: ${e.leftDurationSec / 60}m ${e.leftDurationSec % 60}s",
-            "Right: ${e.rightDurationSec / 60}m ${e.rightDurationSec % 60}s",
-            e.sides?.let { "Sides: $it" },
-            e.caregiver?.let { "Caregiver: $it" }
-        ).joinToString(" | ")
-        return listOfNotNull(line, e.notes.ifBlank { null }).joinToString("\n")
-    }
-
-    private class DiaperExtras(val rash: Boolean, val creams: List<String>, val consistency: String, val amount: String, val notes: String)
-
-    /**
-     * Amount (Light/Medium/Heavy), rash, cream and consistency have no server field; they live in one
-     * "Amount: … | Rash | Cream: … | Consistency: …" notes line.
-     */
-    private fun composeDiaperNotes(e: DiaperEvent): String {
-        val solid = e.type == DiaperType.DIRTY || e.type == DiaperType.BOTH
-        val extras = buildList {
-            if (e.type != DiaperType.DRY && e.amount.isNotBlank()) add("Amount: ${e.amount}")
-            if (e.rashPresent) add("Rash")
-            if (e.skinBarrierApplied.isNotEmpty()) add("Cream: ${e.skinBarrierApplied.joinToString(", ")}")
-            if (solid && e.consistency.isNotBlank()) add("Consistency: ${e.consistency}")
-        }.joinToString(" | ")
-        return listOf(e.notes, extras).filter { it.isNotBlank() }.joinToString("\n")
-    }
-
-    private fun parseDiaperNotes(notes: String): DiaperExtras {
-        val segment = Regex("""^(Amount: .+|Rash|Cream: .+|Consistency: .+)$""")
-        val lines = notes.lines()
-        val extrasLine = lines.lastOrNull { line ->
-            line.isNotBlank() && line.split(" | ").all { segment.matches(it.trim()) }
-        } ?: return DiaperExtras(false, emptyList(), "", "", notes)
-        val segments = extrasLine.split(" | ").map { it.trim() }
-        return DiaperExtras(
-            rash = "Rash" in segments,
-            creams = segments.firstOrNull { it.startsWith("Cream: ") }?.removePrefix("Cream: ")?.split(", ").orEmpty(),
-            consistency = segments.firstOrNull { it.startsWith("Consistency: ") }?.removePrefix("Consistency: ").orEmpty(),
-            amount = segments.firstOrNull { it.startsWith("Amount: ") }?.removePrefix("Amount: ").orEmpty(),
-            notes = (lines - extrasLine).joinToString("\n").trim()
-        )
-    }
-
-    // App colour names <-> the server's colour choices
-    private fun appDiaperColor(server: String?): String = when (server) {
-        "yellow" -> "Mustard"
-        "brown" -> "Tan/Brown"
-        "green" -> "Greenish"
-        "black" -> "Dark"
-        else -> server.orEmpty()
-    }
-
-    private fun serverDiaperColor(app: String): String = when (app) {
-        "Mustard" -> "yellow"
-        "Tan/Brown" -> "brown"
-        "Greenish" -> "green"
-        "Dark" -> "black"
-        in SERVER_COLORS -> app
-        else -> ""
-    }
-
-    private fun mapChange(dto: BabyBuddyChangeDto): DiaperEvent {
-        val (caregiver, rest) = splitCaregiver(dto.notes.orEmpty())
-        val extras = parseDiaperNotes(rest)
-        return DiaperEvent(
-            id = dto.id ?: nextLocalId(),
-            serverId = dto.id,
-            timeMillis = parseServerTime(dto.time)?.time ?: System.currentTimeMillis(),
-            childId = dto.child,
-            timeFormatted = formatServerTime(dto.time),
-            type = when {
-                dto.wet && dto.solid -> DiaperType.BOTH
-                dto.solid -> DiaperType.DIRTY
-                dto.wet -> DiaperType.WET
-                else -> DiaperType.DRY
-            },
-            amount = extras.amount,
-            consistency = extras.consistency,
-            color = appDiaperColor(dto.color),
-            rashPresent = extras.rash,
-            skinBarrierApplied = extras.creams,
-            notes = extras.notes,
-            caregiver = caregiver,
-            imageUrl = null
-        )
-    }
-
-    private fun mapPumping(dto: BabyBuddyPumpingDto): PumpingEvent {
-        val start = dto.start ?: dto.end
-        val (caregiver, rest) = splitCaregiver(dto.notes.orEmpty())
-        return PumpingEvent(
-            id = dto.id ?: nextLocalId(),
-            serverId = dto.id,
-            timeMillis = start?.let(::parseServerTime)?.time ?: System.currentTimeMillis(),
-            timeFormatted = start?.let(::formatServerTime).orEmpty(),
-            durationMinutes = parseDurationSeconds(dto.duration) / 60,
-            amountMl = dto.amount?.toInt() ?: 0,
-            notes = rest,
-            caregiver = caregiver
-        )
-    }
-
-    private fun mapSleep(dto: BabyBuddySleepDto): SleepEvent {
-        val (caregiver, rest) = splitCaregiver(dto.notes.orEmpty())
-        val start = parseServerTime(dto.start)?.time ?: System.currentTimeMillis()
-        val end = dto.end?.let(::parseServerTime)?.time ?: (start + parseDurationSeconds(dto.duration) * 1000L)
-        return SleepEvent(
-            id = dto.id ?: nextLocalId(),
-            serverId = dto.id,
-            caregiver = caregiver,
-            timeMillis = start,
-            endMillis = end,
-            timeFormatted = formatServerTime(dto.start),
-            isNap = dto.nap ?: isNapTime(start),
-            notes = rest
-        )
-    }
-
-    private fun mapTummyTime(dto: BabyBuddyTummyTimeDto): TummyTimeEvent = TummyTimeEvent(
-        id = dto.id ?: nextLocalId(),
-        serverId = dto.id,
-        timeMillis = parseServerTime(dto.start)?.time ?: System.currentTimeMillis(),
-        childId = dto.child,
-        timeFormatted = formatServerTime(dto.start),
-        durationMinutes = parseDurationSeconds(dto.duration) / 60,
-        milestone = dto.milestone.orEmpty(),
-        caregiver = splitCaregiver(dto.notes.orEmpty()).first
-    )
-
-    private fun mapTemperature(dto: BabyBuddyTemperatureDto): TemperatureEvent {
-        val (caregiver, rest) = splitCaregiver(dto.notes.orEmpty())
-        return TemperatureEvent(
-            id = dto.id ?: nextLocalId(),
-            serverId = dto.id,
-            timeMillis = dto.time?.let(::parseServerTime)?.time ?: System.currentTimeMillis(),
-            timeFormatted = dto.time?.let(::formatServerTime).orEmpty(),
-            temperature = dto.temperature ?: 0.0,
-            notes = rest,
-            caregiver = caregiver
-        )
-    }
-
-    private fun mapGrowth(kind: GrowthKind, dto: BabyBuddyGrowthDto): GrowthEvent {
-        val (caregiver, rest) = splitCaregiver(dto.notes.orEmpty())
-        return GrowthEvent(
-            id = dto.id ?: nextLocalId(),
-            serverId = dto.id,
-            kind = kind,
-            dateMillis = dto.date?.let(::parseLocalDateNoon) ?: System.currentTimeMillis(),
-            value = growthValue(kind, dto) ?: 0.0,
-            notes = rest,
-            caregiver = caregiver
-        )
-    }
-
-    private fun growthValue(kind: GrowthKind, dto: BabyBuddyGrowthDto): Double? = when (kind) {
-        GrowthKind.WEIGHT -> dto.weight
-        GrowthKind.LENGTH -> dto.height
-        GrowthKind.HEAD -> dto.headCircumference
-    }
-
-    /** "2026-10-12" → local noon of that day (so the day never shifts with time zones). */
-    private fun parseLocalDateNoon(date: String): Long? = runCatching {
-        SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(date)!!.time + 12 * 3_600_000L
-    }.getOrNull()
-
-    private fun localDate(millis: Long): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(millis))
-
-    private fun mapNote(dto: BabyBuddyNoteDto): NoteEvent = NoteEvent(
-        id = dto.id ?: nextLocalId(),
-        serverId = dto.id,
-        timeMillis = dto.time?.let(::parseServerTime)?.time ?: System.currentTimeMillis(),
-        timeFormatted = dto.time?.let(::formatServerTime).orEmpty(),
-        text = dto.note.orEmpty(),
-        tags = dto.tags.orEmpty()
-    )
+    // Mapping server records to entries and back, and the generated note segments: ServerMapping.kt
 
     /**
      * Entries for the [days] local days ending with the day containing [lastDayMillis], oldest first.
@@ -1143,75 +922,6 @@ class BabyBuddyRepository {
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
-
-    private fun mapFeeding(dto: BabyBuddyFeedingDto): FeedingEvent {
-        val method = dto.method.lowercase()
-        val totalSec = parseDurationSeconds(dto.duration)
-        val side = when (method) {
-            "left breast" -> BreastSide.LEFT
-            "right breast" -> BreastSide.RIGHT
-            "both breasts" -> BreastSide.BOTH
-            else -> null
-        }
-        // The server only stores a total duration. For "both breasts", use a
-        // "Left: 7m 44s | Right: 6m 40s" note if present, else split evenly.
-        val (leftSec, rightSec) = when (side) {
-            BreastSide.LEFT -> totalSec to 0
-            BreastSide.RIGHT -> 0 to totalSec
-            BreastSide.BOTH -> parseSideSplit(dto.notes) ?: (totalSec / 2 to totalSec - totalSec / 2)
-            null -> totalSec to 0
-        }
-        val (caregiver, withoutCaregiver) = splitCaregiver(dto.notes.orEmpty())
-        val (sides, userNotes) = splitFeedingMeta(withoutCaregiver)
-        return FeedingEvent(
-            id = dto.id ?: nextLocalId(),
-            serverId = dto.id,
-            timeMillis = parseServerTime(dto.start)?.time ?: System.currentTimeMillis(),
-            bottleFormula = dto.type.lowercase() == "formula",
-            childId = dto.child,
-            timeFormatted = formatServerTime(dto.start),
-            type = when {
-                dto.type.lowercase() == "solid food" -> FeedType.SOLID
-                side != null -> FeedType.NURSING
-                else -> FeedType.BOTTLE
-            },
-            side = side,
-            leftDurationSec = leftSec,
-            rightDurationSec = rightSec,
-            amountMl = dto.amount?.toInt(),
-            notes = userNotes,
-            caregiver = caregiver,
-            sides = sides,
-            observations = emptyList(),
-            imageUrl = null
-        )
-    }
-
-    private fun parseSideSplit(notes: String?): Pair<Int, Int>? {
-        if (notes == null) return null
-        fun side(name: String): Int? = Regex("""$name:\s*(?:(\d+)m)?\s*(?:(\d+)s)?""", RegexOption.IGNORE_CASE).find(notes)?.let { m ->
-            val min = m.groupValues[1].toIntOrNull()
-            val sec = m.groupValues[2].toIntOrNull()
-            if (min == null && sec == null) null else (min ?: 0) * 60 + (sec ?: 0)
-        }
-        val left = side("Left") ?: return null
-        val right = side("Right") ?: return null
-        return left to right
-    }
-
-    /** Parses Django REST DurationField output: "[D ]HH:MM:SS[.ffffff]". */
-    private fun parseDurationSeconds(duration: String?): Int {
-        if (duration.isNullOrBlank()) return 0
-        val parts = duration.trim().split(" ")
-        val days = if (parts.size > 1) parts[0].toIntOrNull() ?: 0 else 0
-        val hms = parts.last().substringBefore(".").split(":").map { it.toIntOrNull() ?: 0 }
-        val (h, m, sec) = when (hms.size) {
-            3 -> Triple(hms[0], hms[1], hms[2])
-            2 -> Triple(0, hms[0], hms[1])
-            else -> Triple(0, 0, hms.firstOrNull() ?: 0)
-        }
-        return days * 86400 + h * 3600 + m * 60 + sec
     }
 
     /** Every page of a list endpoint (up to [MAX_FETCH] entries); [load] gets the offset. */
@@ -1484,11 +1194,6 @@ class BabyBuddyRepository {
         }
     }
 
-    private fun parseServerTime(isoString: String): Date? {
-        val normalized = isoString.replace(Regex("""\.\d+"""), "").replace(Regex("Z$"), "+00:00")
-        return runCatching { SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US).parse(normalized) }.getOrNull()
-    }
-
     private fun startOfTodayUtc(): String {
         val cal = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
@@ -1499,24 +1204,6 @@ class BabyBuddyRepository {
         return SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
             .apply { timeZone = TimeZone.getTimeZone("UTC") }
             .format(cal.time)
-    }
-
-    private fun formatAge(birthDate: String): String? {
-        val birth = runCatching { SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(birthDate) }.getOrNull() ?: return null
-        val b = Calendar.getInstance().apply { time = birth }
-        val now = Calendar.getInstance()
-        var months = (now.get(Calendar.YEAR) - b.get(Calendar.YEAR)) * 12 + now.get(Calendar.MONTH) - b.get(Calendar.MONTH)
-        if (now.get(Calendar.DAY_OF_MONTH) < b.get(Calendar.DAY_OF_MONTH)) months--
-        if (months < 0) return null
-        b.add(Calendar.MONTH, months)
-        val days = ((now.timeInMillis - b.timeInMillis) / 86_400_000L).toInt()
-        return if (months == 0) AppText.get(R.string.age_days, days) else AppText.get(R.string.age_months_days, months, days)
-    }
-
-    private fun formatServerTime(isoString: String): String {
-        // Server timestamps are UTC ("...Z") or carry an offset; show them in device-local time
-        val date = parseServerTime(isoString) ?: return isoString
-        return TimeFormat.clock(date)
     }
 
     fun disconnect() {
@@ -2016,7 +1703,7 @@ class BabyBuddyRepository {
         return _feedings.value.firstOrNull { it.id == id }?.notes.orEmpty()
     }
 
-    private fun knownServerId(localId: Long, serverId: Long?): Long? = serverId ?: serverIds[localId]
+    private fun knownServerId(localId: Long, serverId: Long?): Long? = serverId ?: writeQueue.knownServerId(localId)
 
     private fun formatClock(millis: Long): String = TimeFormat.clock(millis)
 
@@ -2213,7 +1900,7 @@ class BabyBuddyRepository {
 
     private fun feedSnapshot(t: LiveTimerState) = FeedSnapshot(
         feedingServerId = t.feedingServerId ?: t.feedingLocalId?.let { id ->
-            serverIds[id] ?: _feedings.value.firstOrNull { it.id == id }?.serverId
+            writeQueue.knownServerId(id) ?: _feedings.value.firstOrNull { it.id == id }?.serverId
         },
         side = if (t.activeBreast == BreastSide.RIGHT) BreastSide.RIGHT else BreastSide.LEFT,
         paused = t.isPaused,
@@ -2424,7 +2111,7 @@ class BabyBuddyRepository {
      */
     private fun feedEndedElsewhere(now: Long) {
         val local = _liveTimerState.value
-        local.feedingLocalId?.let { dropQueuedUpdates(ENDPOINT_FEEDINGS, it) }
+        local.feedingLocalId?.let { writeQueue.dropUpdates(ENDPOINT_FEEDINGS, it) }
         setFeedTimerRemoteId(null)
         feedEndedAt = now
         _liveTimerState.value = LiveTimerState(softChimeEnabled = local.softChimeEnabled)
@@ -2435,15 +2122,6 @@ class BabyBuddyRepository {
         setSleepTimerRemoteId(null)
         setSleepTimer(SleepTimerState())
         sleepEndedAt = now
-    }
-
-    /** Drops queued, unsent edits of one entry (the head of the queue may be in flight, so it stays). */
-    private fun dropQueuedUpdates(endpoint: String, localId: Long) = synchronized(pendingWrites) {
-        val head = pendingWrites.firstOrNull()
-        val dropped = pendingWrites.removeAll {
-            it !== head && it.endpoint == endpoint && it.localId == localId && it.action == QueuedWrite.ACTION_UPDATE
-        }
-        if (dropped) queueChanged()
     }
 
     /** Takes over a feed from another phone, counting the running side forward from the snapshot. */
@@ -2473,245 +2151,43 @@ class BabyBuddyRepository {
     }
 
     private fun clearRemote() {
-        flushJob?.cancel()
+        // Unsent entries belong to the server being left
+        val dropped = writeQueue.clear()
+        if (dropped > 0) _syncErrors.tryEmit(AppText.plural(R.plurals.sync_discarded, dropped, dropped))
         remoteApi = null
         remoteAuthHeader = ""
         remoteChildId = null
-        // Unsent entries belong to the server being left
-        synchronized(pendingWrites) {
-            if (pendingWrites.isNotEmpty()) {
-                _syncErrors.tryEmit(AppText.plural(R.plurals.sync_discarded, pendingWrites.size, pendingWrites.size))
-            }
-            pendingWrites.clear()
-            queueChanged()
-        }
         store?.clear()
     }
 
-    // --- Request bodies (without "child", which is added when sending) ---
-
-    private fun feedingBody(e: FeedingEvent): Map<String, Any?> {
-        val start = isoUtc(e.timeMillis)
-        return if (e.type == FeedType.NURSING) {
-            val method = when {
-                e.leftDurationSec > 0 && e.rightDurationSec > 0 -> "both breasts"
-                e.rightDurationSec > 0 -> "right breast"
-                e.leftDurationSec > 0 -> "left breast"
-                e.side == BreastSide.RIGHT -> "right breast"
-                else -> "left breast"
-            }
-            mapOf(
-                "start" to start,
-                "end" to isoUtc(e.timeMillis + (e.leftDurationSec + e.rightDurationSec) * 1000L),
-                "type" to "breast milk",
-                "method" to method,
-                "notes" to composeFeedingNotes(e)
-            )
-        } else {
-            // Bottles are instantaneous on this server (start == end)
-            mapOf(
-                "start" to start,
-                "end" to start,
-                "type" to if (e.bottleFormula) "formula" else "breast milk",
-                "method" to "bottle",
-                "amount" to e.amountMl?.toDouble(),
-                "notes" to composeFeedingNotes(e)
-            )
-        }
-    }
-
-    private fun changeBody(e: DiaperEvent): Map<String, Any?> {
-        val solid = e.type == DiaperType.DIRTY || e.type == DiaperType.BOTH
-        return mapOf(
-            "time" to isoUtc(e.timeMillis),
-            "wet" to (e.type == DiaperType.WET || e.type == DiaperType.BOTH),
-            "solid" to solid,
-            "color" to if (solid) serverDiaperColor(e.color) else "",
-            "notes" to withCaregiver(composeDiaperNotes(e), e.caregiver)
-        )
-    }
-
-    private fun pumpingBody(e: PumpingEvent): Map<String, Any?> = mapOf(
-        "start" to isoUtc(e.timeMillis),
-        "end" to isoUtc(e.timeMillis + e.durationMinutes * 60_000L),
-        "amount" to e.amountMl.toDouble(),
-        "notes" to withCaregiver(e.notes, e.caregiver)
-    )
-
-    private fun temperatureBody(e: TemperatureEvent): Map<String, Any?> = mapOf(
-        "time" to isoUtc(e.timeMillis),
-        "temperature" to e.temperature,
-        "notes" to withCaregiver(e.notes, e.caregiver)
-    )
-
-    private fun growthBody(e: GrowthEvent): Map<String, Any?> = mapOf(
-        "date" to localDate(e.dateMillis),
-        e.kind.field to e.value,
-        "notes" to withCaregiver(e.notes, e.caregiver)
-    )
-
-    private fun sleepBody(e: SleepEvent): Map<String, Any?> = mapOf(
-        "start" to isoUtc(e.timeMillis),
-        "end" to isoUtc(e.endMillis),
-        "nap" to e.isNap,
-        "notes" to withCaregiver(e.notes, e.caregiver)
-    )
-
-    private fun tummyBody(e: TummyTimeEvent): Map<String, Any?> = mapOf(
-        "start" to isoUtc(e.timeMillis),
-        "end" to isoUtc(e.timeMillis + e.durationMinutes * 60_000L),
-        "milestone" to e.milestone,
-        "notes" to withCaregiver("", e.caregiver)
-    )
-
-    // --- Queue ---
+    // --- Queue (request bodies are in ServerMapping.kt; the queue itself is WriteQueue) ---
 
     /** Adds a write to the queue (and disk) and starts sending; no-op in demo/offline mode. */
     private fun enqueue(write: QueuedWrite) {
         val config = _connectionConfig.value
         if (remoteApi == null || !config.isConnected || config.isDemoMode) return
-        synchronized(pendingWrites) {
-            // A newer edit of the same entry replaces a queued one that hasn't been sent yet (index 0 may be in flight)
-            val stale = if (write.action == QueuedWrite.ACTION_UPDATE) {
-                pendingWrites.indexOfLast {
-                    it.endpoint == write.endpoint && it.localId == write.localId && it.action == QueuedWrite.ACTION_UPDATE
-                }.takeIf { it > 0 && it == pendingWrites.lastIndex }
-            } else {
-                null
+        writeQueue.add(write)
+    }
+
+    private fun flushPendingWrites() = writeQueue.flush()
+
+    /** How the write queue reaches the local entries. */
+    private val localEntries = object : WriteQueue.LocalEntries {
+        override fun serverIdOf(write: QueuedWrite): Long? = localStore(write.endpoint).serverIdOf(write.localId)
+
+        override fun onCreated(write: QueuedWrite, serverId: Long) {
+            if (write.endpoint == ENDPOINT_FEEDINGS && write.localId == _liveTimerState.value.feedingLocalId) {
+                // Other phones following this feed can now update its record
+                _liveTimerState.update { it.copy(feedingServerId = serverId) }
+                feedTimerDirty.trySend(Unit)
             }
-            if (stale != null) {
-                pendingWrites[stale] = write.copy(serverId = write.serverId ?: pendingWrites[stale].serverId)
-            } else {
-                pendingWrites.add(write)
-            }
-            queueChanged()
-        }
-        flushPendingWrites()
-    }
-
-    /** Call while holding the pendingWrites lock. */
-    private fun queueChanged() {
-        val snapshot = pendingWrites.toList()
-        pendingSnapshot = snapshot
-        _pendingWriteCount.value = snapshot.size
-        store?.saveQueue(snapshot)
-    }
-
-    private fun removeHead(write: QueuedWrite) = synchronized(pendingWrites) {
-        val head = pendingWrites.firstOrNull()
-        if (head != null && head.endpoint == write.endpoint && head.action == write.action && head.localId == write.localId) {
-            pendingWrites.removeAt(0)
-            queueChanged()
-        }
-    }
-
-    private enum class WriteResult { SAVED, REJECTED, RETRY, PROXY_RETRY, NEEDS_LOGIN }
-
-    /** Sends queued writes in order. A write that fails on network/server errors blocks the queue and is retried with backoff. */
-    private fun flushPendingWrites() {
-        if (flushJob?.isActive == true) return
-        flushJob = syncScope.launch {
-            while (true) {
-                val api = remoteApi ?: break
-                val child = remoteChildId ?: break
-                val auth = remoteAuthHeader
-                val write = synchronized(pendingWrites) { pendingWrites.firstOrNull() } ?: break
-
-                when (val result = attemptWrite(write, api, auth, child)) {
-                    WriteResult.SAVED, WriteResult.REJECTED -> removeHead(write)
-
-                    WriteResult.RETRY, WriteResult.PROXY_RETRY -> {
-                        val attempts = write.attempts + 1
-                        synchronized(pendingWrites) {
-                            if (pendingWrites.firstOrNull() == write) {
-                                pendingWrites[0] = write.copy(attempts = attempts)
-                                queueChanged()
-                            }
-                        }
-                        if (attempts == 1) {
-                            _syncErrors.tryEmit(
-                                if (result == WriteResult.PROXY_RETRY) AppText.get(R.string.sync_proxy_rejected, describe(write)) else AppText.get(R.string.sync_unreachable)
-                            )
-                        }
-                        // 5s, 10s, 20s ... capped at 5 min
-                        delay(minOf(5_000L shl minOf(attempts - 1, 6), 300_000L))
-                    }
-
-                    WriteResult.NEEDS_LOGIN -> {
-                        _syncErrors.tryEmit(AppText.plural(R.plurals.sync_token_rejected, _pendingWriteCount.value, _pendingWriteCount.value))
-                        break
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun attemptWrite(write: QueuedWrite, api: BabyBuddyApiService, auth: String, child: Int): WriteResult {
-        return try {
-            when (write.action) {
-                QueuedWrite.ACTION_CREATE -> {
-                    if (write.attempts > 0) {
-                        // A previous attempt may have reached the server even though we never saw the response
-                        findExisting(write, api, auth, child)?.let { id ->
-                            onCreated(write, id)
-                            return WriteResult.SAVED
-                        }
-                    }
-                    val response = api.createRecord(auth, write.endpoint, sendable(write.body) + ("child" to child))
-                    classify(response, write) { onCreated(write, (response.body()?.get("id") as? Number)?.toLong()) }
-                }
-
-                QueuedWrite.ACTION_UPDATE -> {
-                    // No server id: the entry never reached the server, so there is nothing to change there
-                    val id = resolveServerId(write) ?: return WriteResult.SAVED
-                    classify(api.updateRecord(auth, write.endpoint, id, sendable(write.body)), write) {}
-                }
-
-                QueuedWrite.ACTION_DELETE -> {
-                    val id = resolveServerId(write) ?: return WriteResult.SAVED
-                    val response = api.deleteRecord(auth, write.endpoint, id)
-                    if (response.code() == 404) WriteResult.SAVED else classify(response, write) {}
-                }
-
-                else -> WriteResult.REJECTED
-            }
-        } catch (e: IOException) {
-            WriteResult.RETRY
-        } catch (e: Exception) {
-            _syncErrors.tryEmit(AppText.get(R.string.sync_could_not_save, describe(write), "${e.localizedMessage}"))
-            WriteResult.REJECTED
-        }
-    }
-
-    private inline fun classify(response: Response<*>, write: QueuedWrite, onSuccess: () -> Unit): WriteResult = when {
-        response.isSuccessful -> {
-            onSuccess()
-            WriteResult.SAVED
+            localStore(write.endpoint).setServerId(write.localId, serverId)
         }
 
-        response.code() == 401 || response.code() == 403 -> WriteResult.NEEDS_LOGIN
+        override suspend fun findExisting(write: QueuedWrite, target: WriteQueue.Target): Long? = findExisting(write, target.api, target.auth, target.child)
 
-        response.code() == 408 || response.code() == 429 || response.code() >= 500 -> WriteResult.RETRY
-
-        else -> {
-            val detail = response.errorBody()?.string().orEmpty()
-            if (!isApiReply(response, detail) && write.attempts + 1 < PROXY_RETRY_ATTEMPTS) {
-                // An HTML error page comes from a proxy in front of Baby Buddy (Cloudflare, nginx…), not from the
-                // server's validation, so the request may well go through next time
-                WriteResult.PROXY_RETRY
-            } else {
-                // Validation errors won't fix themselves on retry
-                _syncErrors.tryEmit(AppText.get(R.string.sync_server_rejected, describe(write), response.code(), detail.take(160)).trim())
-                WriteResult.REJECTED
-            }
-        }
+        override fun describe(write: QueuedWrite): String = this@BabyBuddyRepository.describe(write)
     }
-
-    /** Baby Buddy's API answers errors in JSON; anything else was made by something in between. */
-    private fun isApiReply(response: Response<*>, body: String): Boolean = response.errorBody()?.contentType()?.subtype == "json" || body.trimStart().let { it.startsWith("{") || it.startsWith("[") }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun sendable(body: Map<String, Any?>): Map<String, Any> = body.filterValues { it != null } as Map<String, Any>
 
     private fun describe(write: QueuedWrite): String {
         val what = when (write.endpoint) {
@@ -2754,8 +2230,6 @@ class BabyBuddyRepository {
         in GROWTH_ENDPOINTS -> LocalStore(_growth, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) }) { it.kind.endpoint == endpoint }
         else -> LocalStore(_tummyTimes, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
     }
-
-    private fun resolveServerId(write: QueuedWrite): Long? = write.serverId ?: serverIds[write.localId] ?: localStore(write.endpoint).serverIdOf(write.localId)
 
     /** Looks for a record a lost-response create may already have made, by its exact start/time. */
     private suspend fun findExisting(write: QueuedWrite, api: BabyBuddyApiService, auth: String, child: Int): Long? {
@@ -2808,34 +2282,6 @@ class BabyBuddyRepository {
         }
     }
 
-    /** Records the new server id on the local entry and on any queued edits/deletes of it. */
-    private fun onCreated(write: QueuedWrite, serverId: Long?) {
-        if (serverId == null) return
-        serverIds[write.localId] = serverId
-        if (write.endpoint == ENDPOINT_FEEDINGS && write.localId == _liveTimerState.value.feedingLocalId) {
-            // Other phones following this feed can now update its record
-            _liveTimerState.update { it.copy(feedingServerId = serverId) }
-            feedTimerDirty.trySend(Unit)
-        }
-        localStore(write.endpoint).setServerId(write.localId, serverId)
-        synchronized(pendingWrites) {
-            var changed = false
-            pendingWrites.replaceAll { w ->
-                if (w.endpoint == write.endpoint && w.localId == write.localId && w.serverId == null && w.action != QueuedWrite.ACTION_CREATE) {
-                    changed = true
-                    w.copy(serverId = serverId)
-                } else {
-                    w
-                }
-            }
-            if (changed) queueChanged()
-        }
-    }
-
-    private fun isoUtc(millis: Long): String = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
-        .apply { timeZone = TimeZone.getTimeZone("UTC") }
-        .format(Date(millis))
-
     // --- Process-level setup: persistence, timer, widgets ---
 
     private var prefs: SharedPreferences? = null
@@ -2873,6 +2319,7 @@ class BabyBuddyRepository {
         }
         val offline = OfflineStore(File(context.applicationContext.filesDir, "offline"))
         store = offline
+        writeQueue.store = offline
         restoreTimer(p)
         p.getLong(PREF_SLEEP_START, 0L).takeIf { it > 0 }?.let { start ->
             _sleepTimer.value = SleepTimerState(start, p.getString(PREF_SLEEP_NOTES, "").orEmpty(), p.getLong(PREF_SLEEP_CHANGED, 0L))
@@ -2950,11 +2397,7 @@ class BabyBuddyRepository {
     private var restoredToken: String? = null
 
     private fun restoreOffline(offline: OfflineStore) {
-        synchronized(pendingWrites) {
-            pendingWrites.clear()
-            pendingWrites.addAll(offline.loadQueue())
-            queueChanged()
-        }
+        writeQueue.restore(offline.loadQueue())
         val cache = offline.loadCache() ?: return
         if (cache.day != todayKey()) return
         val startOfDay = startOfTodayMillis()
@@ -3145,7 +2588,6 @@ class BabyBuddyRepository {
         private const val PREF_DASHBOARD_WIDGETS = "dashboard_widgets"
         private const val PREF_DASHBOARD_WIDGETS_KNOWN = "dashboard_widgets_known"
         private const val ENDPOINT_TIMERS = "timers"
-        private const val PROXY_RETRY_ATTEMPTS = 6 // ~2.5 min of backoff before a proxy's 4xx is treated as final
         private const val PREF_SLEEP_CHANGED = "sleep_timer_changed_at"
         private const val PREF_FEED_TIMER_ID = "feed_timer_remote_id"
         private const val PREF_SLEEP_TIMER_ID = "sleep_timer_remote_id"
@@ -3180,7 +2622,6 @@ class BabyBuddyRepository {
         private const val PREF_TRENDS_DAY_START = "trends_day_start_hour"
         private const val PREF_THEME_MODE = "theme_mode"
         private const val PREF_START_SIDE = "start_side"
-        private val SERVER_COLORS = setOf("black", "brown", "gray", "green", "orange", "red", "white", "yellow")
         private const val PREF_SELF_SIGNED = "allow_self_signed"
         private const val PREF_CERT_PIN = "pinned_cert_sha256"
         private const val PREF_CF_ID = "cf_access_client_id"
