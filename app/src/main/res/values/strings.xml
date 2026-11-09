@@ -324,12 +324,6 @@
     <string name="write_delete">%s delete</string>
     <string name="age_days">%dd</string>
     <string name="age_months_days">%1$dm %2$dd</string>
-    <string name="card_last_feed_desc">Time since, side</string>
-    <string name="card_last_diaper_desc">Time since, type</string>
-    <string name="card_wake_windows_desc">Awake for, today\'s windows</string>
-    <string name="card_tummy_time_desc">Daily goal</string>
-    <string name="card_temperature_desc">Readings</string>
-    <string name="card_notes_desc">Shared notes</string>
     <string name="card_growth_desc">Weight, length, head</string>
 
     <!-- Common words -->

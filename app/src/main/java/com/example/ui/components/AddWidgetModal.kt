@@ -472,7 +472,7 @@ private fun DashboardWidgetItemCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = widget.title,
+                        text = widget.type.displayName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface

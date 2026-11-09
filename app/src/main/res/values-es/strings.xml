@@ -327,12 +327,6 @@
     <string name="write_delete">el borrado de %s</string>
     <string name="age_days">%d d</string>
     <string name="age_months_days">%1$d m %2$d d</string>
-    <string name="card_last_feed_desc">Tiempo desde, pecho</string>
-    <string name="card_last_diaper_desc">Tiempo desde, tipo</string>
-    <string name="card_wake_windows_desc">Despierto desde hace, ventanas de hoy</string>
-    <string name="card_tummy_time_desc">Objetivo diario</string>
-    <string name="card_temperature_desc">Lecturas</string>
-    <string name="card_notes_desc">Notas compartidas</string>
     <string name="card_growth_desc">Peso, longitud, cabeza</string>
 
     <!-- Common words -->

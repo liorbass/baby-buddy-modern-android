@@ -2,8 +2,6 @@ package com.example.data.repository
 
 import android.content.SharedPreferences
 import androidx.compose.runtime.snapshotFlow
-import com.example.R
-import com.example.data.model.AppText
 import com.example.data.model.BabySex
 import com.example.data.model.DashboardWidgetConfig
 import com.example.data.model.DashboardWidgetType
@@ -272,15 +270,7 @@ class SettingsStore internal constructor(
     fun resetTodayOrder() = todayOrderPref.set(TodaySection.entries.toList())
 
     companion object {
-        fun defaultDashboardWidgets() = listOf(
-            DashboardWidgetConfig(DashboardWidgetType.LAST_FEED, DashboardWidgetType.LAST_FEED.displayName, AppText.get(R.string.card_last_feed_desc), isEnabled = true),
-            DashboardWidgetConfig(DashboardWidgetType.LAST_DIAPER, DashboardWidgetType.LAST_DIAPER.displayName, AppText.get(R.string.card_last_diaper_desc), isEnabled = true),
-            DashboardWidgetConfig(DashboardWidgetType.WAKE_WINDOWS, DashboardWidgetType.WAKE_WINDOWS.displayName, AppText.get(R.string.card_wake_windows_desc), isEnabled = true),
-            DashboardWidgetConfig(DashboardWidgetType.TUMMY_TIME_GOAL, DashboardWidgetType.TUMMY_TIME_GOAL.displayName, AppText.get(R.string.card_tummy_time_desc), isEnabled = false),
-            DashboardWidgetConfig(DashboardWidgetType.HEALTH_VITALS, DashboardWidgetType.HEALTH_VITALS.displayName, AppText.get(R.string.card_temperature_desc), isEnabled = false),
-            DashboardWidgetConfig(DashboardWidgetType.CAREGIVER_NOTES, DashboardWidgetType.CAREGIVER_NOTES.displayName, AppText.get(R.string.card_notes_desc), isEnabled = false),
-            DashboardWidgetConfig(DashboardWidgetType.GROWTH, DashboardWidgetType.GROWTH.displayName, AppText.get(R.string.card_growth_desc), isEnabled = false)
-        )
+        fun defaultDashboardWidgets() = DashboardWidgetType.entries.map { DashboardWidgetConfig(it, isEnabled = it.onByDefault) }
 
         /** The saved card choice applied to [defaults]; cards added since it was saved keep their default. */
         private fun readDashboardWidgets(p: SharedPreferences, defaults: List<DashboardWidgetConfig>): List<DashboardWidgetConfig> {

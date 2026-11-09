@@ -270,14 +270,15 @@ enum class QuickAction(private val labelRes: Int) {
     }
 }
 
-enum class DashboardWidgetType(private val nameRes: Int, private val categoryRes: Int) {
-    LAST_FEED(R.string.card_last_feed, R.string.card_category_feeding),
-    LAST_DIAPER(R.string.card_last_diaper, R.string.card_category_diapers),
-    WAKE_WINDOWS(R.string.card_wake_windows, R.string.card_category_sleep),
-    TUMMY_TIME_GOAL(R.string.card_tummy_time, R.string.card_category_activity),
-    HEALTH_VITALS(R.string.card_temperature, R.string.card_category_health),
-    CAREGIVER_NOTES(R.string.card_notes, R.string.card_category_family),
-    GROWTH(R.string.card_growth, R.string.card_category_health);
+/** Today's cards, in their default order; [onByDefault] until this phone picks its own (Customize Today). */
+enum class DashboardWidgetType(private val nameRes: Int, private val categoryRes: Int, val onByDefault: Boolean) {
+    LAST_FEED(R.string.card_last_feed, R.string.card_category_feeding, true),
+    LAST_DIAPER(R.string.card_last_diaper, R.string.card_category_diapers, true),
+    WAKE_WINDOWS(R.string.card_wake_windows, R.string.card_category_sleep, true),
+    TUMMY_TIME_GOAL(R.string.card_tummy_time, R.string.card_category_activity, false),
+    HEALTH_VITALS(R.string.card_temperature, R.string.card_category_health, false),
+    CAREGIVER_NOTES(R.string.card_notes, R.string.card_category_family, false),
+    GROWTH(R.string.card_growth, R.string.card_category_health, false);
 
     val displayName: String get() = AppText.get(nameRes)
     val category: String get() = AppText.get(categoryRes)
@@ -375,12 +376,10 @@ enum class TodaySection(private val labelRes: Int) {
     }
 }
 
+/** Whether one of Today's cards is shown (its name comes from [type], so it follows the app language). */
 data class DashboardWidgetConfig(
     val type: DashboardWidgetType,
-    val title: String,
-    val subtitle: String,
-    val isEnabled: Boolean = true,
-    val order: Int = 0
+    val isEnabled: Boolean = true
 )
 
 data class TummyTimeGoal(

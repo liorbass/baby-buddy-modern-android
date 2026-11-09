@@ -327,12 +327,6 @@
     <string name="write_delete">מחיקת %s</string>
     <string name="age_days">%d י׳</string>
     <string name="age_months_days">%1$d ח׳ %2$d י׳</string>
-    <string name="card_last_feed_desc">זמן שעבר, צד</string>
-    <string name="card_last_diaper_desc">זמן שעבר, סוג</string>
-    <string name="card_wake_windows_desc">זמן ערות, חלונות היום</string>
-    <string name="card_tummy_time_desc">יעד יומי</string>
-    <string name="card_temperature_desc">מדידות</string>
-    <string name="card_notes_desc">הערות משותפות</string>
     <string name="card_growth_desc">משקל, אורך, ראש</string>
 
     <!-- Common words -->
