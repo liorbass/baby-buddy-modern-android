@@ -407,12 +407,6 @@
     <string name="write_delete">%s (suppression)</string>
     <string name="age_days">%d j</string>
     <string name="age_months_days">%1$d mois %2$d j</string>
-    <string name="card_last_feed_desc">Temps écoulé, sein</string>
-    <string name="card_last_diaper_desc">Temps écoulé, type</string>
-    <string name="card_wake_windows_desc">Éveillé depuis, fenêtres du jour</string>
-    <string name="card_tummy_time_desc">Objectif du jour</string>
-    <string name="card_temperature_desc">Relevés</string>
-    <string name="card_notes_desc">Notes partagées</string>
     <string name="card_growth_desc">Poids, taille, tête</string>
 
     <!-- Top bar, navigation, feed controls, pickers -->

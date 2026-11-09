@@ -324,12 +324,6 @@
     <string name="write_delete">%s (verwijdering)</string>
     <string name="age_days">%d d</string>
     <string name="age_months_days">%1$d mnd %2$d d</string>
-    <string name="card_last_feed_desc">Tijd sinds, kant</string>
-    <string name="card_last_diaper_desc">Tijd sinds, type</string>
-    <string name="card_wake_windows_desc">Wakker sinds, wakkertijden van vandaag</string>
-    <string name="card_tummy_time_desc">Dagdoel</string>
-    <string name="card_temperature_desc">Metingen</string>
-    <string name="card_notes_desc">Gedeelde notities</string>
     <string name="card_growth_desc">Gewicht, lengte, hoofd</string>
 
     <!-- Common words -->
