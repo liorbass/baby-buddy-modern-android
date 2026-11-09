@@ -4,15 +4,12 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.example.R
 import com.example.data.api.BabyBuddyApiClient
-import com.example.data.api.BabyBuddyApiService
-import com.example.data.api.PaginatedResponse
 import com.example.data.api.UntrustedCertificateException
 import com.example.data.api.findInChain
 import com.example.data.ml.RhythmEvents
 import com.example.data.ml.RhythmPrediction
 import com.example.data.ml.RhythmTarget
 import com.example.data.ml.SavedRhythmModel
-import com.example.data.ml.predictRhythms
 import com.example.data.ml.trainRhythmModels
 import com.example.data.model.AppText
 import com.example.data.model.BATH_NOTE_TEXT
@@ -20,13 +17,10 @@ import com.example.data.model.BATH_TAG
 import com.example.data.model.BabyProfile
 import com.example.data.model.BabySex
 import com.example.data.model.BreastSide
-import com.example.data.model.DayHours
 import com.example.data.model.DayStats
 import com.example.data.model.DiaperEvent
-import com.example.data.model.DiaperMark
 import com.example.data.model.DiaperType
 import com.example.data.model.FeedIntervalStats
-import com.example.data.model.FeedMark
 import com.example.data.model.FeedType
 import com.example.data.model.FeedingEvent
 import com.example.data.model.GrowthEvent
@@ -41,7 +35,6 @@ import com.example.data.model.PumpingEvent
 import com.example.data.model.ReminderSettings
 import com.example.data.model.ServerConnectionConfig
 import com.example.data.model.SleepEvent
-import com.example.data.model.SleepMark
 import com.example.data.model.SleepTimerState
 import com.example.data.model.TemperatureEvent
 import com.example.data.model.ThemeMode
@@ -49,15 +42,11 @@ import com.example.data.model.TimeFormat
 import com.example.data.model.TrackedItem
 import com.example.data.model.TummyTimeEvent
 import com.example.data.model.TummyTimeGoal
-import com.example.data.model.averageMinutes
-import com.example.data.model.daytimeWakeWindows
 import com.example.data.model.isNapTime
 import com.example.data.model.startOfDay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -75,16 +64,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import retrofit2.Response
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.util.TimeZone
 
 class BabyBuddyRepository {
 
@@ -96,9 +81,7 @@ class BabyBuddyRepository {
 
     // Set on a successful connect; writes go to the server only while these are present
     private val syncScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private var remoteApi: BabyBuddyApiService? = null
-    private var remoteAuthHeader: String = ""
-    private var remoteChildId: Int? = null
+    private var session: RemoteSession? = null
 
     fun nextLocalId(): Long = newLocalId()
 
@@ -112,7 +95,7 @@ class BabyBuddyRepository {
     private val writeQueue: WriteQueue by lazy {
         WriteQueue(
             scope = syncScope,
-            target = { remoteApi?.let { api -> remoteChildId?.let { child -> WriteQueue.Target(api, remoteAuthHeader, child) } } },
+            target = { session?.target },
             local = localEntries,
             reportError = { _syncErrors.tryEmit(it) }
         )
@@ -282,10 +265,11 @@ class BabyBuddyRepository {
         p.edit().remove(PREF_AWAY_SINCE).apply()
         if (!_connectionConfig.value.isConnected) return
         val from = maxOf(since, System.currentTimeMillis() - 24 * 60 * 60_000L)
+        val today = TimedEvents(_feedings.value, _diapers.value, _sleeps.value)
         val (feeds, changes, sleeps) = if (from >= startOfDay()) {
-            Triple(_feedings.value, _diapers.value, _sleeps.value)
+            today
         } else {
-            withContext(Dispatchers.IO) { runCatching { fetchEvents(from) }.getOrNull() } ?: Triple(_feedings.value, _diapers.value, _sleeps.value)
+            withContext(Dispatchers.IO) { runCatching { queries.fetchEvents(from) }.getOrNull() } ?: today
         }
         val me = myName()
         fun byOther(caregiver: String?) = if (me != null) !caregiver.equals(me, ignoreCase = true) else !caregiver.isNullOrBlank()
@@ -297,7 +281,7 @@ class BabyBuddyRepository {
                     (if (f.type == FeedType.NURSING) TrackedItem.BREASTFEEDING else TrackedItem.BOTTLE) !in hidden
             }.sortedBy { it.timeMillis },
             diapers = changes.filter { it.timeMillis >= from && byOther(it.caregiver) && TrackedItem.DIAPERS !in hidden }.sortedBy { it.timeMillis },
-            sleeps = sleeps.filter { it.id != -1L && it.endMillis >= from && byOther(it.caregiver) && TrackedItem.SLEEP !in hidden }.sortedBy { it.timeMillis }
+            sleeps = sleeps.filter { it.id != ServerQueries.RUNNING_SLEEP_ID && it.endMillis >= from && byOther(it.caregiver) && TrackedItem.SLEEP !in hidden }.sortedBy { it.timeMillis }
         )
         if (!summary.isEmpty) _handoff.value = summary
     }
@@ -313,12 +297,8 @@ class BabyBuddyRepository {
         _connectionConfig.update { it.copy(isConnected = !disconnected) }
     }
 
-    private var allDemoFeedings: List<FeedingEvent> = emptyList()
-    private var allDemoDiapers: List<DiaperEvent> = emptyList()
-    private var allDemoSleeps: List<SleepEvent> = emptyList()
-    private var allDemoPumpings: List<PumpingEvent> = emptyList()
-    private var allDemoTummyTimes: List<TummyTimeEvent> = emptyList()
-    private var allDemoNotes: List<NoteEvent> = emptyList()
+    /** Demo mode's simulated history (all of it; the lists hold today's part). */
+    private var demoHistory: DemoHistory? = null
 
     fun enterDemoMode() {
         clearRemote()
@@ -337,14 +317,15 @@ class BabyBuddyRepository {
         if (settings.babySex.value == null) settings.setBabySex(BabySex.BOY)
         if (!settings.reminders.value.anyOn) settings.setReminders(ReminderSettings(feedAfterMinutes = 180, awakeAfterMinutes = 120, sleepAfterMinutes = 150, diaperAfterMinutes = 180, earlyMinutes = 15))
         settings.setModelsTab(true)
+        val demo = demoHistory ?: return
         syncScope.launch(Dispatchers.Default) {
             val now = System.currentTimeMillis()
             val from = now - 60 * 86_400_000L
             val events = RhythmEvents(
-                allDemoFeedings.filter { it.timeMillis >= from },
-                allDemoDiapers.filter { it.timeMillis >= from },
-                allDemoSleeps.filter { it.timeMillis >= from },
-                birthMillis = runCatching { SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(_babyProfile.value.birthDate)!!.time }.getOrNull() ?: from
+                demo.feeds.filter { it.timeMillis >= from },
+                demo.diapers.filter { it.timeMillis >= from },
+                demo.sleeps.filter { it.timeMillis >= from },
+                birthMillis = parseLocalDate(_babyProfile.value.birthDate) ?: from
             )
             val r = settings.reminders.value
             val defaults = mapOf(
@@ -379,30 +360,25 @@ class BabyBuddyRepository {
 
         // Simulated up to now, so "last feed", "awake for" and the charts read naturally at any time of day
         val now = System.currentTimeMillis()
-        val birth = runCatching { SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(_babyProfile.value.birthDate)!!.time }.getOrDefault(today - 270 * 86_400_000L)
+        val birth = parseLocalDate(_babyProfile.value.birthDate) ?: (today - 270 * 86_400_000L)
         val demo = generateDemoHistory(now = now, birthMillis = birth, clock = ::formatClock)
-        allDemoFeedings = demo.feeds
-        allDemoDiapers = demo.diapers
-        allDemoSleeps = demo.sleeps
-        allDemoPumpings = demo.pumpings
-        allDemoTummyTimes = demo.tummyTimes
-        allDemoNotes = demo.notes
+        demoHistory = demo
         _growth.value = demo.growth
         _noteTags.value = listOf(NoteTag("Vitamin D"), NoteTag("Medicine"), NoteTag("Teething"))
 
-        _feedings.value = allDemoFeedings.filter { it.timeMillis >= today }
-        _diapers.value = allDemoDiapers.filter { it.timeMillis >= today }
-        _sleeps.value = allDemoSleeps.filter { it.endMillis >= today }
-        _pumpings.value = allDemoPumpings.filter { it.timeMillis >= today }
-        _tummyTimes.value = allDemoTummyTimes.filter { it.timeMillis >= today }
-        _notes.value = allDemoNotes.filter { it.timeMillis >= today }
+        _feedings.value = demo.feeds.filter { it.timeMillis >= today }
+        _diapers.value = demo.diapers.filter { it.timeMillis >= today }
+        _sleeps.value = demo.sleeps.filter { it.endMillis >= today }
+        _pumpings.value = demo.pumpings.filter { it.timeMillis >= today }
+        _tummyTimes.value = demo.tummyTimes.filter { it.timeMillis >= today }
+        _notes.value = demo.notes.filter { it.timeMillis >= today }
 
         // The latest of each, from before today too (early in the morning today has little)
-        _lastBreastfeedRemote.value = allDemoFeedings.firstOrNull { it.type == FeedType.NURSING }
-        _recentFeedsRemote.value = allDemoFeedings.sortedByDescending { it.timeMillis }.take(10)
-        _lastDiaperRemote.value = allDemoDiapers.firstOrNull()
-        _lastSleepEndRemote.value = allDemoSleeps.maxOfOrNull { it.endMillis }
-        _lastBathRemote.value = allDemoNotes.firstOrNull { BATH_TAG in it.tags }?.timeMillis
+        _lastBreastfeedRemote.value = demo.feeds.firstOrNull { it.type == FeedType.NURSING }
+        _recentFeedsRemote.value = demo.feeds.sortedByDescending { it.timeMillis }.take(10)
+        _lastDiaperRemote.value = demo.diapers.firstOrNull()
+        _lastSleepEndRemote.value = demo.sleeps.maxOfOrNull { it.endMillis }
+        _lastBathRemote.value = demo.notes.firstOrNull { BATH_TAG in it.tags }?.timeMillis
         _stashBase.value = StashBase(450, now, 0, 0)
         val temperatureAt = clockMs(0, 9, 30).let { if (it < now) it else clockMs(1, 9, 30) }
         _temperatures.value = listOf(
@@ -422,7 +398,7 @@ class BabyBuddyRepository {
         try {
             val pin = pinnedCertSha256.takeIf { allowSelfSigned }.orEmpty()
             val api = BabyBuddyApiClient.createService(serverUrl, allowSelfSigned, cfClientId, cfClientSecret, pin)
-            val authHeader = if (token.startsWith("Token ")) token else "Token $token"
+            val authHeader = RemoteSession.authHeader(token)
             val response = api.getChildren(authHeader)
             if (response.isSuccessful) {
                 val children = response.body()?.results ?: emptyList()
@@ -455,9 +431,8 @@ class BabyBuddyRepository {
                 }
                 _isServerDisconnectedView.value = false
 
-                remoteApi = api
-                remoteAuthHeader = authHeader
-                remoteChildId = detectedChild?.id
+                val connected = RemoteSession(api, authHeader, detectedChild?.id)
+                session = connected
                 prefs?.edit()
                     ?.putString(PREF_URL, serverUrl)
                     ?.putString(PREF_TOKEN_ENC, runCatching { SecretCipher.encrypt(token) }.getOrNull())
@@ -471,7 +446,7 @@ class BabyBuddyRepository {
                     ?.putString(PREF_BIRTH_DATE, detectedChild?.birthDate)
                     ?.apply()
 
-                syncToday(api, authHeader, detectedChild?.id)
+                syncToday(connected)
                 flushPendingWrites()
                 pollSharedTimers()
                 loadMilkStash()
@@ -512,13 +487,16 @@ class BabyBuddyRepository {
     }
 
     /** Replaces local lists with today's (device-local midnight onwards) entries from the server. */
-    private suspend fun syncToday(api: BabyBuddyApiService, authHeader: String, childId: Int?) {
-        val since = startOfTodayUtc()
+    private suspend fun syncToday(remote: RemoteSession) {
+        val api = remote.api
+        val authHeader = remote.auth
+        val childId = remote.child
+        val since = isoUtc(startOfDay())
 
         runCatching {
             api.getFeedings(authHeader, childId, since).body()!!.results.map(::mapFeeding)
         }.onSuccess { remote ->
-            _feedings.value = mergeWithPending(ENDPOINT_FEEDINGS, remote, _feedings.value, { it.id }, { it.serverId }, { it.timeMillis })
+            _feedings.value = mergeWithPending(Endpoints.FEEDINGS, remote, _feedings.value, { it.id }, { it.serverId }, { it.timeMillis })
         }
 
         runCatching {
@@ -557,38 +535,38 @@ class BabyBuddyRepository {
         runCatching {
             api.getChanges(authHeader, childId, since).body()!!.results.map(::mapChange)
         }.onSuccess { remote ->
-            _diapers.value = mergeWithPending(ENDPOINT_CHANGES, remote, _diapers.value, { it.id }, { it.serverId }, { it.timeMillis })
+            _diapers.value = mergeWithPending(Endpoints.CHANGES, remote, _diapers.value, { it.id }, { it.serverId }, { it.timeMillis })
         }
 
         runCatching {
             api.getTummyTimes(authHeader, childId, since).body()!!.results.map(::mapTummyTime)
         }.onSuccess { remote ->
-            _tummyTimes.value = mergeWithPending(ENDPOINT_TUMMY, remote, _tummyTimes.value, { it.id }, { it.serverId }, { it.timeMillis })
+            _tummyTimes.value = mergeWithPending(Endpoints.TUMMY, remote, _tummyTimes.value, { it.id }, { it.serverId }, { it.timeMillis })
         }
 
         runCatching {
             api.getPumping(authHeader, childId, since).body()!!.results.map(::mapPumping)
         }.onSuccess { remote ->
-            _pumpings.value = mergeWithPending(ENDPOINT_PUMPING, remote, _pumpings.value, { it.id }, { it.serverId }, { it.timeMillis })
+            _pumpings.value = mergeWithPending(Endpoints.PUMPING, remote, _pumpings.value, { it.id }, { it.serverId }, { it.timeMillis })
         }
 
         runCatching {
             // Sleeps that ended today, so last night's sleep counts too
             api.getSleep(authHeader, childId, endedSince = since).body()!!.results.map(::mapSleep)
         }.onSuccess { remote ->
-            _sleeps.value = mergeWithPending(ENDPOINT_SLEEP, remote, _sleeps.value, { it.id }, { it.serverId }, { it.timeMillis })
+            _sleeps.value = mergeWithPending(Endpoints.SLEEP, remote, _sleeps.value, { it.id }, { it.serverId }, { it.timeMillis })
         }
 
         runCatching {
             api.getTemperatures(authHeader, childId, since).body()!!.results.map(::mapTemperature)
         }.onSuccess { remote ->
-            _temperatures.value = mergeWithPending(ENDPOINT_TEMPERATURE, remote, _temperatures.value, { it.id }, { it.serverId }, { it.timeMillis })
+            _temperatures.value = mergeWithPending(Endpoints.TEMPERATURE, remote, _temperatures.value, { it.id }, { it.serverId }, { it.timeMillis })
         }
 
         runCatching {
             api.getNotes(authHeader, childId, since).body()!!.results.map(::mapNote)
         }.onSuccess { remote ->
-            _notes.value = mergeWithPending(ENDPOINT_NOTES, remote, _notes.value, { it.id }, { it.serverId }, { it.timeMillis })
+            _notes.value = mergeWithPending(Endpoints.NOTES, remote, _notes.value, { it.id }, { it.serverId }, { it.timeMillis })
         }
 
         if (TrackedItem.GROWTH !in settings.hiddenItems.value) {
@@ -629,399 +607,69 @@ class BabyBuddyRepository {
 
     // Mapping server records to entries and back, and the generated note segments: ServerMapping.kt
 
+    /** Read-only range queries for History, Trends and the rhythm models ([ServerQueries]). */
+    private val queries = ServerQueries(
+        session = { session },
+        demo = { demoHistory.takeIf { _connectionConfig.value.isDemoMode } },
+        sleepTimer = { _sleepTimer.value },
+        hiddenItems = { settings.hiddenItems.value }
+    )
+
     /**
      * Entries for the [days] local days ending with the day containing [lastDayMillis], oldest first.
      * Today's column uses the live local lists, which include unsent entries and pending edits.
      */
-    suspend fun loadHistory(lastDayMillis: Long, days: Int = 7): Result<List<HistoryDay>> = withContext(Dispatchers.IO) {
-        val dayStarts = (days - 1 downTo 0).map { back ->
-            Calendar.getInstance().apply {
-                timeInMillis = lastDayMillis
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-                add(Calendar.DAY_OF_YEAR, -back)
-            }.timeInMillis
-        }
-        if (_connectionConfig.value.isDemoMode) {
-            val feeds = allDemoFeedings
-            val changes = allDemoDiapers
-            val tummies = allDemoTummyTimes
-            val pumps = allDemoPumpings
-            val sleeps = allDemoSleeps
-            val entries = HistoryEntries(feeds, changes, tummies, pumps, sleeps, allDemoNotes)
-            return@withContext Result.success(dayStarts.map(entries::day))
-        }
-        val api = remoteApi
-        val child = remoteChildId
-        if (api == null || child == null) {
-            return@withContext Result.failure(IllegalStateException(AppText.get(R.string.error_connect_for_history)))
-        }
-        try {
-            val rangeEnd = Calendar.getInstance().apply {
-                timeInMillis = dayStarts.last()
-                add(Calendar.DAY_OF_YEAR, 1)
-            }.timeInMillis
-            val since = isoUtc(dayStarts.first())
-            val until = isoUtc(rangeEnd - 1000)
-
-            val feedResp = api.getFeedings(remoteAuthHeader, child, since = since, until = until, limit = 1000)
-            val changeResp = api.getChanges(remoteAuthHeader, child, since = since, until = until, limit = 1000)
-            val tummyResp = api.getTummyTimes(remoteAuthHeader, child, since = since, until = until, limit = 1000)
-            val pumpResp = api.getPumping(remoteAuthHeader, child, since = since, until = until, limit = 1000)
-            val sleepResp = runCatching { api.getSleep(remoteAuthHeader, child, since = since, until = until, limit = 1000) }.getOrNull()
-            val noteResp = runCatching { api.getNotes(remoteAuthHeader, child, since = since, until = until, limit = 1000) }.getOrNull()
-            if (!feedResp.isSuccessful) error("HTTP ${feedResp.code()} loading feedings")
-            if (!changeResp.isSuccessful) error("HTTP ${changeResp.code()} loading diaper changes")
-
-            val feeds = feedResp.body()?.results.orEmpty().map(::mapFeeding)
-            val changes = changeResp.body()?.results.orEmpty().map(::mapChange)
-            val tummies = tummyResp.body()?.results.orEmpty().map(::mapTummyTime)
-            val pumps = pumpResp.body()?.results.orEmpty().map(::mapPumping)
-            val sleeps = sleepResp?.body()?.results.orEmpty().map(::mapSleep)
-            val allNotes = noteResp?.body()?.results.orEmpty().map(::mapNote)
-            val entries = HistoryEntries(feeds, changes, tummies, pumps, sleeps, allNotes)
-            val todayStart = startOfDay()
-
-            Result.success(
-                dayStarts.map { start ->
-                    if (start == todayStart) {
-                        HistoryDay(
-                            start,
-                            _feedings.value,
-                            _diapers.value,
-                            _tummyTimes.value,
-                            _pumpings.value,
-                            _sleeps.value.filter { it.timeMillis >= start },
-                            _notes.value.filter { BATH_TAG in it.tags && it.timeMillis >= start },
-                            _notes.value.filter { BATH_TAG !in it.tags && it.timeMillis >= start }
-                        )
-                    } else {
-                        entries.day(start)
-                    }
-                }
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    /** Every page of a list endpoint (up to [MAX_FETCH] entries); [load] gets the offset. */
-    private suspend fun <T> allPages(what: String, load: suspend (offset: Int) -> retrofit2.Response<PaginatedResponse<T>>): List<T> {
-        val out = mutableListOf<T>()
-        while (out.size < MAX_FETCH) {
-            val resp = load(out.size)
-            if (!resp.isSuccessful) error("HTTP ${resp.code()} loading $what")
-            val page = resp.body() ?: break
-            out += page.results
-            if (page.next == null || page.results.isEmpty()) break
-        }
-        return out
-    }
-
-    /**
-     * Feeds (from the day before [fromMillis], for gaps across it), diaper changes and sleeps (ended since
-     * [fromMillis], plus the one being timed, ending now) up to [toMillis] from the server, or the demo data.
-     */
-    private suspend fun fetchEvents(fromMillis: Long, toMillis: Long? = null): Triple<List<FeedingEvent>, List<DiaperEvent>, List<SleepEvent>> {
-        val api = remoteApi
-        val child = remoteChildId
-        if (_connectionConfig.value.isDemoMode) {
-            val to = toMillis ?: Long.MAX_VALUE
-            return Triple(
-                allDemoFeedings.filter { it.timeMillis < to }.sortedBy { it.timeMillis },
-                allDemoDiapers.filter { it.timeMillis < to },
-                allDemoSleeps.filter { it.timeMillis < to }
-            )
-        }
-        check(api != null && child != null) { AppText.get(R.string.error_connect_for_trends) }
-        val until = toMillis?.let(::isoUtc)
-        val fetchFrom = fromMillis - 24 * 60 * 60_000L
-        val feeds = allPages("feedings") { api.getFeedings(remoteAuthHeader, child, since = isoUtc(fetchFrom), until = until, limit = PAGE, offset = it) }
-            .map(::mapFeeding)
-            .sortedBy { it.timeMillis }
-        val changes = allPages("diaper changes") { api.getChanges(remoteAuthHeader, child, since = isoUtc(fromMillis), until = until, limit = PAGE, offset = it) }
-            .map(::mapChange)
-        val now = System.currentTimeMillis()
-        val sleeps = runCatching {
-            allPages("sleep") { api.getSleep(remoteAuthHeader, child, until = until, endedSince = isoUtc(fromMillis), limit = PAGE, offset = it) }
-        }.getOrDefault(emptyList()).map(::mapSleep) +
-            listOfNotNull(
-                _sleepTimer.value.takeIf { it.isRunning && toMillis == null }?.let { t ->
-                    SleepEvent(id = -1L, timeMillis = t.startMillis, endMillis = now, isNap = isNapTime(t.startMillis))
-                }
-            )
-        return Triple(feeds, changes, sleeps)
-    }
-
-    /**
-     * Feeds, changes and finished sleeps from [fromMillis] to [toMillis], for training the rhythm models
-     * (Trends → Models). Age counts from the birth date, else from [fromMillis].
-     */
-    suspend fun loadRhythmEvents(fromMillis: Long, toMillis: Long, birthDate: String?): Result<RhythmEvents> = withContext(Dispatchers.IO) {
-        try {
-            val now = System.currentTimeMillis()
-            val (feeds, changes, sleeps) = fetchEvents(fromMillis, toMillis.takeIf { it < now - 60_000L })
-            val running = _sleepTimer.value.takeIf { it.isRunning && toMillis >= now - 60_000L }?.startMillis
-            val birth = birthDate?.let { runCatching { SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(it)?.time }.getOrNull() }
-            Result.success(RhythmEvents(feeds, changes, sleeps.filter { it.id != -1L }, running, birth ?: fromMillis))
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Result.failure(e)
-        }
-    }
-
-    // Trends → Models: the models picked for reminders, Today and the summary widget (prefs "rhythm_models"),
-    // and when each expects the next event, from the last two days of entries (refetched every half hour)
-    private val _usedModels = MutableStateFlow<Map<RhythmTarget, SavedRhythmModel>>(emptyMap())
-    val usedModels: StateFlow<Map<RhythmTarget, SavedRhythmModel>> = _usedModels.asStateFlow()
-    private val _rhythmPredictions = MutableStateFlow<Map<RhythmTarget, RhythmPrediction>>(emptyMap())
-    val rhythmPredictions: StateFlow<Map<RhythmTarget, RhythmPrediction>> = _rhythmPredictions.asStateFlow()
-    private var recentEvents: Triple<List<FeedingEvent>, List<DiaperEvent>, List<SleepEvent>>? = null
-    private var recentFetchedAt = 0L
-    private val predictionMutex = Mutex()
-
-    /** Uses [model] for its rhythm from now on, or stops using a model for [target] when null. */
-    fun setUsedModel(target: RhythmTarget, model: SavedRhythmModel?) {
-        _usedModels.update { if (model == null) it - target else it + (target to model) }
-        modelPrefs?.edit()?.apply { if (model == null) remove(target.name) else putString(target.name, model.toText()) }?.apply()
-        syncScope.launch { updatePredictions() }
-    }
-
-    /** The model's expected time for the next event counted from [anchorMillis], if a model is used for [target]. */
-    fun modelDue(target: RhythmTarget, anchorMillis: Long): Long? = _rhythmPredictions.value[target]?.takeIf { kotlin.math.abs(it.anchorMillis - anchorMillis) < 60_000L }?.dueMillis
-
-    /** Like [modelDue], but once that time has passed, when the event now looks most likely (see [RhythmPrediction.expectedMillis]). */
-    private fun modelExpected(target: RhythmTarget, anchorMillis: Long, now: Long): Long? = _rhythmPredictions.value[target]?.takeIf { kotlin.math.abs(it.anchorMillis - anchorMillis) < 60_000L }?.expectedMillis(now)
-
-    /**
-     * The picked models' times for what's next from here: the next feed (unless one is running), the next diaper
-     * change, and the wake-up while a sleep is timed, else the next sleep. Untracked items are left out. An overdue
-     * time is re-estimated every minute.
-     */
-    val modelNextTimes: StateFlow<Map<RhythmTarget, Long>> by lazy {
-        val minutes = flow {
-            while (true) {
-                emit(System.currentTimeMillis())
-                delay(60_000L)
-            }
-        }
-        combine(_rhythmPredictions, settings.hiddenItems, _liveTimerState.map { it.isRunning }, minutes) { _, hidden, feeding, now ->
-            val sleep = _sleepTimer.value
-            buildMap {
-                val feedsShown = TrackedItem.BREASTFEEDING !in hidden || TrackedItem.BOTTLE !in hidden
-                lastFeedMillis.value?.takeIf { feedsShown && !feeding }?.let { modelExpected(RhythmTarget.FEED_GAP, it, now) }?.let { put(RhythmTarget.FEED_GAP, it) }
-                lastDiaper.value?.takeIf { TrackedItem.DIAPERS !in hidden }?.let { modelExpected(RhythmTarget.DIAPER_GAP, it.timeMillis, now) }
-                    ?.let { put(RhythmTarget.DIAPER_GAP, it) }
-                if (TrackedItem.SLEEP !in hidden) {
-                    if (sleep.isRunning) {
-                        modelExpected(RhythmTarget.SLEEP_LENGTH, sleep.startMillis, now)?.let { put(RhythmTarget.SLEEP_LENGTH, it) }
-                    } else {
-                        lastSleepEndMillis.value?.let { modelExpected(RhythmTarget.AWAKE_WINDOW, it, now) }?.let { put(RhythmTarget.AWAKE_WINDOW, it) }
-                    }
-                }
-            }
-        }.stateIn(syncScope, SharingStarted.Eagerly, emptyMap())
-    }
-
-    /**
-     * What's next for the next-up notification: [modelNextTimes], else the next feed and diaper change by the
-     * reminder intervals (Settings → Notifications).
-     */
-    val nextUpTimes: StateFlow<Map<RhythmTarget, Long>> by lazy {
-        combine(
-            modelNextTimes,
-            settings.reminders,
-            combine(lastFeedMillis, lastDiaper.map { it?.timeMillis }) { feed, diaper -> feed to diaper },
-            _liveTimerState.map { it.isRunning },
-            settings.hiddenItems
-        ) { model, reminders, (lastFeed, lastChange), feeding, hidden ->
-            buildMap {
-                putAll(model)
-                val feedsShown = TrackedItem.BREASTFEEDING !in hidden || TrackedItem.BOTTLE !in hidden
-                if (RhythmTarget.FEED_GAP !in model && feedsShown && !feeding && lastFeed != null && reminders.feedAfterMinutes > 0) {
-                    put(RhythmTarget.FEED_GAP, lastFeed + reminders.feedAfterMinutes * 60_000L)
-                }
-                if (RhythmTarget.DIAPER_GAP !in model && TrackedItem.DIAPERS !in hidden && lastChange != null && reminders.diaperAfterMinutes > 0) {
-                    put(RhythmTarget.DIAPER_GAP, lastChange + reminders.diaperAfterMinutes * 60_000L)
-                }
-            }
-        }.stateIn(syncScope, SharingStarted.Eagerly, emptyMap())
-    }
-
-    /** Recomputes [rhythmPredictions]: today's entries from memory, the day before from the server. */
-    suspend fun updatePredictions() = predictionMutex.withLock {
-        val models = _usedModels.value.values
-        if (models.isEmpty()) {
-            _rhythmPredictions.value = emptyMap()
-            return@withLock
-        }
-        val now = System.currentTimeMillis()
-        val midnight = startOfDay()
-        if (recentEvents == null || recentFetchedAt < midnight || now - recentFetchedAt > 30 * 60_000L) {
-            withContext(Dispatchers.IO) { runCatching { fetchEvents(now - 2 * 24 * 60 * 60_000L) } }.onSuccess {
-                recentEvents = it
-                recentFetchedAt = now
-            }
-        }
-        val (oldFeeds, oldChanges, oldSleeps) = recentEvents ?: Triple(emptyList(), emptyList(), emptyList())
-        val events = RhythmEvents(
-            feeds = oldFeeds.filter { it.timeMillis < midnight } + _feedings.value.filter { it.timeMillis >= midnight },
-            changes = oldChanges.filter { it.timeMillis < midnight } + _diapers.value.filter { it.timeMillis >= midnight },
-            sleeps = oldSleeps.filter { it.id != -1L && it.endMillis < midnight } + _sleeps.value.filter { it.endMillis >= midnight },
-            runningSleepStart = _sleepTimer.value.takeIf { it.isRunning }?.startMillis
+    suspend fun loadHistory(lastDayMillis: Long, days: Int = 7): Result<List<HistoryDay>> = queries.loadHistory(lastDayMillis, days) { start ->
+        HistoryDay(
+            dayStartMillis = start,
+            feedings = _feedings.value,
+            diapers = _diapers.value,
+            tummyTimes = _tummyTimes.value,
+            pumpings = _pumpings.value,
+            sleeps = _sleeps.value.filter { it.timeMillis >= start },
+            baths = _notes.value.filter { BATH_TAG in it.tags && it.timeMillis >= start },
+            notes = _notes.value.filter { BATH_TAG !in it.tags && it.timeMillis >= start }
         )
-        _rhythmPredictions.value = withContext(Dispatchers.Default) { predictRhythms(events, models) }
     }
 
-    /** Per-day feed/diaper totals for the last [days] days (today last). Needs a server connection. */
-    suspend fun loadTrends(days: Int): Result<List<DayStats>> = withContext(Dispatchers.IO) {
-        val isDemo = _connectionConfig.value.isDemoMode
-        val api = remoteApi
-        val child = remoteChildId
-        if (!isDemo && (api == null || child == null)) {
-            return@withContext Result.failure(IllegalStateException(AppText.get(R.string.error_connect_for_trends)))
-        }
-        try {
-            // Days start at the hour picked in Settings (midnight by default); the last one is the day running now
-            val now = System.currentTimeMillis()
-            val firstDay = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, DayHours.trendsDayStartHour)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-                if (timeInMillis > now) add(Calendar.DAY_OF_YEAR, -1)
-                add(Calendar.DAY_OF_YEAR, -(days - 1))
-            }
+    /** See [ServerQueries.loadRhythmEvents]. */
+    suspend fun loadRhythmEvents(fromMillis: Long, toMillis: Long, birthDate: String?): Result<RhythmEvents> = queries.loadRhythmEvents(fromMillis, toMillis, birthDate)
 
-            // From 12 hours earlier, so the first day's morning wake window has the night sleep before it
-            val (events, pumps) = coroutineScope {
-                val events = async { fetchEvents(firstDay.timeInMillis - 12 * 60 * 60_000L) }
-                val pumps = async {
-                    when {
-                        TrackedItem.PUMPING in settings.hiddenItems.value -> emptyList()
+    /** Per-day numbers for the last [days] days (today last); see [ServerQueries.loadTrends]. */
+    suspend fun loadTrends(days: Int): Result<List<DayStats>> = queries.loadTrends(days)
 
-                        isDemo -> allDemoPumpings
+    /** Average time between feed starts per day for the last 7 days, plus this week vs the week before. */
+    suspend fun loadFeedIntervals(): Result<FeedIntervalStats> = queries.loadFeedIntervals()
 
-                        else -> allPages("pumping") { offset ->
-                            api!!.getPumping(remoteAuthHeader, child, since = isoUtc(firstDay.timeInMillis), limit = PAGE, offset = offset)
-                        }.map(::mapPumping)
-                    }
-                }
-                events.await() to pumps.await()
-            }
-            val (feeds, changes, sleeps) = events
-            val wakeWindows = daytimeWakeWindows(sleeps.filter { it.id != -1L })
-
-            fun endOf(f: FeedingEvent) = f.timeMillis + (f.leftDurationSec + f.rightDurationSec) * 1000L
-            // Gaps between consecutive feeds, keyed by the time the gap starts
-            val gaps = feeds.zipWithNext { prev, next -> endOf(prev) to (next.timeMillis - endOf(prev)) }
-                .filter { it.second > 0 }
-
-            val labelFormat = SimpleDateFormat("EEE d", Locale.getDefault())
-            val stats = (0 until days).map { offset ->
-                val dayStart = (firstDay.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, offset) }.timeInMillis
-                val dayEnd = (firstDay.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, offset + 1) }.timeInMillis
-                val dayFeeds = feeds.filter { it.timeMillis in dayStart until dayEnd }
-                val dayChanges = changes.filter { it.timeMillis in dayStart until dayEnd }
-                val nursing = dayFeeds.filter { it.type == FeedType.NURSING }
-                val longestGap = gaps.filter { it.first in dayStart until dayEnd }.maxByOrNull { it.second }
-                val daySleep = sleeps.mapNotNull { s ->
-                    val from = maxOf(s.timeMillis, dayStart)
-                    val to = minOf(s.endMillis, dayEnd)
-                    if (to <= from) {
-                        null
-                    } else {
-                        SleepMark(((from - dayStart) / 60_000L).toInt(), ((to - from) / 60_000L).toInt(), s.isNap)
-                    }
-                }.sortedBy { it.startMinute }
-                DayStats(
-                    label = labelFormat.format(Date(dayStart)),
-                    feeds = dayFeeds.size,
-                    nursingMinutes = nursing.sumOf { it.leftDurationSec + it.rightDurationSec } / 60,
-                    bottleMl = dayFeeds.sumOf { it.amountMl ?: 0 },
-                    wet = dayChanges.count { it.type == DiaperType.WET || it.type == DiaperType.BOTH },
-                    dirty = dayChanges.count { it.type == DiaperType.DIRTY || it.type == DiaperType.BOTH },
-                    isToday = offset == days - 1,
-                    leftMinutes = nursing.sumOf { it.leftDurationSec } / 60,
-                    rightMinutes = nursing.sumOf { it.rightDurationSec } / 60,
-                    feedMarks = dayFeeds.map { f ->
-                        FeedMark(
-                            startMinute = ((f.timeMillis - dayStart) / 60_000L).toInt(),
-                            durationMinutes = (f.leftDurationSec + f.rightDurationSec) / 60,
-                            isBottle = f.amountMl != null
-                        )
-                    },
-                    longestGapStartMinute = longestGap?.let { ((it.first - dayStart) / 60_000L).toInt() },
-                    longestGapMinutes = longestGap?.let { (it.second / 60_000L).toInt() } ?: 0,
-                    diaperMarks = dayChanges.map { c ->
-                        DiaperMark(
-                            minute = ((c.timeMillis - dayStart) / 60_000L).toInt(),
-                            wet = c.type == DiaperType.WET || c.type == DiaperType.BOTH,
-                            dirty = c.type == DiaperType.DIRTY || c.type == DiaperType.BOTH
-                        )
-                    },
-                    sleepMarks = daySleep,
-                    sleepMinutes = daySleep.sumOf { it.durationMinutes },
-                    naps = sleeps.count { it.isNap && it.timeMillis in dayStart until dayEnd },
-                    longestSleepMinutes = sleeps.filter { it.timeMillis in dayStart until dayEnd }
-                        .maxOfOrNull { it.durationMinutes } ?: 0,
-                    wakeWindowMinutes = wakeWindows.filter { it.endMillis in dayStart until dayEnd }.averageMinutes(),
-                    pumpedMl = pumps.filter { it.timeMillis in dayStart until dayEnd }.sumOf { it.amountMl }
-                )
-            }
-            Result.success(stats)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    /** The models picked in Trends → Models and their predictions ([RhythmPredictor]). */
+    private val predictor: RhythmPredictor by lazy {
+        RhythmPredictor(
+            scope = syncScope,
+            settings = settings,
+            anchors = RhythmAnchors(lastFeedMillis, lastDiaper, lastSleepEndMillis, _liveTimerState.map { it.isRunning }, sleepTimer),
+            today = { TimedEvents(_feedings.value, _diapers.value, _sleeps.value) },
+            fetchEvents = { queries.fetchEvents(it) }
+        )
     }
+    val usedModels: StateFlow<Map<RhythmTarget, SavedRhythmModel>> get() = predictor.usedModels
+    val rhythmPredictions: StateFlow<Map<RhythmTarget, RhythmPrediction>> get() = predictor.predictions
 
-    private fun startOfTodayUtc(): String {
-        val cal = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        return SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
-            .apply { timeZone = TimeZone.getTimeZone("UTC") }
-            .format(cal.time)
-    }
+    /** See [RhythmPredictor.nextTimes]. */
+    val modelNextTimes: StateFlow<Map<RhythmTarget, Long>> get() = predictor.nextTimes
 
-    /** A range of entries, cut into local days for History. Notes tagged [BATH_TAG] are baths. */
-    private class HistoryEntries(
-        val feeds: List<FeedingEvent>,
-        val changes: List<DiaperEvent>,
-        val tummies: List<TummyTimeEvent>,
-        val pumps: List<PumpingEvent>,
-        val sleeps: List<SleepEvent>,
-        val notes: List<NoteEvent>
-    ) {
-        fun day(start: Long): HistoryDay {
-            val end = Calendar.getInstance().apply {
-                timeInMillis = start
-                add(Calendar.DAY_OF_YEAR, 1)
-            }.timeInMillis
-            val onDay = notes.filter { it.timeMillis in start until end }
-            return HistoryDay(
-                dayStartMillis = start,
-                feedings = feeds.filter { it.timeMillis in start until end },
-                diapers = changes.filter { it.timeMillis in start until end },
-                tummyTimes = tummies.filter { it.timeMillis in start until end },
-                pumpings = pumps.filter { it.timeMillis in start until end },
-                sleeps = sleeps.filter { it.timeMillis in start until end },
-                baths = onDay.filter { BATH_TAG in it.tags },
-                notes = onDay.filterNot { BATH_TAG in it.tags }
-            )
-        }
-    }
+    /** See [RhythmPredictor.nextUpTimes]. */
+    val nextUpTimes: StateFlow<Map<RhythmTarget, Long>> get() = predictor.nextUpTimes
+
+    fun setUsedModel(target: RhythmTarget, model: SavedRhythmModel?) = predictor.setUsedModel(target, model)
+
+    fun modelDue(target: RhythmTarget, anchorMillis: Long): Long? = predictor.due(target, anchorMillis)
+
+    suspend fun updatePredictions() = predictor.update()
 
     /** Demo mode's connection, baby (Sam) and simulated history; used on entering it and on start. */
     private fun showDemoBaby() {
         _connectionConfig.value = ServerConnectionConfig(
-            serverUrl = "demo.babybuddy.local",
-            apiToken = "demo-token",
+            serverUrl = "demo.babybuddy.local", // no token: demo mode never calls a server
             isConnected = true,
             isDemoMode = true,
             detectedChildName = "Sam",
@@ -1061,7 +709,7 @@ class BabyBuddyRepository {
         _handoff.value = null
         prefs?.edit()?.remove(PREF_AWAY_SINCE)?.apply()
         // Saved rhythm models learned this child's (or the demo's) rhythm
-        RhythmTarget.entries.forEach { setUsedModel(it, null) }
+        predictor.clear()
         _babyProfile.value = BabyProfile(name = AppText.get(R.string.profile_my_baby), shortName = AppText.get(R.string.profile_baby), ageFormatted = AppText.get(R.string.profile_newborn))
         stopAndResetTimer()
     }
@@ -1215,7 +863,7 @@ class BabyBuddyRepository {
         )
         if (updated == existing) return
         _feedings.update { list -> list.map { if (it.id == id) updated else it }.sortedByDescending { it.timeMillis } }
-        enqueue(QueuedWrite(ENDPOINT_FEEDINGS, QueuedWrite.ACTION_UPDATE, id, knownServerId(id, updated.serverId), feedingBody(updated)))
+        enqueue(QueuedWrite(Endpoints.FEEDINGS, QueuedWrite.ACTION_UPDATE, id, knownServerId(id, updated.serverId), feedingBody(updated)))
     }
 
     // Older entry points (widgets, other screens) map onto the side taps
@@ -1266,27 +914,27 @@ class BabyBuddyRepository {
     fun addDiaperLog(event: DiaperEvent, timeMs: Long = System.currentTimeMillis()): Long {
         val local = event.copy(id = nextLocalId(), timeMillis = timeMs, timeFormatted = formatClock(timeMs), caregiver = myName())
         _diapers.update { (listOf(local) + it).sortedByDescending { e -> e.timeMillis } }
-        enqueue(QueuedWrite(ENDPOINT_CHANGES, QueuedWrite.ACTION_CREATE, local.id, body = changeBody(local)))
+        enqueue(QueuedWrite(Endpoints.CHANGES, QueuedWrite.ACTION_CREATE, local.id, body = changeBody(local)))
         return local.id
     }
 
     fun updateDiaper(updated: DiaperEvent) {
         _diapers.update { list -> list.map { if (it.id == updated.id) updated else it }.sortedByDescending { it.timeMillis } }
         _lastDiaperRemote.update { if (it?.id == updated.id) updated else it }
-        enqueue(QueuedWrite(ENDPOINT_CHANGES, QueuedWrite.ACTION_UPDATE, updated.id, knownServerId(updated.id, updated.serverId), changeBody(updated)))
+        enqueue(QueuedWrite(Endpoints.CHANGES, QueuedWrite.ACTION_UPDATE, updated.id, knownServerId(updated.id, updated.serverId), changeBody(updated)))
     }
 
     fun deleteDiaper(id: Long) {
         val event = _diapers.value.firstOrNull { it.id == id } ?: return
         _diapers.update { list -> list.filterNot { it.id == id } }
         _lastDiaperRemote.update { if (it?.id == id) null else it }
-        enqueue(QueuedWrite(ENDPOINT_CHANGES, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
+        enqueue(QueuedWrite(Endpoints.CHANGES, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
     }
 
     fun addFeeding(event: FeedingEvent): Long {
         val local = event.copy(caregiver = event.caregiver ?: myName())
         _feedings.update { (listOf(local) + it).sortedByDescending { e -> e.timeMillis } }
-        enqueue(QueuedWrite(ENDPOINT_FEEDINGS, QueuedWrite.ACTION_CREATE, local.id, body = feedingBody(local)))
+        enqueue(QueuedWrite(Endpoints.FEEDINGS, QueuedWrite.ACTION_CREATE, local.id, body = feedingBody(local)))
         return local.id
     }
 
@@ -1313,7 +961,7 @@ class BabyBuddyRepository {
         // An older feed edited from History may be the "last breastfeed" (its last side drives Today and the widget)
         _lastBreastfeedRemote.update { if (it?.id == event.id) event else it }
         _recentFeedsRemote.update { list -> list.map { if (it.id == event.id) event else it }.sortedByDescending { it.timeMillis } }
-        enqueue(QueuedWrite(ENDPOINT_FEEDINGS, QueuedWrite.ACTION_UPDATE, event.id, knownServerId(event.id, event.serverId), feedingBody(event)))
+        enqueue(QueuedWrite(Endpoints.FEEDINGS, QueuedWrite.ACTION_UPDATE, event.id, knownServerId(event.id, event.serverId), feedingBody(event)))
     }
 
     fun deleteFeeding(id: Long) {
@@ -1322,18 +970,18 @@ class BabyBuddyRepository {
         _recentFeedsRemote.update { list -> list.filterNot { it.id == id } }
         // The server's "last breastfeed" may have been this one: fall back to the one before it
         _lastBreastfeedRemote.update { last -> if (last?.id == id) _recentFeedsRemote.value.firstOrNull { it.type == FeedType.NURSING } else last }
-        enqueue(QueuedWrite(ENDPOINT_FEEDINGS, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
+        enqueue(QueuedWrite(Endpoints.FEEDINGS, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
     }
 
     fun updateTummyTime(updated: TummyTimeEvent) {
         _tummyTimes.update { list -> list.map { if (it.id == updated.id) updated else it }.sortedByDescending { it.timeMillis } }
-        enqueue(QueuedWrite(ENDPOINT_TUMMY, QueuedWrite.ACTION_UPDATE, updated.id, knownServerId(updated.id, updated.serverId), tummyBody(updated)))
+        enqueue(QueuedWrite(Endpoints.TUMMY, QueuedWrite.ACTION_UPDATE, updated.id, knownServerId(updated.id, updated.serverId), tummyBody(updated)))
     }
 
     fun deleteTummyTime(id: Long) {
         val event = _tummyTimes.value.firstOrNull { it.id == id } ?: return
         _tummyTimes.update { list -> list.filterNot { it.id == id } }
-        enqueue(QueuedWrite(ENDPOINT_TUMMY, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
+        enqueue(QueuedWrite(Endpoints.TUMMY, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
     }
 
     /** [startMillis] defaults to "just finished": now minus the duration. */
@@ -1349,7 +997,7 @@ class BabyBuddyRepository {
             caregiver = myName()
         )
         _pumpings.update { (listOf(event) + it).sortedByDescending { e -> e.timeMillis } }
-        enqueue(QueuedWrite(ENDPOINT_PUMPING, QueuedWrite.ACTION_CREATE, event.id, body = pumpingBody(event)))
+        enqueue(QueuedWrite(Endpoints.PUMPING, QueuedWrite.ACTION_CREATE, event.id, body = pumpingBody(event)))
         return event.id
     }
 
@@ -1364,14 +1012,14 @@ class BabyBuddyRepository {
             caregiver = myName()
         )
         _temperatures.update { (listOf(event) + it).sortedByDescending { e -> e.timeMillis } }
-        enqueue(QueuedWrite(ENDPOINT_TEMPERATURE, QueuedWrite.ACTION_CREATE, event.id, body = temperatureBody(event)))
+        enqueue(QueuedWrite(Endpoints.TEMPERATURE, QueuedWrite.ACTION_CREATE, event.id, body = temperatureBody(event)))
         return event.id
     }
 
     fun deleteTemperature(id: Long) {
         val event = _temperatures.value.firstOrNull { it.id == id } ?: return
         _temperatures.update { list -> list.filterNot { it.id == id } }
-        enqueue(QueuedWrite(ENDPOINT_TEMPERATURE, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
+        enqueue(QueuedWrite(Endpoints.TEMPERATURE, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
     }
 
     /** Logs one measurement (kg or cm) on the day of [dateMillis]; returns its id (for undo). */
@@ -1409,7 +1057,7 @@ class BabyBuddyRepository {
         val event = NoteEvent(id = nextLocalId(), timeMillis = now, timeFormatted = formatClock(now), text = text, tags = tags)
         _notes.update { (listOf(event) + it).sortedByDescending { e -> e.timeMillis } }
         val body = mapOf("note" to text, "time" to isoUtc(now), "tags" to tags.takeIf { it.isNotEmpty() })
-        enqueue(QueuedWrite(ENDPOINT_NOTES, QueuedWrite.ACTION_CREATE, event.id, body = body))
+        enqueue(QueuedWrite(Endpoints.NOTES, QueuedWrite.ACTION_CREATE, event.id, body = body))
         return event.id
     }
 
@@ -1422,13 +1070,13 @@ class BabyBuddyRepository {
         val event = updated.copy(timeFormatted = formatClock(updated.timeMillis))
         _notes.update { list -> list.map { if (it.id == event.id) event else it }.sortedByDescending { it.timeMillis } }
         val body = mapOf("note" to event.text, "time" to isoUtc(event.timeMillis), "tags" to event.tags)
-        enqueue(QueuedWrite(ENDPOINT_NOTES, QueuedWrite.ACTION_UPDATE, event.id, knownServerId(event.id, event.serverId), body))
+        enqueue(QueuedWrite(Endpoints.NOTES, QueuedWrite.ACTION_UPDATE, event.id, knownServerId(event.id, event.serverId), body))
     }
 
     /** Deletes a note or bath (from today or an earlier day in History). */
     fun deleteNoteEvent(note: NoteEvent) {
         _notes.update { list -> list.filterNot { it.id == note.id } }
-        enqueue(QueuedWrite(ENDPOINT_NOTES, QueuedWrite.ACTION_DELETE, note.id, knownServerId(note.id, note.serverId)))
+        enqueue(QueuedWrite(Endpoints.NOTES, QueuedWrite.ACTION_DELETE, note.id, knownServerId(note.id, note.serverId)))
         // The server's "last bath" may have been this one
         if (BATH_TAG in note.tags && _lastBathRemote.value == note.timeMillis) _lastBathRemote.value = null
     }
@@ -1471,11 +1119,12 @@ class BabyBuddyRepository {
 
     /** Finds the latest stash amount on the server and totals the days between it and today. */
     suspend fun loadMilkStash() {
-        val api = remoteApi ?: return
-        val child = remoteChildId ?: return
+        val remote = session ?: return
+        val api = remote.api
+        val child = remote.child ?: return
         runCatching {
             val since = isoUtc(System.currentTimeMillis() - 180L * 24 * 60 * 60_000L)
-            val note = api.getNotes(remoteAuthHeader, child, since = since, limit = 1000).body()!!.results
+            val note = api.getNotes(remote.auth, child, since = since, limit = 1000).body()!!.results
                 .filter { MILK_STASH_TAG in it.tags.orEmpty() }
                 .maxByOrNull { it.time?.let(::parseServerTime)?.time ?: 0L }
                 ?: return@runCatching null
@@ -1484,9 +1133,9 @@ class BabyBuddyRepository {
             val todayStart = startOfDay()
             if (sinceMillis >= todayStart) return@runCatching StashBase(ml, sinceMillis, 0, 0)
             val from = isoUtc(sinceMillis)
-            val pumped = api.getPumping(remoteAuthHeader, child, since = from, limit = 1000).body()!!.results
+            val pumped = api.getPumping(remote.auth, child, since = from, limit = 1000).body()!!.results
                 .map(::mapPumping).filter { it.timeMillis in sinceMillis until todayStart }.sumOf { it.amountMl }
-            val given = api.getFeedings(remoteAuthHeader, child, since = from, limit = 1000).body()!!.results
+            val given = api.getFeedings(remote.auth, child, since = from, limit = 1000).body()!!.results
                 .map(::mapFeeding).filter { it.timeMillis in sinceMillis until todayStart && isBreastMilkBottle(it) }
                 .sumOf { it.amountMl ?: 0 }
             StashBase(ml, sinceMillis, pumped, given)
@@ -1500,18 +1149,18 @@ class BabyBuddyRepository {
     fun deleteNote(id: Long) {
         val event = _notes.value.firstOrNull { it.id == id } ?: return
         _notes.update { list -> list.filterNot { it.id == id } }
-        enqueue(QueuedWrite(ENDPOINT_NOTES, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
+        enqueue(QueuedWrite(Endpoints.NOTES, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
     }
 
     fun updatePumping(updated: PumpingEvent) {
         _pumpings.update { list -> list.map { if (it.id == updated.id) updated else it }.sortedByDescending { it.timeMillis } }
-        enqueue(QueuedWrite(ENDPOINT_PUMPING, QueuedWrite.ACTION_UPDATE, updated.id, knownServerId(updated.id, updated.serverId), pumpingBody(updated)))
+        enqueue(QueuedWrite(Endpoints.PUMPING, QueuedWrite.ACTION_UPDATE, updated.id, knownServerId(updated.id, updated.serverId), pumpingBody(updated)))
     }
 
     fun deletePumping(id: Long) {
         val event = _pumpings.value.firstOrNull { it.id == id } ?: return
         _pumpings.update { list -> list.filterNot { it.id == id } }
-        enqueue(QueuedWrite(ENDPOINT_PUMPING, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
+        enqueue(QueuedWrite(Endpoints.PUMPING, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
     }
 
     /** Note on the running breastfeed, synced like any edit. */
@@ -1521,7 +1170,7 @@ class BabyBuddyRepository {
         val updated = existing.copy(notes = notes.trim())
         if (updated == existing) return
         _feedings.update { list -> list.map { if (it.id == id) updated else it } }
-        enqueue(QueuedWrite(ENDPOINT_FEEDINGS, QueuedWrite.ACTION_UPDATE, id, knownServerId(id, updated.serverId), feedingBody(updated)))
+        enqueue(QueuedWrite(Endpoints.FEEDINGS, QueuedWrite.ACTION_UPDATE, id, knownServerId(id, updated.serverId), feedingBody(updated)))
     }
 
     /** The running breastfeed's note. */
@@ -1603,19 +1252,19 @@ class BabyBuddyRepository {
             caregiver = myName()
         )
         _sleeps.update { (listOf(event) + it).sortedByDescending { e -> e.timeMillis } }
-        enqueue(QueuedWrite(ENDPOINT_SLEEP, QueuedWrite.ACTION_CREATE, event.id, body = sleepBody(event)))
+        enqueue(QueuedWrite(Endpoints.SLEEP, QueuedWrite.ACTION_CREATE, event.id, body = sleepBody(event)))
         return event.id
     }
 
     fun updateSleep(updated: SleepEvent) {
         _sleeps.update { list -> list.map { if (it.id == updated.id) updated else it }.sortedByDescending { it.timeMillis } }
-        enqueue(QueuedWrite(ENDPOINT_SLEEP, QueuedWrite.ACTION_UPDATE, updated.id, knownServerId(updated.id, updated.serverId), sleepBody(updated)))
+        enqueue(QueuedWrite(Endpoints.SLEEP, QueuedWrite.ACTION_UPDATE, updated.id, knownServerId(updated.id, updated.serverId), sleepBody(updated)))
     }
 
     fun deleteSleep(id: Long) {
         val event = _sleeps.value.firstOrNull { it.id == id } ?: return
         _sleeps.update { list -> list.filterNot { it.id == id } }
-        enqueue(QueuedWrite(ENDPOINT_SLEEP, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
+        enqueue(QueuedWrite(Endpoints.SLEEP, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
     }
 
     fun startSleep(startMillis: Long = System.currentTimeMillis()) {
@@ -1671,13 +1320,13 @@ class BabyBuddyRepository {
     private val timers: SharedTimerSync by lazy {
         SharedTimerSync(
             scope = syncScope,
-            target = { remoteApi?.let { api -> remoteChildId?.let { child -> WriteQueue.Target(api, remoteAuthHeader, child) } } },
+            target = { session?.target },
             feed = _liveTimerState,
             sleep = _sleepTimer,
             setSleep = ::setSleepTimer,
             feedings = _feedings,
             writeQueue = writeQueue,
-            syncToday = { syncToday(it.api, it.auth, it.child) }
+            syncToday = { syncToday(RemoteSession(it.api, it.auth, it.child)) }
         )
     }
 
@@ -1688,9 +1337,7 @@ class BabyBuddyRepository {
         // Unsent entries belong to the server being left
         val dropped = writeQueue.clear()
         if (dropped > 0) _syncErrors.tryEmit(AppText.plural(R.plurals.sync_discarded, dropped, dropped))
-        remoteApi = null
-        remoteAuthHeader = ""
-        remoteChildId = null
+        session = null
         store?.clear()
     }
 
@@ -1699,7 +1346,7 @@ class BabyBuddyRepository {
     /** Adds a write to the queue (and disk) and starts sending; no-op in demo/offline mode. */
     private fun enqueue(write: QueuedWrite) {
         val config = _connectionConfig.value
-        if (remoteApi == null || !config.isConnected || config.isDemoMode) return
+        if (session == null || !config.isConnected || config.isDemoMode) return
         writeQueue.add(write)
     }
 
@@ -1710,7 +1357,7 @@ class BabyBuddyRepository {
         override fun serverIdOf(write: QueuedWrite): Long? = localStore(write.endpoint).serverIdOf(write.localId)
 
         override fun onCreated(write: QueuedWrite, serverId: Long) {
-            if (write.endpoint == ENDPOINT_FEEDINGS && write.localId == _liveTimerState.value.feedingLocalId) {
+            if (write.endpoint == Endpoints.FEEDINGS && write.localId == _liveTimerState.value.feedingLocalId) {
                 // Other phones following this feed can now update its record
                 _liveTimerState.update { it.copy(feedingServerId = serverId) }
                 timers.feedRecordCreated()
@@ -1718,27 +1365,9 @@ class BabyBuddyRepository {
             localStore(write.endpoint).setServerId(write.localId, serverId)
         }
 
-        override suspend fun findExisting(write: QueuedWrite, target: WriteQueue.Target): Long? = findExisting(write, target.api, target.auth, target.child)
+        override suspend fun findExisting(write: QueuedWrite, target: WriteQueue.Target): Long? = findExistingRecord(write, target)
 
-        override fun describe(write: QueuedWrite): String = this@BabyBuddyRepository.describe(write)
-    }
-
-    private fun describe(write: QueuedWrite): String {
-        val what = when (write.endpoint) {
-            ENDPOINT_FEEDINGS -> AppText.get(R.string.write_feeding)
-            ENDPOINT_CHANGES -> AppText.get(R.string.write_diaper_change)
-            ENDPOINT_PUMPING -> AppText.get(R.string.write_pumping)
-            ENDPOINT_TEMPERATURE -> AppText.get(R.string.write_temperature)
-            ENDPOINT_NOTES -> AppText.get(R.string.write_note)
-            ENDPOINT_SLEEP -> AppText.get(R.string.write_sleep)
-            in GROWTH_ENDPOINTS -> GrowthKind.forEndpoint(write.endpoint)!!.label.lowercase()
-            else -> AppText.get(R.string.write_tummy_time)
-        }
-        return when (write.action) {
-            QueuedWrite.ACTION_UPDATE -> AppText.get(R.string.write_edit, what)
-            QueuedWrite.ACTION_DELETE -> AppText.get(R.string.write_delete, what)
-            else -> what
-        }
+        override fun describe(write: QueuedWrite): String = describeWrite(write)
     }
 
     /** One endpoint's local entries, for filling in and looking up server ids. */
@@ -1755,71 +1384,19 @@ class BabyBuddyRepository {
     }
 
     private fun localStore(endpoint: String): LocalStore<*> = when (endpoint) {
-        ENDPOINT_FEEDINGS -> LocalStore(_feedings, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-        ENDPOINT_CHANGES -> LocalStore(_diapers, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-        ENDPOINT_PUMPING -> LocalStore(_pumpings, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-        ENDPOINT_TEMPERATURE -> LocalStore(_temperatures, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-        ENDPOINT_NOTES -> LocalStore(_notes, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-        ENDPOINT_SLEEP -> LocalStore(_sleeps, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-        in GROWTH_ENDPOINTS -> LocalStore(_growth, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) }) { it.kind.endpoint == endpoint }
+        Endpoints.FEEDINGS -> LocalStore(_feedings, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+        Endpoints.CHANGES -> LocalStore(_diapers, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+        Endpoints.PUMPING -> LocalStore(_pumpings, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+        Endpoints.TEMPERATURE -> LocalStore(_temperatures, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+        Endpoints.NOTES -> LocalStore(_notes, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+        Endpoints.SLEEP -> LocalStore(_sleeps, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
+        in Endpoints.GROWTH -> LocalStore(_growth, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) }) { it.kind.endpoint == endpoint }
         else -> LocalStore(_tummyTimes, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-    }
-
-    /** Looks for a record a lost-response create may already have made, by its exact start/time. */
-    private suspend fun findExisting(write: QueuedWrite, api: BabyBuddyApiService, auth: String, child: Int): Long? {
-        val body = write.body
-        return when (write.endpoint) {
-            ENDPOINT_FEEDINGS -> {
-                val start = body["start"] as? String ?: return null
-                api.getFeedings(auth, child, since = start, until = start).body()?.results.orEmpty()
-                    .firstOrNull { it.method == body["method"] }?.id
-            }
-
-            ENDPOINT_CHANGES -> {
-                val time = body["time"] as? String ?: return null
-                api.getChanges(auth, child, since = time, until = time).body()?.results.orEmpty()
-                    .firstOrNull { it.wet == body["wet"] && it.solid == body["solid"] }?.id
-            }
-
-            ENDPOINT_PUMPING -> {
-                val start = body["start"] as? String ?: return null
-                api.getPumping(auth, child, since = start, until = start).body()?.results.orEmpty().firstOrNull()?.id
-            }
-
-            ENDPOINT_TEMPERATURE -> {
-                val time = body["time"] as? String ?: return null
-                api.getTemperatures(auth, child, since = time, until = time).body()?.results.orEmpty().firstOrNull()?.id
-            }
-
-            ENDPOINT_NOTES -> {
-                val time = body["time"] as? String ?: return null
-                api.getNotes(auth, child, since = time, until = time).body()?.results.orEmpty()
-                    .firstOrNull { it.note == body["note"] }?.id
-            }
-
-            ENDPOINT_SLEEP -> {
-                val start = body["start"] as? String ?: return null
-                api.getSleep(auth, child, since = start, until = start).body()?.results.orEmpty().firstOrNull()?.id
-            }
-
-            in GROWTH_ENDPOINTS -> {
-                val kind = GrowthKind.forEndpoint(write.endpoint) ?: return null
-                val date = body["date"] as? String ?: return null
-                api.getGrowth(auth, kind.endpoint, child, date = date).body()?.results.orEmpty()
-                    .firstOrNull { growthValue(kind, it) == body[kind.field] }?.id
-            }
-
-            else -> {
-                val start = body["start"] as? String ?: return null
-                api.getTummyTimes(auth, child, since = start, until = start).body()?.results.orEmpty().firstOrNull()?.id
-            }
-        }
     }
 
     // --- Process-level setup: persistence, timer, widgets ---
 
     private var prefs: SharedPreferences? = null
-    private var modelPrefs: SharedPreferences? = null
 
     /** Called once from the Application: restores the saved login and running timer, starts the timer. */
     fun attach(context: Context) {
@@ -1828,9 +1405,7 @@ class BabyBuddyRepository {
         prefs = p
         p.edit().remove(LEGACY_PREF_TOKEN).apply() // earlier builds stored the token in plain text
         settings.load(p, syncScope)
-        val mp = context.applicationContext.getSharedPreferences(MODEL_PREFS, Context.MODE_PRIVATE)
-        modelPrefs = mp
-        _usedModels.value = mp.all.values.mapNotNull { (it as? String)?.let(SavedRhythmModel::fromText) }.associateBy { it.target }
+        predictor.load(context.applicationContext.getSharedPreferences(MODEL_PREFS, Context.MODE_PRIVATE))
         val offline = OfflineStore(File(context.applicationContext.filesDir, "offline"))
         store = offline
         writeQueue.store = offline
@@ -1872,7 +1447,7 @@ class BabyBuddyRepository {
             ) { (f, d, t), (p, temp, n), s -> TodayCache(todayKey(), f, d, t, p, temp, n, s) }.collectLatest { cache ->
                 delay(500)
                 val config = _connectionConfig.value
-                if (remoteApi != null && config.isConnected && !config.isDemoMode) {
+                if (session != null && config.isConnected && !config.isDemoMode) {
                     offline.saveCache(cache)
                 }
             }
@@ -1925,9 +1500,7 @@ class BabyBuddyRepository {
         val cfSecret = p.getString(PREF_CF_SECRET_ENC, null)?.let(SecretCipher::decrypt).orEmpty()
         val childId = p.getInt(PREF_CHILD_ID, -1).takeIf { it >= 0 }
         // Set up writes right away so entries logged while the server is unreachable get queued
-        remoteApi = BabyBuddyApiClient.createService(url, selfSigned, cfId, cfSecret, certPin)
-        remoteAuthHeader = if (token.startsWith("Token ")) token else "Token $token"
-        remoteChildId = childId
+        session = RemoteSession(BabyBuddyApiClient.createService(url, selfSigned, cfId, cfSecret, certPin), RemoteSession.authHeader(token), childId)
         _connectionConfig.update {
             it.copy(
                 serverUrl = url,
@@ -2031,18 +1604,8 @@ class BabyBuddyRepository {
         private const val PREF_URL = "server_url"
         private const val PREF_TOKEN_ENC = "api_token_enc"
         private const val LEGACY_PREF_TOKEN = "api_token"
-        private const val ENDPOINT_FEEDINGS = "feedings"
-        private const val ENDPOINT_CHANGES = "changes"
-        private const val ENDPOINT_TUMMY = "tummy-times"
-        private const val ENDPOINT_PUMPING = "pumping"
-        private const val ENDPOINT_TEMPERATURE = "temperature"
-        private const val ENDPOINT_NOTES = "notes"
-        private const val ENDPOINT_SLEEP = "sleep"
-        private val GROWTH_ENDPOINTS = GrowthKind.entries.map { it.endpoint }.toSet()
         private const val PREF_SLEEP_CHANGED = "sleep_timer_changed_at"
         private const val MODEL_PREFS = "rhythm_models"
-        private const val PAGE = 1000
-        private const val MAX_FETCH = 20_000
         private const val PREF_SLEEP_START = "sleep_timer_start"
         private const val PREF_SLEEP_NOTES = "sleep_timer_notes"
         private const val PREF_AWAY_SINCE = "away_since"
@@ -2070,61 +1633,17 @@ class BabyBuddyRepository {
             caregiver = myName()
         )
         _tummyTimes.update { (listOf(event) + it).sortedByDescending { e -> e.timeMillis } }
-        enqueue(QueuedWrite(ENDPOINT_TUMMY, QueuedWrite.ACTION_CREATE, event.id, body = tummyBody(event)))
+        enqueue(QueuedWrite(Endpoints.TUMMY, QueuedWrite.ACTION_CREATE, event.id, body = tummyBody(event)))
         return event.id
     }
 
     /** Re-fetches today's entries (e.g. ones another caregiver logged) and resends anything queued. */
     suspend fun refresh(): Boolean = withContext(Dispatchers.IO) {
-        val api = remoteApi ?: return@withContext false
-        syncToday(api, remoteAuthHeader, remoteChildId)
+        val remote = session ?: return@withContext false
+        syncToday(remote)
         flushPendingWrites()
         pollSharedTimers()
         loadMilkStash()
         true
-    }
-
-    /** Average time between feed starts per day for the last 7 days, plus this week vs the week before. */
-    suspend fun loadFeedIntervals(): Result<FeedIntervalStats> = withContext(Dispatchers.IO) {
-        if (_connectionConfig.value.isDemoMode) {
-            // Sample numbers to match the demo day (a feed about every 3 hours)
-            return@withContext Result.success(
-                FeedIntervalStats(listOf(185, 178, 192, 181, 175, 188, 180), thisWeekAverageMinutes = 183, lastWeekAverageMinutes = 171)
-            )
-        }
-        val api = remoteApi
-        val child = remoteChildId
-        if (api == null || child == null) return@withContext Result.failure(IllegalStateException(AppText.get(R.string.error_not_connected)))
-        try {
-            val todayStart = startOfDay()
-            val day = 86_400_000L
-            val from = todayStart - 14 * day
-            val response = api.getFeedings(remoteAuthHeader, child, since = isoUtc(from), limit = 1000)
-            if (!response.isSuccessful) error("HTTP ${response.code()} loading feedings")
-            // Bottle top-ups logged right after a breastfeed aren't separate feeds
-            val starts = response.body()?.results.orEmpty().mapNotNull { parseServerTime(it.start)?.time }.sorted()
-                .fold(mutableListOf<Long>()) { acc, t ->
-                    if (acc.isEmpty() || t - acc.last() > 20 * 60_000L) acc.add(t)
-                    acc
-                }
-            val gaps = starts.zipWithNext { a, b -> b to (b - a) / 60_000L }
-                .filter { it.second in 30..(10 * 60) } // ignore implausible gaps (missing entries, cluster feeds)
-
-            fun averageBetween(start: Long, end: Long): Int? = gaps.filter { it.first in start until end }.map { it.second }.takeIf { it.isNotEmpty() }?.average()?.toInt()
-
-            val daily = (6 downTo 0).map { back ->
-                val start = todayStart - back * day
-                averageBetween(start, start + day)
-            }
-            Result.success(
-                FeedIntervalStats(
-                    dailyAverageMinutes = daily,
-                    thisWeekAverageMinutes = averageBetween(todayStart - 6 * day, todayStart + day),
-                    lastWeekAverageMinutes = averageBetween(todayStart - 13 * day, todayStart - 6 * day)
-                )
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
     }
 }

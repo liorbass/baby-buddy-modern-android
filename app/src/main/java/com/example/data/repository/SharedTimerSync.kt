@@ -208,7 +208,7 @@ internal class SharedTimerSync(
         }
         try {
             if (pendingDelete != null) {
-                val response = api.deleteRecord(auth, ENDPOINT_TIMERS, pendingDelete)
+                val response = api.deleteRecord(auth, Endpoints.TIMERS, pendingDelete)
                 when {
                     response.isSuccessful || response.code() == 404 -> setToDelete(null)
 
@@ -225,7 +225,7 @@ internal class SharedTimerSync(
             val id = currentId ?: api.getTimers(auth, server.child).body()?.results.orEmpty()
                 .firstOrNull { isOurs(it.name) }?.id
             if (id != null) {
-                val response = api.updateRecord(auth, ENDPOINT_TIMERS, id, mapOf("name" to name))
+                val response = api.updateRecord(auth, Endpoints.TIMERS, id, mapOf("name" to name))
                 if (response.isSuccessful) {
                     setRemoteId(id)
                     return
@@ -246,7 +246,7 @@ internal class SharedTimerSync(
             // The server rejects starts in the future, so allow for this phone's clock being ahead
             val now = System.currentTimeMillis()
             val start = minOf(startMillis.takeIf { it > 0 } ?: now, now - 60_000L)
-            val response = api.createRecord(auth, ENDPOINT_TIMERS, mapOf("child" to server.child, "name" to name, "start" to isoUtc(start)))
+            val response = api.createRecord(auth, Endpoints.TIMERS, mapOf("child" to server.child, "name" to name, "start" to isoUtc(start)))
             if (response.isSuccessful) {
                 setRemoteId((response.body()?.get("id") as? Number)?.toLong())
             } else if (response.code() >= 500) {
@@ -347,7 +347,7 @@ internal class SharedTimerSync(
      */
     private fun feedEndedElsewhere(now: Long) {
         val local = feed.value
-        local.feedingLocalId?.let { writeQueue.dropUpdates(ENDPOINT_FEEDINGS, it) }
+        local.feedingLocalId?.let { writeQueue.dropUpdates(Endpoints.FEEDINGS, it) }
         setFeedTimerRemoteId(null)
         feedEndedAt = now
         feed.value = LiveTimerState(softChimeEnabled = local.softChimeEnabled)
@@ -387,8 +387,6 @@ internal class SharedTimerSync(
     }
 
     private companion object {
-        const val ENDPOINT_TIMERS = "timers"
-        const val ENDPOINT_FEEDINGS = "feedings"
         const val PREF_FEED_TIMER_ID = "feed_timer_remote_id"
         const val PREF_SLEEP_TIMER_ID = "sleep_timer_remote_id"
         const val PREF_FEED_TIMER_TO_DELETE = "feed_timer_to_delete"
