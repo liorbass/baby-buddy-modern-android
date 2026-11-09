@@ -3,7 +3,7 @@
 An unofficial Android client for a self-hosted [Baby Buddy](https://github.com/babybuddy/babybuddy) server — track feeding, sleep, diapers, pumping, tummy time and more, with a live nursing timer that syncs between parents' phones in real time, home-screen widgets, lock-screen notifications and offline-first sync.
 
 <p>
-  <a href="https://github.com/liorbass/baby-buddy-modern-android/releases/latest"><img src="https://img.shields.io/github/v/release/liorbass/baby-buddy-modern-android?label=Download%20APK&logo=android&style=for-the-badge&color=9A442D" alt="Download the latest APK" height="40"></a>
+  <a href="https://github.com/liorbass/baby-buddy-modern-android/releases/latest"><img src="https://img.shields.io/github/v/release/liorbass/baby-buddy-modern-android?label=Download%20APK&logo=android&style=for-the-badge&color=9A442D" alt="Download the latest APK" height="40"><img src="https://img.shields.io/github/downloads/liorbass/baby-buddy-modern-android/total?label=downloads&style=for-the-badge&color=6B6B2E" alt="Total downloads" height="40"></a>
   <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22dev.liorbass.babybuddy%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fliorbass%2Fbaby-buddy-modern-android%22%2C%22author%22%3A%22liorbass%22%2C%22name%22%3A%22Baby%20Buddy%20Companion%22%7D"><img src="docs/images/badge_obtainium.png" alt="Get it on Obtainium" height="40"></a>
 </p>
 
@@ -58,7 +58,7 @@ Details and screenshots: **[docs/FEATURES.md](docs/FEATURES.md)** (widgets, lock
 2. **Install** the APK from the [latest release](https://github.com/liorbass/baby-buddy-modern-android/releases/latest), or with [Obtainium](https://github.com/ImranR98/Obtainium) for automatic updates (badge above, or add this repository's URL; config in [`docs/obtainium/`](docs/obtainium/dev.liorbass.babybuddy.json)). Android 7.0+.
 3. **Log in** with your server URL (e.g. `https://baby.example.com`) and API token (Baby Buddy web UI → your user profile). Optional: a Cloudflare Access service token. For a self-signed certificate, turn on **Allow self-signed certificates**: the app shows the certificate's fingerprint once and then trusts only that certificate. Plain `http://` works on a home network, but sends the token unencrypted.
 
-
+cc
 Building from source and contributing: **[CONTRIBUTING.md](CONTRIBUTING.md)**. How the app uses the server's API and which fields carry what: [docs/ICD.md](docs/ICD.md). Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Privacy
