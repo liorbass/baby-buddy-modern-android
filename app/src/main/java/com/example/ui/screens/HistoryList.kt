@@ -63,7 +63,6 @@ import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
 import com.example.ui.theme.OutlineVariant
 import com.example.ui.theme.PrimaryColor
-import com.example.ui.theme.PrimaryFixed
 import com.example.ui.theme.SurfaceContainerLow
 import com.example.ui.theme.SurfaceContainerLowest
 import java.text.SimpleDateFormat
