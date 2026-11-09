@@ -76,7 +76,7 @@ class BabyBuddyRepository {
     /** This phone's settings (Settings screens, Customize Today), saved in prefs. */
     val settings = SettingsStore(onClockFormatChanged = { reformatTimes() })
 
-    private val _babyProfile = MutableStateFlow(BabyProfile(name = "", shortName = "", ageFormatted = "", avatarUrl = ""))
+    private val _babyProfile = MutableStateFlow(BabyProfile())
     val babyProfile: StateFlow<BabyProfile> = _babyProfile.asStateFlow()
 
     // Set on a successful connect; writes go to the server only while these are present
@@ -107,11 +107,16 @@ class BabyBuddyRepository {
     private val _connectionConfig = MutableStateFlow(ServerConnectionConfig())
     val connectionConfig: StateFlow<ServerConnectionConfig> = _connectionConfig.asStateFlow()
 
-    private val _liveTimerState = MutableStateFlow(LiveTimerState())
-    val liveTimerState: StateFlow<LiveTimerState> = _liveTimerState.asStateFlow()
-
     private val _feedings = MutableStateFlow<List<FeedingEvent>>(emptyList())
     val feedings: StateFlow<List<FeedingEvent>> = _feedings.asStateFlow()
+
+    /** The breastfeeding timer; every tap is saved to the feed's record ([NursingTimer]). */
+    private val nursing = NursingTimer(
+        records = FeedRecords(_feedings, nextId = ::nextLocalId, add = ::addFeeding, queueUpdate = ::queueFeedingUpdate),
+        onChanged = { timers.feedChanged() },
+        onEnded = { timers.feedEnded() }
+    )
+    val liveTimerState: StateFlow<LiveTimerState> = nursing.state.asStateFlow()
 
     // The latest breastfeed from the server, so the last side is known even before today's first feed
     private val _lastBreastfeedRemote = MutableStateFlow<FeedingEvent?>(null)
@@ -155,7 +160,7 @@ class BabyBuddyRepository {
         combine(
             _feedings,
             _recentFeedsRemote,
-            _liveTimerState.map { it.takeIf { s -> s.isRunning }?.let { s -> s.sessionStartMillis to s.feedingLocalId } }.distinctUntilChanged()
+            liveTimerState.map { it.takeIf { s -> s.isRunning }?.let { s -> s.sessionStartMillis to s.feedingLocalId } }.distinctUntilChanged()
         ) { today, recent, feed ->
             val (start, currentId) = feed ?: return@combine null
             (today + recent).filter { it.id != currentId && it.timeMillis < start - 60_000L }.maxOfOrNull { it.timeMillis }
@@ -234,9 +239,7 @@ class BabyBuddyRepository {
         _lastBreastfeedRemote.update { it?.copy(timeFormatted = formatClock(it.timeMillis)) }
         _recentFeedsRemote.update { list -> list.map { it.copy(timeFormatted = formatClock(it.timeMillis)) } }
         _lastDiaperRemote.update { it?.copy(timeFormatted = formatClock(it.timeMillis)) }
-        _liveTimerState.update { t ->
-            if (t.isRunning && t.sessionStartMillis > 0) t.copy(sessionStartedTime = formatClock(t.sessionStartMillis)) else t
-        }
+        nursing.reformat()
     }
 
     private val _handoff = MutableStateFlow<HandoffSummary?>(null)
@@ -288,15 +291,6 @@ class BabyBuddyRepository {
 
     private fun myName(): String? = settings.caregiverName.value.ifBlank { null }
 
-    // Offline test toggle to view disconnected state exactly like the screenshot
-    private val _isServerDisconnectedView = MutableStateFlow(false)
-    val isServerDisconnectedView: StateFlow<Boolean> = _isServerDisconnectedView.asStateFlow()
-
-    fun toggleServerDisconnectedView(disconnected: Boolean) {
-        _isServerDisconnectedView.value = disconnected
-        _connectionConfig.update { it.copy(isConnected = !disconnected) }
-    }
-
     /** Demo mode's simulated history (all of it; the lists hold today's part). */
     private var demoHistory: DemoHistory? = null
 
@@ -310,7 +304,6 @@ class BabyBuddyRepository {
 
         settings.setCaregiverName("Sarah")
 
-        _isServerDisconnectedView.value = false
         settings.setThemeMode(ThemeMode.LIGHT)
         showDemoBaby()
         // Show every feature: growth charts, reminders and the rhythm models (fitted on the demo data and in use)
@@ -425,11 +418,9 @@ class BabyBuddyRepository {
                         pinnedCertSha256 = pin,
                         cfClientId = cfClientId,
                         cfClientSecret = cfClientSecret,
-                        detectedChildName = detectedName,
-                        lastSyncFormatted = AppText.get(R.string.synced_just_now)
+                        detectedChildName = detectedName
                     )
                 }
-                _isServerDisconnectedView.value = false
 
                 val connected = RemoteSession(api, authHeader, detectedChild?.id)
                 session = connected
@@ -580,7 +571,7 @@ class BabyBuddyRepository {
             }
         }
         val syncedAt = System.currentTimeMillis()
-        _connectionConfig.update { it.copy(lastSyncFormatted = AppText.get(R.string.synced_at, formatClock(syncedAt)), lastSyncMillis = syncedAt) }
+        _connectionConfig.update { it.copy(lastSyncMillis = syncedAt) }
     }
 
     /**
@@ -646,7 +637,7 @@ class BabyBuddyRepository {
         RhythmPredictor(
             scope = syncScope,
             settings = settings,
-            anchors = RhythmAnchors(lastFeedMillis, lastDiaper, lastSleepEndMillis, _liveTimerState.map { it.isRunning }, sleepTimer),
+            anchors = RhythmAnchors(lastFeedMillis, lastDiaper, lastSleepEndMillis, liveTimerState.map { it.isRunning }, sleepTimer),
             today = { TimedEvents(_feedings.value, _diapers.value, _sleeps.value) },
             fetchEvents = { queries.fetchEvents(it) }
         )
@@ -672,8 +663,7 @@ class BabyBuddyRepository {
             serverUrl = "demo.babybuddy.local", // no token: demo mode never calls a server
             isConnected = true,
             isDemoMode = true,
-            detectedChildName = "Sam",
-            lastSyncFormatted = AppText.get(R.string.demo_mode)
+            detectedChildName = "Sam"
         )
         _babyProfile.value = BabyProfile(
             name = "Sam",
@@ -711,204 +701,28 @@ class BabyBuddyRepository {
         // Saved rhythm models learned this child's (or the demo's) rhythm
         predictor.clear()
         _babyProfile.value = BabyProfile(name = AppText.get(R.string.profile_my_baby), shortName = AppText.get(R.string.profile_baby), ageFormatted = AppText.get(R.string.profile_newborn))
-        stopAndResetTimer()
+        nursing.reset()
     }
 
-    fun updateConfig(config: ServerConnectionConfig) {
-        _connectionConfig.value = config
-    }
+    // --- Breastfeeding (NursingTimer): every tap is saved and synced; there is no separate save step ---
 
-    // Live Nursing Session Actions
-    fun updateLiveTimer(
-        isPaused: Boolean? = null,
-        activeBreast: BreastSide? = null,
-        leftIncrement: Int = 0,
-        rightIncrement: Int = 0,
-        bottleOz: Double? = null,
-        notes: String? = null
-    ) {
-        _liveTimerState.update { curr ->
-            curr.copy(
-                isPaused = isPaused ?: curr.isPaused,
-                activeBreast = activeBreast ?: curr.activeBreast,
-                leftSeconds = curr.leftSeconds + leftIncrement,
-                rightSeconds = curr.rightSeconds + rightIncrement,
-                bottleAmountOz = bottleOz ?: curr.bottleAmountOz,
-                notes = notes ?: curr.notes
-            )
-        }
-    }
+    fun tapSide(side: BreastSide) = nursing.tapSide(side)
 
-    // --- Breastfeeding: every tap is saved and synced; there is no separate save step ---
+    fun setSideSeconds(side: BreastSide, seconds: Int) = nursing.setSideSeconds(side, seconds)
 
-    /**
-     * Left/Right button: starts (or resumes) the feed on [side], switches to it, or pauses it if it's the running side.
-     * A feed paused for longer than [SESSION_TIMEOUT_MS] has ended, so the next tap starts a new one.
-     */
-    fun tapSide(side: BreastSide) {
-        val t = _liveTimerState.value
-        val now = System.currentTimeMillis()
-        val sessionOver = !t.isRunning || t.feedingLocalId == null ||
-            (t.isPaused && now - t.pausedAtMillis > SESSION_TIMEOUT_MS)
-        when {
-            sessionOver -> startFeedOn(side, now)
+    fun setFeedStart(startMillis: Long) = nursing.setFeedStart(startMillis)
 
-            !t.isPaused && t.activeBreast == side ->
-                _liveTimerState.value = t.copy(isPaused = true, pausedAtMillis = now, lastActiveMillis = 0L)
+    fun endFeed() = nursing.endFeed()
 
-            else ->
-                _liveTimerState.value = t.copy(isPaused = false, activeBreast = side, pausedAtMillis = 0L, lastActiveMillis = 0L)
-        }
-        syncLiveFeeding()
-        timers.feedChanged()
-    }
+    fun switchActiveSide() = nursing.switchSide()
 
-    /** Manually corrects one side's time on the running feed (e.g. the timer was started late). */
-    fun setSideSeconds(side: BreastSide, seconds: Int) {
-        val t = _liveTimerState.value
-        if (!t.isRunning || t.feedingLocalId == null) return
-        val s = seconds.coerceAtLeast(0)
-        _liveTimerState.value = when (side) {
-            BreastSide.LEFT -> t.copy(leftSeconds = s, editCount = t.editCount + 1)
-            else -> t.copy(rightSeconds = s, editCount = t.editCount + 1)
-        }
-        syncLiveFeeding()
-        timers.feedChanged()
-    }
+    fun togglePause() = nursing.togglePause()
 
-    /**
-     * Moves the running feed's start. Moving it earlier means the timer was started late, so the
-     * difference goes to the side the feed began on (and comes off it when moved later).
-     */
-    fun setFeedStart(startMillis: Long) {
-        val t = _liveTimerState.value
-        if (!t.isRunning || t.feedingLocalId == null || t.sessionStartMillis <= 0L) return
-        val newStart = startMillis.coerceAtMost(feedFinishMillis(t))
-        val delta = ((t.sessionStartMillis - newStart) / 1000L).toInt()
-        val first = t.firstSide ?: t.activeBreast
-        _liveTimerState.value = t.copy(
-            sessionStartMillis = newStart,
-            sessionStartedTime = formatClock(newStart),
-            leftSeconds = if (first == BreastSide.LEFT) (t.leftSeconds + delta).coerceAtLeast(0) else t.leftSeconds,
-            rightSeconds = if (first == BreastSide.RIGHT) (t.rightSeconds + delta).coerceAtLeast(0) else t.rightSeconds,
-            editCount = t.editCount + 1
-        )
-        syncLiveFeeding()
-        timers.feedChanged()
-    }
+    fun startNewNursingSession(side: BreastSide) = nursing.startNew(side)
 
-    /** The last moment a side was running: now while running, else when it was paused. */
-    fun feedFinishMillis(t: LiveTimerState = _liveTimerState.value): Long = when {
-        !t.isPaused -> System.currentTimeMillis()
-        t.lastActiveMillis > 0 -> t.lastActiveMillis
-        t.pausedAtMillis > 0 -> t.pausedAtMillis
-        else -> System.currentTimeMillis()
-    }
+    fun setLiveFeedNotes(notes: String) = nursing.setNotes(notes)
 
-    /** Ends the current feed now (it's already saved), so the next tap starts a new one. */
-    fun endFeed() {
-        syncLiveFeeding()
-        _liveTimerState.value = LiveTimerState(softChimeEnabled = _liveTimerState.value.softChimeEnabled)
-        timers.feedEnded()
-    }
-
-    private fun startFeedOn(side: BreastSide, now: Long) {
-        if (_liveTimerState.value.feedingLocalId != null) syncLiveFeeding()
-        val event = FeedingEvent(
-            id = nextLocalId(),
-            timeMillis = now,
-            timeFormatted = formatClock(now),
-            type = FeedType.NURSING,
-            side = side,
-            leftDurationSec = 0,
-            rightDurationSec = 0,
-            amountMl = null,
-            notes = "",
-            observations = emptyList(),
-            imageUrl = null
-        )
-        _liveTimerState.value = LiveTimerState(
-            isRunning = true,
-            isPaused = false,
-            activeBreast = side,
-            sessionStartedTime = formatClock(now),
-            softChimeEnabled = _liveTimerState.value.softChimeEnabled,
-            feedingLocalId = event.id,
-            sessionStartMillis = now,
-            firstSide = side
-        )
-        addFeeding(event.copy(sides = side.name))
-    }
-
-    /** Pushes the running feed's current durations/sides to its feeding record (local list + server queue). */
-    private fun syncLiveFeeding() {
-        val t = _liveTimerState.value
-        val id = t.feedingLocalId ?: return
-        val existing = _feedings.value.firstOrNull { it.id == id } ?: return
-        val start = t.sessionStartMillis.takeIf { it > 0 } ?: existing.timeMillis
-        val updated = existing.copy(
-            timeMillis = start,
-            timeFormatted = formatClock(start),
-            leftDurationSec = t.leftSeconds,
-            rightDurationSec = t.rightSeconds,
-            side = when {
-                t.leftSeconds > 0 && t.rightSeconds > 0 -> BreastSide.BOTH
-                t.rightSeconds > 0 -> BreastSide.RIGHT
-                t.leftSeconds > 0 -> BreastSide.LEFT
-                else -> t.activeBreast
-            },
-            sides = (t.firstSide ?: t.activeBreast).let { first ->
-                if (first == t.activeBreast) first.name else "${first.name} -> ${t.activeBreast.name}"
-            }
-        )
-        if (updated == existing) return
-        _feedings.update { list -> list.map { if (it.id == id) updated else it }.sortedByDescending { it.timeMillis } }
-        enqueue(QueuedWrite(Endpoints.FEEDINGS, QueuedWrite.ACTION_UPDATE, id, knownServerId(id, updated.serverId), feedingBody(updated)))
-    }
-
-    // Older entry points (widgets, other screens) map onto the side taps
-    fun switchActiveSide() {
-        val t = _liveTimerState.value
-        tapSide(if (t.activeBreast == BreastSide.LEFT) BreastSide.RIGHT else BreastSide.LEFT)
-    }
-
-    fun togglePause() = tapSide(_liveTimerState.value.activeBreast)
-
-    fun toggleChime() {
-        _liveTimerState.update { it.copy(softChimeEnabled = !it.softChimeEnabled) }
-    }
-
-    fun toggleObservation(tag: String) {
-        _liveTimerState.update { curr ->
-            val updated = if (curr.observations.contains(tag)) {
-                curr.observations - tag
-            } else {
-                curr.observations + tag
-            }
-            curr.copy(observations = updated)
-        }
-    }
-
-    fun startNewNursingSession(side: BreastSide = BreastSide.RIGHT) {
-        if (_liveTimerState.value.feedingLocalId != null) endFeed()
-        tapSide(side)
-    }
-
-    fun stopAndResetTimer() {
-        _liveTimerState.value = LiveTimerState(softChimeEnabled = _liveTimerState.value.softChimeEnabled)
-    }
-
-    /** Ends the running feed (already saved) and logs an optional bottle top-up. */
-    fun finishAndSaveNursingSession(
-        supplementOz: Double = 0.0,
-        supplementType: String = "Pumped Breast Milk",
-        notes: String = ""
-    ) {
-        endFeed()
-        if (supplementOz > 0) {
-            logBottle(Math.round(supplementOz * 29.5735).toInt(), supplementType.contains("formula", ignoreCase = true))
-        }
-    }
+    fun liveFeedUserNotes(): String = nursing.notes()
 
     /** Returns the new entry's id (for undo). */
     fun addDiaperLog(event: DiaperEvent, timeMs: Long = System.currentTimeMillis()): Long {
@@ -949,20 +763,19 @@ class BabyBuddyRepository {
             leftDurationSec = 0,
             rightDurationSec = 0,
             amountMl = ml,
-            notes = notes,
-            observations = emptyList(),
-            imageUrl = null
+            notes = notes
         )
     )
 
-    fun updateFeeding(updated: FeedingEvent) {
-        val event = updated
+    fun updateFeeding(event: FeedingEvent) {
         _feedings.update { list -> list.map { if (it.id == event.id) event else it }.sortedByDescending { it.timeMillis } }
         // An older feed edited from History may be the "last breastfeed" (its last side drives Today and the widget)
         _lastBreastfeedRemote.update { if (it?.id == event.id) event else it }
         _recentFeedsRemote.update { list -> list.map { if (it.id == event.id) event else it }.sortedByDescending { it.timeMillis } }
-        enqueue(QueuedWrite(Endpoints.FEEDINGS, QueuedWrite.ACTION_UPDATE, event.id, knownServerId(event.id, event.serverId), feedingBody(event)))
+        queueFeedingUpdate(event)
     }
+
+    private fun queueFeedingUpdate(event: FeedingEvent) = enqueue(QueuedWrite(Endpoints.FEEDINGS, QueuedWrite.ACTION_UPDATE, event.id, knownServerId(event.id, event.serverId), feedingBody(event)))
 
     fun deleteFeeding(id: Long) {
         val event = _feedings.value.firstOrNull { it.id == id } ?: return
@@ -1163,22 +976,6 @@ class BabyBuddyRepository {
         enqueue(QueuedWrite(Endpoints.PUMPING, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
     }
 
-    /** Note on the running breastfeed, synced like any edit. */
-    fun setLiveFeedNotes(notes: String) {
-        val id = _liveTimerState.value.feedingLocalId ?: return
-        val existing = _feedings.value.firstOrNull { it.id == id } ?: return
-        val updated = existing.copy(notes = notes.trim())
-        if (updated == existing) return
-        _feedings.update { list -> list.map { if (it.id == id) updated else it } }
-        enqueue(QueuedWrite(Endpoints.FEEDINGS, QueuedWrite.ACTION_UPDATE, id, knownServerId(id, updated.serverId), feedingBody(updated)))
-    }
-
-    /** The running breastfeed's note. */
-    fun liveFeedUserNotes(): String {
-        val id = _liveTimerState.value.feedingLocalId ?: return ""
-        return _feedings.value.firstOrNull { it.id == id }?.notes.orEmpty()
-    }
-
     private fun knownServerId(localId: Long, serverId: Long?): Long? = serverId ?: writeQueue.knownServerId(localId)
 
     private fun formatClock(millis: Long): String = TimeFormat.clock(millis)
@@ -1196,8 +993,7 @@ class BabyBuddyRepository {
                         consistency = "",
                         color = "",
                         skinBarrierApplied = emptyList(),
-                        notes = note.orEmpty(),
-                        imageUrl = null
+                        notes = note.orEmpty()
                     )
                 )
             }
@@ -1211,8 +1007,7 @@ class BabyBuddyRepository {
                         consistency = "",
                         color = "",
                         skinBarrierApplied = emptyList(),
-                        notes = note.orEmpty(),
-                        imageUrl = null
+                        notes = note.orEmpty()
                     )
                 )
             }
@@ -1226,8 +1021,7 @@ class BabyBuddyRepository {
                         consistency = "",
                         color = "",
                         skinBarrierApplied = emptyList(),
-                        notes = note.orEmpty(),
-                        imageUrl = null
+                        notes = note.orEmpty()
                     )
                 )
             }
@@ -1321,7 +1115,7 @@ class BabyBuddyRepository {
         SharedTimerSync(
             scope = syncScope,
             target = { session?.target },
-            feed = _liveTimerState,
+            feed = nursing.state,
             sleep = _sleepTimer,
             setSleep = ::setSleepTimer,
             feedings = _feedings,
@@ -1357,9 +1151,9 @@ class BabyBuddyRepository {
         override fun serverIdOf(write: QueuedWrite): Long? = localStore(write.endpoint).serverIdOf(write.localId)
 
         override fun onCreated(write: QueuedWrite, serverId: Long) {
-            if (write.endpoint == Endpoints.FEEDINGS && write.localId == _liveTimerState.value.feedingLocalId) {
+            if (write.endpoint == Endpoints.FEEDINGS && write.localId == nursing.state.value.feedingLocalId) {
                 // Other phones following this feed can now update its record
-                _liveTimerState.update { it.copy(feedingServerId = serverId) }
+                nursing.state.update { it.copy(feedingServerId = serverId) }
                 timers.feedRecordCreated()
             }
             localStore(write.endpoint).setServerId(write.localId, serverId)
@@ -1409,19 +1203,13 @@ class BabyBuddyRepository {
         val offline = OfflineStore(File(context.applicationContext.filesDir, "offline"))
         store = offline
         writeQueue.store = offline
-        restoreTimer(p)
+        nursing.restore(p)
         p.getLong(PREF_SLEEP_START, 0L).takeIf { it > 0 }?.let { start ->
             _sleepTimer.value = SleepTimerState(start, p.getString(PREF_SLEEP_NOTES, "").orEmpty(), p.getLong(PREF_SLEEP_CHANGED, 0L))
         }
         timers.load(p)
         timers.start()
-        startTimerTicker()
-        syncScope.launch {
-            // Save the timer whenever it starts/stops/switches; the ticks in between are recomputed from the clock
-            _liveTimerState.map { listOf(it.isRunning, it.isPaused, it.activeBreast, it.editCount) }
-                .distinctUntilChanged()
-                .collect { saveTimer() }
-        }
+        nursing.start(syncScope, p)
         if (restoreConnection(p)) {
             restoreOffline(offline)
             reformatTimes() // the cache may have been saved with the other clock format
@@ -1479,7 +1267,7 @@ class BabyBuddyRepository {
         _tummyTimes,
         _babyProfile,
         combine(
-            _liveTimerState.map { listOf(it.isRunning, it.isPaused, it.activeBreast, it.editCount) }.distinctUntilChanged(),
+            liveTimerState.map { listOf(it.isRunning, it.isPaused, it.activeBreast, it.editCount) }.distinctUntilChanged(),
             modelNextTimes
         ) { timer, next -> timer to next }
     ) { feeds, diapers, tummies, profile, timer -> listOf(feeds, diapers, tummies, profile, timer) }
@@ -1511,8 +1299,7 @@ class BabyBuddyRepository {
                 cfClientSecret = cfSecret,
                 isConnected = true,
                 isDemoMode = false,
-                detectedChildName = p.getString(PREF_CHILD_NAME, "").orEmpty(),
-                lastSyncFormatted = AppText.get(R.string.connecting)
+                detectedChildName = p.getString(PREF_CHILD_NAME, "").orEmpty()
             )
         }
         p.getString(PREF_CHILD_NAME, null)?.let { name ->
@@ -1527,74 +1314,6 @@ class BabyBuddyRepository {
             }
         }
         return true
-    }
-
-    /** Advances the nursing timer from the wall clock, so it stays right even if ticks are delayed. */
-    private fun startTimerTicker() {
-        syncScope.launch {
-            var last = System.currentTimeMillis()
-            while (true) {
-                delay(1000)
-                val elapsedSec = ((System.currentTimeMillis() - last) / 1000).toInt()
-                if (elapsedSec <= 0) continue
-                last += elapsedSec * 1000L
-                val t = _liveTimerState.value
-                if (t.isRunning && !t.isPaused) {
-                    updateLiveTimer(
-                        leftIncrement = if (t.activeBreast == BreastSide.LEFT) elapsedSec else 0,
-                        rightIncrement = if (t.activeBreast == BreastSide.RIGHT) elapsedSec else 0
-                    )
-                    // Keep the server's copy of a running feed at most a minute behind
-                    val total = _liveTimerState.value.totalSeconds
-                    if (total / 60 != (total - elapsedSec) / 60) syncLiveFeeding()
-                } else if (t.isRunning && t.isPaused && System.currentTimeMillis() - t.pausedAtMillis > SESSION_TIMEOUT_MS) {
-                    endFeed()
-                }
-            }
-        }
-    }
-
-    private fun saveTimer() {
-        val t = _liveTimerState.value
-        prefs?.edit()
-            ?.putBoolean("timer_running", t.isRunning)
-            ?.putBoolean("timer_paused", t.isPaused)
-            ?.putString("timer_side", t.activeBreast.name)
-            ?.putInt("timer_left", t.leftSeconds)
-            ?.putInt("timer_right", t.rightSeconds)
-            ?.putString("timer_started", t.sessionStartedTime)
-            ?.putLong("timer_feeding_id", t.feedingLocalId ?: -1L)
-            ?.putLong("timer_session_start", t.sessionStartMillis)
-            ?.putLong("timer_paused_at", t.pausedAtMillis)
-            ?.putString("timer_first_side", t.firstSide?.name)
-            ?.putLong("timer_last_active", t.lastActiveMillis)
-            ?.putLong("timer_changed_at", t.changedAtMillis)
-            ?.putLong("timer_feeding_server_id", t.feedingServerId ?: -1L)
-            ?.putLong("timer_saved_at", System.currentTimeMillis())
-            ?.apply()
-    }
-
-    private fun restoreTimer(p: SharedPreferences) {
-        if (!p.getBoolean("timer_running", false)) return
-        val paused = p.getBoolean("timer_paused", false)
-        val side = runCatching { BreastSide.valueOf(p.getString("timer_side", "LEFT")!!) }.getOrDefault(BreastSide.LEFT)
-        // Time that passed while the app wasn't running counts towards the active side
-        val missed = if (paused) 0 else ((System.currentTimeMillis() - p.getLong("timer_saved_at", 0L)) / 1000).toInt().coerceAtLeast(0)
-        _liveTimerState.value = LiveTimerState(
-            isRunning = true,
-            isPaused = paused,
-            activeBreast = side,
-            leftSeconds = p.getInt("timer_left", 0) + if (side == BreastSide.LEFT) missed else 0,
-            rightSeconds = p.getInt("timer_right", 0) + if (side == BreastSide.RIGHT) missed else 0,
-            sessionStartedTime = p.getString("timer_started", "").orEmpty(),
-            feedingLocalId = p.getLong("timer_feeding_id", -1L).takeIf { it >= 0 },
-            sessionStartMillis = p.getLong("timer_session_start", 0L),
-            pausedAtMillis = p.getLong("timer_paused_at", 0L),
-            firstSide = p.getString("timer_first_side", null)?.let { name -> runCatching { BreastSide.valueOf(name) }.getOrNull() },
-            lastActiveMillis = p.getLong("timer_last_active", 0L),
-            changedAtMillis = p.getLong("timer_changed_at", 0L),
-            feedingServerId = p.getLong("timer_feeding_server_id", -1L).takeIf { it >= 0 }
-        )
     }
 
     companion object {
@@ -1617,7 +1336,6 @@ class BabyBuddyRepository {
         private const val PREF_CHILD_NAME = "child_name"
         private const val PREF_BIRTH_DATE = "birth_date"
         private const val PREF_DEMO_MODE = "is_demo_mode"
-        private const val SESSION_TIMEOUT_MS = 30 * 60_000L
     }
 
     /** Logs a tummy-time session that just ended; returns its id (for undo). */

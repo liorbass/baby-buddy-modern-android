@@ -65,7 +65,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -156,7 +155,6 @@ class MainViewModel(
         _historyFilter.value = filter
         navigateTo(ScreenDestination.HISTORY)
     }
-    val isServerDisconnectedView: StateFlow<Boolean> = repository.isServerDisconnectedView
     val pendingWriteCount: StateFlow<Int> = repository.pendingWriteCount
 
     // Trends (loaded from the server when the Trends tab opens)
@@ -555,26 +553,8 @@ class MainViewModel(
         repository.togglePause()
     }
 
-    fun toggleChime() {
-        repository.toggleChime()
-        val active = liveTimerState.value.softChimeEnabled
-        showToast(AppText.get(if (active) R.string.toast_chime_on else R.string.toast_chime_muted))
-    }
-
-    fun toggleObservationTag(tag: String) {
-        repository.toggleObservation(tag)
-    }
-
-    fun startNewNursing(side: BreastSide = BreastSide.RIGHT) {
-        repository.startNewNursingSession(side)
-    }
-
-    fun finishAndSaveNursing(
-        supplementOz: Double = 0.0,
-        supplementType: String = "Pumped Breast Milk",
-        notes: String = ""
-    ) {
-        repository.finishAndSaveNursingSession(supplementOz, supplementType, notes)
+    fun finishAndSaveNursing() {
+        repository.endFeed()
         showToast(AppText.get(R.string.toast_feeding_saved))
         navigateTo(ScreenDestination.TODAY_DASHBOARD)
     }
@@ -677,15 +657,6 @@ class MainViewModel(
         showToast(AppText.get(R.string.toast_demo_mode))
     }
 
-    fun toggleServerDisconnectedSimulation(disconnected: Boolean) {
-        repository.toggleServerDisconnectedView(disconnected)
-        if (disconnected) {
-            showToast(AppText.get(R.string.toast_simulating_disconnected), isSuccess = false)
-        } else {
-            showToast(AppText.get(R.string.toast_server_connected))
-        }
-    }
-
     // Widget Management Operations
     fun setAddWidgetModalVisible(visible: Boolean) {
         _showAddWidgetModal.value = visible
@@ -699,11 +670,6 @@ class MainViewModel(
         } else {
             showToast(AppText.get(R.string.toast_card_removed, type.displayName))
         }
-    }
-
-    fun addDashboardWidget(type: DashboardWidgetType) {
-        repository.settings.addWidget(type)
-        showToast(AppText.get(R.string.toast_card_added, type.displayName))
     }
 
     fun removeDashboardWidget(type: DashboardWidgetType) {

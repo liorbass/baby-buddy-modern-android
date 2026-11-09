@@ -247,8 +247,6 @@ class SettingsStore internal constructor(
 
     fun toggleWidget(type: DashboardWidgetType) = setWidget(type) { !it }
 
-    fun addWidget(type: DashboardWidgetType) = setWidget(type) { true }
-
     fun removeWidget(type: DashboardWidgetType) = setWidget(type) { false }
 
     private fun setWidget(type: DashboardWidgetType, enabled: (Boolean) -> Boolean) = dashboardWidgetsPref.set(dashboardWidgetsPref.value.map { if (it.type == type) it.copy(isEnabled = enabled(it.isEnabled)) else it })
