@@ -350,7 +350,7 @@ internal class SharedTimerSync(
         local.feedingLocalId?.let { writeQueue.dropUpdates(Endpoints.FEEDINGS, it) }
         setFeedTimerRemoteId(null)
         feedEndedAt = now
-        feed.value = LiveTimerState(softChimeEnabled = local.softChimeEnabled)
+        feed.value = LiveTimerState()
     }
 
     /** The sleep's shared timer is gone: it was stopped (and saved) on another phone. */
@@ -372,7 +372,6 @@ internal class SharedTimerSync(
             leftSeconds = snap.leftSeconds + if (snap.side == BreastSide.LEFT) elapsed else 0,
             rightSeconds = snap.rightSeconds + if (snap.side == BreastSide.RIGHT) elapsed else 0,
             sessionStartedTime = TimeFormat.clock(snap.startMillis),
-            softChimeEnabled = local.softChimeEnabled,
             // Without the record yet, a placeholder id; it's linked on a later poll
             feedingLocalId = record?.id ?: local.feedingLocalId?.takeIf { local.isRunning } ?: newLocalId(),
             sessionStartMillis = snap.startMillis,

@@ -148,7 +148,6 @@ internal fun mapChange(dto: BabyBuddyChangeDto): DiaperEvent {
         id = dto.id ?: newLocalId(),
         serverId = dto.id,
         timeMillis = parseServerTime(dto.time)?.time ?: System.currentTimeMillis(),
-        childId = dto.child,
         timeFormatted = formatServerTime(dto.time),
         type = when {
             dto.wet && dto.solid -> DiaperType.BOTH
@@ -162,8 +161,7 @@ internal fun mapChange(dto: BabyBuddyChangeDto): DiaperEvent {
         rashPresent = extras.rash,
         skinBarrierApplied = extras.creams,
         notes = extras.notes,
-        caregiver = caregiver,
-        imageUrl = null
+        caregiver = caregiver
     )
 }
 
@@ -202,7 +200,6 @@ internal fun mapTummyTime(dto: BabyBuddyTummyTimeDto): TummyTimeEvent = TummyTim
     id = dto.id ?: newLocalId(),
     serverId = dto.id,
     timeMillis = parseServerTime(dto.start)?.time ?: System.currentTimeMillis(),
-    childId = dto.child,
     timeFormatted = formatServerTime(dto.start),
     durationMinutes = parseDurationSeconds(dto.duration) / 60,
     milestone = dto.milestone.orEmpty(),
@@ -282,7 +279,6 @@ internal fun mapFeeding(dto: BabyBuddyFeedingDto): FeedingEvent {
         serverId = dto.id,
         timeMillis = parseServerTime(dto.start)?.time ?: System.currentTimeMillis(),
         bottleFormula = dto.type.lowercase() == "formula",
-        childId = dto.child,
         timeFormatted = formatServerTime(dto.start),
         type = when {
             dto.type.lowercase() == "solid food" -> FeedType.SOLID
@@ -295,9 +291,7 @@ internal fun mapFeeding(dto: BabyBuddyFeedingDto): FeedingEvent {
         amountMl = dto.amount?.toInt(),
         notes = userNotes,
         caregiver = caregiver,
-        sides = sides,
-        observations = emptyList(),
-        imageUrl = null
+        sides = sides
     )
 }
 

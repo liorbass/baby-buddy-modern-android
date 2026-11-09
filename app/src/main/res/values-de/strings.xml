@@ -255,8 +255,6 @@
     <string name="toast_sleep_updated">Schlaf aktualisiert</string>
     <string name="toast_sleep_deleted">Schlaf gelöscht</string>
     <string name="toast_feed_ended">Mahlzeit beendet</string>
-    <string name="toast_chime_on">Sanfter Ton: an</string>
-    <string name="toast_chime_muted">Sanfter Ton: stumm</string>
     <string name="toast_feeding_saved">Mahlzeit gespeichert</string>
     <string name="toast_diaper_saved_start_timer">Windel gespeichert! Still-Timer startet...</string>
     <string name="toast_diaper_saved">Windel gespeichert</string>
@@ -271,8 +269,6 @@
     <string name="toast_connection_failed">Verbindung fehlgeschlagen: %s</string>
     <string name="toast_logged_out">Abgemeldet</string>
     <string name="toast_demo_mode">Demomodus mit Beispieldaten aktiv</string>
-    <string name="toast_simulating_disconnected">Getrennte Verbindung wird simuliert</string>
-    <string name="toast_server_connected">Server verbunden</string>
     <string name="toast_card_added">%s zu Heute hinzugefügt</string>
     <string name="toast_card_removed">%s von Heute entfernt</string>
     <string name="toast_card_removed_short">%s entfernt</string>
@@ -328,10 +324,6 @@
     <string name="write_delete">%s (Löschen)</string>
     <string name="age_days">%d T.</string>
     <string name="age_months_days">%1$d Mon. %2$d T.</string>
-    <string name="demo_mode">Demomodus</string>
-    <string name="synced_just_now">Gerade synchronisiert</string>
-    <string name="synced_at">Synchronisiert um %s</string>
-    <string name="connecting">Verbinde…</string>
     <string name="card_last_feed_desc">Zeit seitdem, Seite</string>
     <string name="card_last_diaper_desc">Zeit seitdem, Art</string>
     <string name="card_wake_windows_desc">Wach seit, heutige Wachfenster</string>

@@ -338,8 +338,6 @@
     <string name="toast_sleep_updated">Sommeil mis à jour</string>
     <string name="toast_sleep_deleted">Sommeil supprimé</string>
     <string name="toast_feed_ended">Tétée terminée</string>
-    <string name="toast_chime_on">Carillon doux : activé</string>
-    <string name="toast_chime_muted">Carillon doux : coupé</string>
     <string name="toast_feeding_saved">Alimentation enregistrée</string>
     <string name="toast_diaper_saved_start_timer">Couche enregistrée ! Démarrage du chronomètre d\'allaitement...</string>
     <string name="toast_diaper_saved">Couche enregistrée</string>
@@ -354,8 +352,6 @@
     <string name="toast_connection_failed">Échec de la connexion : %s</string>
     <string name="toast_logged_out">Déconnecté</string>
     <string name="toast_demo_mode">Mode démo actif avec des données d\'exemple</string>
-    <string name="toast_simulating_disconnected">Simulation d\'une déconnexion</string>
-    <string name="toast_server_connected">Serveur connecté</string>
     <string name="toast_card_added">%s ajouté à Aujourd\'hui</string>
     <string name="toast_card_removed">%s retiré d\'Aujourd\'hui</string>
     <string name="toast_card_removed_short">%s retiré</string>
@@ -411,10 +407,6 @@
     <string name="write_delete">%s (suppression)</string>
     <string name="age_days">%d j</string>
     <string name="age_months_days">%1$d mois %2$d j</string>
-    <string name="demo_mode">Mode démo</string>
-    <string name="synced_just_now">Synchronisé à l\'instant</string>
-    <string name="synced_at">Synchronisé à %s</string>
-    <string name="connecting">Connexion…</string>
     <string name="card_last_feed_desc">Temps écoulé, sein</string>
     <string name="card_last_diaper_desc">Temps écoulé, type</string>
     <string name="card_wake_windows_desc">Éveillé depuis, fenêtres du jour</string>

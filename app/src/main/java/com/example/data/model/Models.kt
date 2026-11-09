@@ -2,14 +2,12 @@ package com.example.data.model
 
 import com.example.R
 
+/** The child entries are logged for, from the server (or demo mode); [birthDate] is "yyyy-MM-dd", or blank if unknown. */
 data class BabyProfile(
-    val id: Int = 1,
-    val name: String = "Leo James",
-    val shortName: String = "Leo",
-    val ageFormatted: String = "3m 12d",
-    val birthDate: String = "2024-07-12",
-    val weightKg: Double = 6.2,
-    val avatarUrl: String = "https://lh3.googleusercontent.com/aida-public/AB6AXuBqhKMwHvhfsoT6IwAJ9fSRqNIifbiWVIEcSQsReFQ3_H0KX7Qlf_DGn8saBc9UuOQiLsi0XXlpihNmkCcSMx4iM9Ee-97dLHOiKB22_xgP2JN2QLNJx0srLL_n6wmK2r2tcI4fpgC4K5KB7dP-2op_TeXSBhACNzRXS7WRYywazhooNT1rjjAMGT9kmJykKTxQ1o1tBdFnbv5fWFZ15lekXqs3WL6VBwHxMkhdGehXoWUL0ohnxl7F"
+    val name: String = "",
+    val shortName: String = "",
+    val ageFormatted: String = "",
+    val birthDate: String = ""
 )
 
 enum class FeedType {
@@ -31,16 +29,13 @@ data class FeedingEvent(
     val sides: String? = null, // side order from the server notes, e.g. "LEFT -> RIGHT"
     val timeMillis: Long = System.currentTimeMillis(), // feed start
     val bottleFormula: Boolean = false, // bottle contents: formula vs. breast milk
-    val childId: Int = 1,
-    val timeFormatted: String = "1:45 PM",
+    val timeFormatted: String = "",
     val type: FeedType = FeedType.NURSING,
-    val side: BreastSide? = BreastSide.LEFT,
-    val leftDurationSec: Int = 14 * 60,
+    val side: BreastSide? = null,
+    val leftDurationSec: Int = 0,
     val rightDurationSec: Int = 0,
     val amountMl: Int? = null,
-    val notes: String = "Good sustained latch",
-    val observations: List<String> = listOf("Good Latch", "Burped Well"),
-    val imageUrl: String? = "https://lh3.googleusercontent.com/aida-public/AB6AXuB1LA9nfExUl_myT8vlNGyS8Xo6JH5jSfg64vbz4F9j934sD6BYs_r-nXPwzyrmQhLe-VYTczKduITneBnqyaaHnsgKqueAEKhWYHIwpeOWZ8IuqVPgTXquWyhmMjgFDusWFHSxOkpVtU53fY2Wk5zA5QjBTbxW4FjJr-KBoaaNGMDDbDdyrRPDUSPqsrAFq_XSI3WE9JqIHGLbRxHb6LchMnXgvfk0IivMvBjhvCdJrTqoValtS770"
+    val notes: String = ""
 ) {
     val totalDurationMinutes: Int
         get() = (leftDurationSec + rightDurationSec) / 60
@@ -119,16 +114,14 @@ data class DiaperEvent(
     val serverId: Long? = null, // Baby Buddy record id, once saved on the server
     val caregiver: String? = null, // who logged it ("Caregiver: Alex" in the server notes)
     val timeMillis: Long = System.currentTimeMillis(),
-    val childId: Int = 1,
-    val timeFormatted: String = "1:05 PM",
+    val timeFormatted: String = "",
     val type: DiaperType = DiaperType.BOTH,
-    val amount: String = "Medium", // Light, Medium, Heavy
-    val consistency: String = "Seedy / Mustard",
-    val color: String = "Mustard",
+    val amount: String = "", // one of DIAPER_AMOUNTS, or blank if not recorded
+    val consistency: String = "", // blank if not recorded
+    val color: String = "", // blank if not recorded
     val rashPresent: Boolean = false,
-    val skinBarrierApplied: List<String> = listOf("Aquaphor / Barrier"),
-    val notes: String = "Aquaphor ointment barrier applied",
-    val imageUrl: String? = "https://lh3.googleusercontent.com/aida-public/AB6AXuDpv9FSE-MHQY48199iEwcNZXlxY5Jwp07B99kVFDl1PZ_PxdIknR9M7UHfYJ5RRxxg0X1GrZrYEb7WsgLx8S_mfvX1EyrUVrR30zEOlpNSEcQqQV5aSt0hXuGk0cFp_slc2OroH7bv2gJBYrLyqAlMSjmUu3comMiFoKURIJqPPH_2kHX1FxjC3ohDg6gv-IsgWgGDVctHx5QLR8ayzCOkbVn8flBUMlS57-cZlgwDXrPt0AHE68PP"
+    val skinBarrierApplied: List<String> = emptyList(), // creams put on
+    val notes: String = ""
 )
 
 data class TummyTimeEvent(
@@ -136,10 +129,9 @@ data class TummyTimeEvent(
     val serverId: Long? = null, // Baby Buddy record id, once saved on the server
     val caregiver: String? = null, // who logged it ("Caregiver: Alex" in the server notes)
     val timeMillis: Long = System.currentTimeMillis(), // session start
-    val childId: Int = 1,
-    val timeFormatted: String = "10:30 AM",
-    val durationMinutes: Int = 15,
-    val milestone: String = "Pushed up on forearms, tracking rattles"
+    val timeFormatted: String = "",
+    val durationMinutes: Int = 0,
+    val milestone: String = ""
 )
 
 data class LiveTimerState(
@@ -148,13 +140,7 @@ data class LiveTimerState(
     val activeBreast: BreastSide = BreastSide.RIGHT,
     val leftSeconds: Int = 0,
     val rightSeconds: Int = 0,
-    val sessionStartedTime: String = "Ready",
-    val softChimeEnabled: Boolean = true,
-    val bottleSupplementEnabled: Boolean = false,
-    val bottleAmountOz: Double = 0.0,
-    val bottleType: String = "Pumped Breast Milk",
-    val observations: Set<String> = emptySet(),
-    val notes: String = "",
+    val sessionStartedTime: String = "", // the start, formatted with the clock setting
     // Live-synced session: the feeding record it updates, when it started, and pause bookkeeping
     val feedingLocalId: Long? = null,
     val sessionStartMillis: Long = 0L,
@@ -166,10 +152,6 @@ data class LiveTimerState(
     val editCount: Int = 0 // bumped on manual time edits, so widgets/notification redraw their clocks
 ) {
     val totalSeconds: Int get() = leftSeconds + rightSeconds
-    val leftPercentage: Int
-        get() = if (totalSeconds > 0) ((leftSeconds.toDouble() / totalSeconds) * 100).toInt() else 50
-    val rightPercentage: Int
-        get() = 100 - leftPercentage
 }
 
 data class ServerConnectionConfig(
@@ -177,16 +159,12 @@ data class ServerConnectionConfig(
     val apiToken: String = "",
     val isConnected: Boolean = false,
     val isDemoMode: Boolean = false,
-    val lastSyncFormatted: String = "Not Connected",
     val lastSyncMillis: Long = 0L, // when today's entries were last fetched from the server
-    val latencyMs: Int = 0,
     val allowSelfSignedCert: Boolean = false,
     val pinnedCertSha256: String = "", // the self-signed certificate the user trusted (SHA-256), if any
     val cfClientId: String = "", // Cloudflare Access service token, optional
     val cfClientSecret: String = "",
-    val syncCadence: String = "Instant", // Instant, 5 Mins, Manual
-    val detectedChildName: String = "",
-    val autoDetectChild: Boolean = true
+    val detectedChildName: String = ""
 )
 
 /** Tag on the note that records how much breast milk is stored (shared by all phones). */

@@ -256,8 +256,6 @@
     <string name="toast_sleep_updated">Sueño actualizado</string>
     <string name="toast_sleep_deleted">Sueño eliminado</string>
     <string name="toast_feed_ended">Toma terminada</string>
-    <string name="toast_chime_on">Sonido suave: activado</string>
-    <string name="toast_chime_muted">Sonido suave: silenciado</string>
     <string name="toast_feeding_saved">Toma guardada</string>
     <string name="toast_diaper_saved_start_timer">¡Pañal guardado! Iniciando el temporizador de lactancia...</string>
     <string name="toast_diaper_saved">Pañal guardado</string>
@@ -272,8 +270,6 @@
     <string name="toast_connection_failed">Error de conexión: %s</string>
     <string name="toast_logged_out">Sesión cerrada</string>
     <string name="toast_demo_mode">Modo demo activo con datos de ejemplo</string>
-    <string name="toast_simulating_disconnected">Simulando desconexión</string>
-    <string name="toast_server_connected">Servidor conectado</string>
     <string name="toast_card_added">%s añadido a Hoy</string>
     <string name="toast_card_removed">%s quitado de Hoy</string>
     <string name="toast_card_removed_short">%s quitado</string>
@@ -331,10 +327,6 @@
     <string name="write_delete">el borrado de %s</string>
     <string name="age_days">%d d</string>
     <string name="age_months_days">%1$d m %2$d d</string>
-    <string name="demo_mode">Modo demo</string>
-    <string name="synced_just_now">Sincronizado ahora mismo</string>
-    <string name="synced_at">Sincronizado %s</string>
-    <string name="connecting">Conectando…</string>
     <string name="card_last_feed_desc">Tiempo desde, pecho</string>
     <string name="card_last_diaper_desc">Tiempo desde, tipo</string>
     <string name="card_wake_windows_desc">Despierto desde hace, ventanas de hoy</string>

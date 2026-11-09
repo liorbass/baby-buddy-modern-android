@@ -256,8 +256,6 @@
     <string name="toast_sleep_updated">השינה עודכנה</string>
     <string name="toast_sleep_deleted">השינה נמחקה</string>
     <string name="toast_feed_ended">ההאכלה הסתיימה</string>
-    <string name="toast_chime_on">צליל עדין: פעיל</string>
-    <string name="toast_chime_muted">צליל עדין: מושתק</string>
     <string name="toast_feeding_saved">ההאכלה נשמרה</string>
     <string name="toast_diaper_saved_start_timer">הטיטול נשמר! מפעילים את טיימר ההנקה…</string>
     <string name="toast_diaper_saved">הטיטול נשמר</string>
@@ -272,8 +270,6 @@
     <string name="toast_connection_failed">החיבור נכשל: %s</string>
     <string name="toast_logged_out">התנתקת</string>
     <string name="toast_demo_mode">מצב הדגמה פעיל עם נתונים לדוגמה</string>
-    <string name="toast_simulating_disconnected">הדמיית מצב מנותק</string>
-    <string name="toast_server_connected">השרת מחובר</string>
     <string name="toast_card_added">הכרטיס %s נוסף להיום</string>
     <string name="toast_card_removed">הכרטיס %s הוסר מהיום</string>
     <string name="toast_card_removed_short">הוסר: %s</string>
@@ -331,10 +327,6 @@
     <string name="write_delete">מחיקת %s</string>
     <string name="age_days">%d י׳</string>
     <string name="age_months_days">%1$d ח׳ %2$d י׳</string>
-    <string name="demo_mode">מצב הדגמה</string>
-    <string name="synced_just_now">סונכרן הרגע</string>
-    <string name="synced_at">סונכרן %s</string>
-    <string name="connecting">מתחבר…</string>
     <string name="card_last_feed_desc">זמן שעבר, צד</string>
     <string name="card_last_diaper_desc">זמן שעבר, סוג</string>
     <string name="card_wake_windows_desc">זמן ערות, חלונות היום</string>

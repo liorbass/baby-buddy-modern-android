@@ -4,7 +4,7 @@ This document describes how the app is structured. Package root is `com.example`
 
 ## State flow
 
-`BabyBuddyRepository` (singleton via `BabyBuddyRepository.instance`) is the single source of truth, holding all app state as `MutableStateFlow`s. `MainViewModel` re-exposes those flows, owns UI-only state (current screen, toast, modal visibility), and wraps repository mutations with user-facing toasts. Composables receive the ViewModel/state and callbacks from `MainActivity`.
+`BabyBuddyRepository` (singleton via `BabyBuddyRepository.instance`) is the single source of truth, holding all app state as `MutableStateFlow`s. The nursing timer (`NursingTimer`), shared timers (`SharedTimerSync`), write queue (`WriteQueue`), range queries for History/Trends/rhythm models (`ServerQueries`) and rhythm predictions (`RhythmPredictor`) are separate classes the repository wires up and delegates to. `MainViewModel` re-exposes those flows, owns UI-only state (current screen, toast, modal visibility), and wraps repository mutations with user-facing toasts. Composables receive the ViewModel/state and callbacks from `MainActivity`.
 
 ## Navigation
 
@@ -22,7 +22,7 @@ These are excluded from backups. Without a saved login the app shows only the lo
 
 ## Server integration
 
-`data/api/BabyBuddyApi.kt`: Retrofit + Moshi (reflection `KotlinJsonAdapterFactory`) against the Baby Buddy REST API (`api/children/`, `api/feedings/`, `api/sleep/`, `api/changes/`, …), with `Authorization: Token <token>` passed per call. `BabyBuddyApiClient.createService` optionally installs a trust-all TLS manager for self-signed servers, and adds `CF-Access-Client-Id`/`CF-Access-Client-Secret` headers when a Cloudflare Access service token is configured.
+`data/api/BabyBuddyApi.kt`: Retrofit + Moshi (reflection `KotlinJsonAdapterFactory`) against the Baby Buddy REST API (`api/children/`, `api/feedings/`, `api/sleep/`, `api/changes/`, …), with `Authorization: Token <token>` passed per call. `BabyBuddyApiClient.createService` installs `PinningTrustManager` (for "Allow self-signed certificates": trust on first use, never trust-all; it trusts what the system trusts plus the one certificate whose SHA-256 the user pinned), and adds `CF-Access-Client-Id`/`CF-Access-Client-Secret` headers when a Cloudflare Access service token is configured.
 
 - `repository.testConnection` fetches children and recent events and maps DTOs into UI models (`data/model/Models.kt`).
 - `syncToday` fetches only entries since local midnight (UTC `start_min`/`date_min` filters) and merges them with local entries that still have queued writes (`mergeWithPending`). Sleeps are synced by end date (`end_min`).
@@ -51,7 +51,7 @@ No save step: `repository.tapSide(side)` starts a feed (creating its feeding rec
 
 - `setSideSeconds` corrects one side's time mid-feed (the Edit buttons under the side buttons); it bumps `LiveTimerState.editCount` so widgets and the notification redraw their clocks.
 - `setFeedStart` moves the start (the difference goes to the first side); backs the Started field.
-- The timer ticks in the repository (`startTimerTicker`, wall-clock based) and its state is persisted; the timer widget uses a self-ticking `Chronometer`.
+- The timer is `NursingTimer` (the repository delegates to it): it ticks from the wall clock and its state is persisted; the timer widget uses a self-ticking `Chronometer`.
 - `repository.lastBreastfeed` is the latest breastfeed and drives the "last side" shown on Today, the Left/Right controls and the timer widget (`FeedingEvent.lastSide`).
 
 Shared Left/Right UI lives in `ui/components/BreastSideControls.kt`.

@@ -60,7 +60,7 @@ fun generateDemoHistory(now: Long, birthMillis: Long, days: Int = 90, clock: (Lo
             feeds += FeedingEvent(
                 id = id++, type = FeedType.BOTTLE, timeMillis = t, timeFormatted = clock(t), amountMl = 110 + random.nextInt(6) * 10,
                 bottleFormula = random.nextInt(3) == 0, side = null, leftDurationSec = 0, rightDurationSec = 0,
-                notes = "", observations = emptyList(), imageUrl = null, caregiver = "Alex"
+                notes = "", caregiver = "Alex"
             )
         } else {
             val left = (7 + random.nextInt(6) + if (bedtime) 3 else 0) * 60
@@ -75,7 +75,7 @@ fun generateDemoHistory(now: Long, birthMillis: Long, days: Int = 90, clock: (Lo
                 } else {
                     ""
                 },
-                observations = emptyList(), imageUrl = null, caregiver = "Sarah"
+                caregiver = "Sarah"
             )
         }
     }
@@ -90,7 +90,7 @@ fun generateDemoHistory(now: Long, birthMillis: Long, days: Int = 90, clock: (Lo
         diapers += DiaperEvent(
             id = id++, type = kind, timeMillis = t, timeFormatted = clock(t), caregiver = who(),
             amount = DIAPER_AMOUNTS[((t / 60_000L) % DIAPER_AMOUNTS.size).toInt()], // varied without another random draw
-            consistency = if (kind == DiaperType.WET) "" else "Soft", color = "", skinBarrierApplied = emptyList(), notes = "", imageUrl = null
+            consistency = if (kind == DiaperType.WET) "" else "Soft", color = "", skinBarrierApplied = emptyList(), notes = ""
         )
     }
 

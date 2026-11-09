@@ -255,8 +255,6 @@
     <string name="toast_sleep_updated">Slaap aangepast</string>
     <string name="toast_sleep_deleted">Slaap verwijderd</string>
     <string name="toast_feed_ended">Voeding beëindigd</string>
-    <string name="toast_chime_on">Zacht belletje: aan</string>
-    <string name="toast_chime_muted">Zacht belletje: uit</string>
     <string name="toast_feeding_saved">Voeding opgeslagen</string>
     <string name="toast_diaper_saved_start_timer">Luier opgeslagen! Borstvoedingstimer start...</string>
     <string name="toast_diaper_saved">Luier opgeslagen</string>
@@ -271,8 +269,6 @@
     <string name="toast_connection_failed">Verbinding mislukt: %s</string>
     <string name="toast_logged_out">Uitgelogd</string>
     <string name="toast_demo_mode">Demomodus actief met voorbeeldgegevens</string>
-    <string name="toast_simulating_disconnected">Verbroken verbinding simuleren</string>
-    <string name="toast_server_connected">Server verbonden</string>
     <string name="toast_card_added">%s toegevoegd aan Vandaag</string>
     <string name="toast_card_removed">%s verwijderd van Vandaag</string>
     <string name="toast_card_removed_short">%s verwijderd</string>
@@ -328,10 +324,6 @@
     <string name="write_delete">%s (verwijdering)</string>
     <string name="age_days">%d d</string>
     <string name="age_months_days">%1$d mnd %2$d d</string>
-    <string name="demo_mode">Demomodus</string>
-    <string name="synced_just_now">Zojuist gesynchroniseerd</string>
-    <string name="synced_at">Gesynchroniseerd %s</string>
-    <string name="connecting">Verbinden…</string>
     <string name="card_last_feed_desc">Tijd sinds, kant</string>
     <string name="card_last_diaper_desc">Tijd sinds, type</string>
     <string name="card_wake_windows_desc">Wakker sinds, wakkertijden van vandaag</string>
