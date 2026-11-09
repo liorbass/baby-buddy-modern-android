@@ -59,7 +59,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -112,7 +111,7 @@ class BabyBuddyRepository {
 
     /** The breastfeeding timer; every tap is saved to the feed's record ([NursingTimer]). */
     private val nursing = NursingTimer(
-        records = FeedRecords(_feedings, nextId = ::nextLocalId, add = ::addFeeding, queueUpdate = ::queueFeedingUpdate),
+        records = FeedRecords(_feedings, nextId = ::nextLocalId, add = ::addFeeding, update = { feedStore.update(it) }),
         onChanged = { timers.feedChanged() },
         onEnded = { timers.feedEnded() }
     )
@@ -223,6 +222,29 @@ class BabyBuddyRepository {
     // Every weight / length / head circumference measurement (any date), newest first
     private val _growth = MutableStateFlow<List<GrowthEvent>>(emptyList())
     val growth: StateFlow<List<GrowthEvent>> = _growth.asStateFlow()
+
+    // Each kind of entry: its list and how its changes are queued ([EntryStore])
+    private val entryQueue = EntryQueue(enqueue = ::enqueue, knownServerId = { writeQueue.knownServerId(it) }, pending = { writeQueue.snapshot })
+    private val feedStore = EntryStore(_feedings, EntryKeys({ it.id }, { it.serverId }, { it.timeMillis }, { e, id -> e.copy(serverId = id) }), { Endpoints.FEEDINGS }, entryQueue, ::feedingBody)
+    private val diaperStore = EntryStore(_diapers, EntryKeys({ it.id }, { it.serverId }, { it.timeMillis }, { e, id -> e.copy(serverId = id) }), { Endpoints.CHANGES }, entryQueue, ::changeBody)
+    private val tummyStore = EntryStore(_tummyTimes, EntryKeys({ it.id }, { it.serverId }, { it.timeMillis }, { e, id -> e.copy(serverId = id) }), { Endpoints.TUMMY }, entryQueue, ::tummyBody)
+    private val pumpingStore = EntryStore(_pumpings, EntryKeys({ it.id }, { it.serverId }, { it.timeMillis }, { e, id -> e.copy(serverId = id) }), { Endpoints.PUMPING }, entryQueue, ::pumpingBody)
+    private val temperatureStore =
+        EntryStore(_temperatures, EntryKeys({ it.id }, { it.serverId }, { it.timeMillis }, { e, id -> e.copy(serverId = id) }), { Endpoints.TEMPERATURE }, entryQueue, ::temperatureBody)
+    private val noteStore = EntryStore(_notes, EntryKeys({ it.id }, { it.serverId }, { it.timeMillis }, { e, id -> e.copy(serverId = id) }), { Endpoints.NOTES }, entryQueue, ::noteBody, ::newNoteBody)
+    private val sleepStore = EntryStore(_sleeps, EntryKeys({ it.id }, { it.serverId }, { it.timeMillis }, { e, id -> e.copy(serverId = id) }), { Endpoints.SLEEP }, entryQueue, ::sleepBody)
+    private val growthStore = EntryStore(_growth, EntryKeys({ it.id }, { it.serverId }, { it.dateMillis }, { e, id -> e.copy(serverId = id) }), { it.kind.endpoint }, entryQueue, ::growthBody)
+
+    private fun storeFor(endpoint: String): EntryStore<*> = when (endpoint) {
+        Endpoints.FEEDINGS -> feedStore
+        Endpoints.CHANGES -> diaperStore
+        Endpoints.PUMPING -> pumpingStore
+        Endpoints.TEMPERATURE -> temperatureStore
+        Endpoints.NOTES -> noteStore
+        Endpoints.SLEEP -> sleepStore
+        in Endpoints.GROWTH -> growthStore
+        else -> tummyStore
+    }
 
     /** The side a one-tap feed starts on now, per the start side setting and the last breastfeed. */
     fun nextStartSide(): BreastSide = settings.startSide.value.after(lastBreastfeed.value?.lastSide)
@@ -487,7 +509,7 @@ class BabyBuddyRepository {
         runCatching {
             api.getFeedings(authHeader, childId, since).body()!!.results.map(::mapFeeding)
         }.onSuccess { remote ->
-            _feedings.value = mergeWithPending(Endpoints.FEEDINGS, remote, _feedings.value, { it.id }, { it.serverId }, { it.timeMillis })
+            feedStore.mergeRemote(Endpoints.FEEDINGS, remote)
         }
 
         runCatching {
@@ -526,74 +548,49 @@ class BabyBuddyRepository {
         runCatching {
             api.getChanges(authHeader, childId, since).body()!!.results.map(::mapChange)
         }.onSuccess { remote ->
-            _diapers.value = mergeWithPending(Endpoints.CHANGES, remote, _diapers.value, { it.id }, { it.serverId }, { it.timeMillis })
+            diaperStore.mergeRemote(Endpoints.CHANGES, remote)
         }
 
         runCatching {
             api.getTummyTimes(authHeader, childId, since).body()!!.results.map(::mapTummyTime)
         }.onSuccess { remote ->
-            _tummyTimes.value = mergeWithPending(Endpoints.TUMMY, remote, _tummyTimes.value, { it.id }, { it.serverId }, { it.timeMillis })
+            tummyStore.mergeRemote(Endpoints.TUMMY, remote)
         }
 
         runCatching {
             api.getPumping(authHeader, childId, since).body()!!.results.map(::mapPumping)
         }.onSuccess { remote ->
-            _pumpings.value = mergeWithPending(Endpoints.PUMPING, remote, _pumpings.value, { it.id }, { it.serverId }, { it.timeMillis })
+            pumpingStore.mergeRemote(Endpoints.PUMPING, remote)
         }
 
         runCatching {
             // Sleeps that ended today, so last night's sleep counts too
             api.getSleep(authHeader, childId, endedSince = since).body()!!.results.map(::mapSleep)
         }.onSuccess { remote ->
-            _sleeps.value = mergeWithPending(Endpoints.SLEEP, remote, _sleeps.value, { it.id }, { it.serverId }, { it.timeMillis })
+            sleepStore.mergeRemote(Endpoints.SLEEP, remote)
         }
 
         runCatching {
             api.getTemperatures(authHeader, childId, since).body()!!.results.map(::mapTemperature)
         }.onSuccess { remote ->
-            _temperatures.value = mergeWithPending(Endpoints.TEMPERATURE, remote, _temperatures.value, { it.id }, { it.serverId }, { it.timeMillis })
+            temperatureStore.mergeRemote(Endpoints.TEMPERATURE, remote)
         }
 
         runCatching {
             api.getNotes(authHeader, childId, since).body()!!.results.map(::mapNote)
         }.onSuccess { remote ->
-            _notes.value = mergeWithPending(Endpoints.NOTES, remote, _notes.value, { it.id }, { it.serverId }, { it.timeMillis })
+            noteStore.mergeRemote(Endpoints.NOTES, remote)
         }
 
         if (TrackedItem.GROWTH !in settings.hiddenItems.value) {
             GrowthKind.entries.forEach { kind ->
                 runCatching {
                     api.getGrowth(authHeader, kind.endpoint, childId).body()!!.results.map { mapGrowth(kind, it) }
-                }.onSuccess { remote ->
-                    val merged = mergeWithPending(kind.endpoint, remote, _growth.value.filter { it.kind == kind }, { it.id }, { it.serverId }, { it.dateMillis })
-                    _growth.update { list -> (list.filter { it.kind != kind } + merged).sortedByDescending { it.dateMillis } }
-                }
+                }.onSuccess { remote -> growthStore.mergeRemote(kind.endpoint, remote) }
             }
         }
         val syncedAt = System.currentTimeMillis()
         _connectionConfig.update { it.copy(lastSyncMillis = syncedAt) }
-    }
-
-    /**
-     * Server entries win, except where a queued write hasn't reached the server yet:
-     * entries with a pending create/update keep their local version, and pending deletes stay deleted.
-     */
-    private fun <T> mergeWithPending(
-        endpoint: String,
-        remote: List<T>,
-        local: List<T>,
-        id: (T) -> Long,
-        serverId: (T) -> Long?,
-        time: (T) -> Long
-    ): List<T> {
-        val pending = writeQueue.snapshot.filter { it.endpoint == endpoint }
-        val touchedLocalIds = pending.map { it.localId }.toSet()
-        val deletedServerIds = pending.filter { it.action == QueuedWrite.ACTION_DELETE }
-            .mapNotNull { it.serverId ?: writeQueue.knownServerId(it.localId) ?: it.localId }.toSet()
-        val keepLocal = local.filter { id(it) in touchedLocalIds }
-        val shadowed = keepLocal.mapNotNull(serverId).toSet() + keepLocal.map(id)
-        val keepRemote = remote.filter { r -> serverId(r).let { it !in deletedServerIds && it !in shadowed } }
-        return (keepRemote + keepLocal).sortedByDescending(time)
     }
 
     // Mapping server records to entries and back, and the generated note segments: ServerMapping.kt
@@ -725,32 +722,19 @@ class BabyBuddyRepository {
     fun liveFeedUserNotes(): String = nursing.notes()
 
     /** Returns the new entry's id (for undo). */
-    fun addDiaperLog(event: DiaperEvent, timeMs: Long = System.currentTimeMillis()): Long {
-        val local = event.copy(id = nextLocalId(), timeMillis = timeMs, timeFormatted = formatClock(timeMs), caregiver = myName())
-        _diapers.update { (listOf(local) + it).sortedByDescending { e -> e.timeMillis } }
-        enqueue(QueuedWrite(Endpoints.CHANGES, QueuedWrite.ACTION_CREATE, local.id, body = changeBody(local)))
-        return local.id
-    }
+    fun addDiaperLog(event: DiaperEvent, timeMs: Long = System.currentTimeMillis()): Long = diaperStore.add(event.copy(id = nextLocalId(), timeMillis = timeMs, timeFormatted = formatClock(timeMs), caregiver = myName()))
 
     fun updateDiaper(updated: DiaperEvent) {
-        _diapers.update { list -> list.map { if (it.id == updated.id) updated else it }.sortedByDescending { it.timeMillis } }
+        diaperStore.update(updated)
         _lastDiaperRemote.update { if (it?.id == updated.id) updated else it }
-        enqueue(QueuedWrite(Endpoints.CHANGES, QueuedWrite.ACTION_UPDATE, updated.id, knownServerId(updated.id, updated.serverId), changeBody(updated)))
     }
 
     fun deleteDiaper(id: Long) {
-        val event = _diapers.value.firstOrNull { it.id == id } ?: return
-        _diapers.update { list -> list.filterNot { it.id == id } }
+        diaperStore.delete(diaperStore.find(id) ?: return)
         _lastDiaperRemote.update { if (it?.id == id) null else it }
-        enqueue(QueuedWrite(Endpoints.CHANGES, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
     }
 
-    fun addFeeding(event: FeedingEvent): Long {
-        val local = event.copy(caregiver = event.caregiver ?: myName())
-        _feedings.update { (listOf(local) + it).sortedByDescending { e -> e.timeMillis } }
-        enqueue(QueuedWrite(Endpoints.FEEDINGS, QueuedWrite.ACTION_CREATE, local.id, body = feedingBody(local)))
-        return local.id
-    }
+    fun addFeeding(event: FeedingEvent): Long = feedStore.add(event.copy(caregiver = event.caregiver ?: myName()))
 
     fun logBottle(ml: Int, formula: Boolean, timeMs: Long = System.currentTimeMillis(), notes: String = ""): Long = addFeeding(
         FeedingEvent(
@@ -759,43 +743,28 @@ class BabyBuddyRepository {
             timeFormatted = formatClock(timeMs),
             type = FeedType.BOTTLE,
             bottleFormula = formula,
-            side = null,
-            leftDurationSec = 0,
-            rightDurationSec = 0,
             amountMl = ml,
             notes = notes
         )
     )
 
     fun updateFeeding(event: FeedingEvent) {
-        _feedings.update { list -> list.map { if (it.id == event.id) event else it }.sortedByDescending { it.timeMillis } }
+        feedStore.update(event)
         // An older feed edited from History may be the "last breastfeed" (its last side drives Today and the widget)
         _lastBreastfeedRemote.update { if (it?.id == event.id) event else it }
         _recentFeedsRemote.update { list -> list.map { if (it.id == event.id) event else it }.sortedByDescending { it.timeMillis } }
-        queueFeedingUpdate(event)
     }
 
-    private fun queueFeedingUpdate(event: FeedingEvent) = enqueue(QueuedWrite(Endpoints.FEEDINGS, QueuedWrite.ACTION_UPDATE, event.id, knownServerId(event.id, event.serverId), feedingBody(event)))
-
     fun deleteFeeding(id: Long) {
-        val event = _feedings.value.firstOrNull { it.id == id } ?: return
-        _feedings.update { list -> list.filterNot { it.id == id } }
+        feedStore.delete(feedStore.find(id) ?: return)
         _recentFeedsRemote.update { list -> list.filterNot { it.id == id } }
         // The server's "last breastfeed" may have been this one: fall back to the one before it
         _lastBreastfeedRemote.update { last -> if (last?.id == id) _recentFeedsRemote.value.firstOrNull { it.type == FeedType.NURSING } else last }
-        enqueue(QueuedWrite(Endpoints.FEEDINGS, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
     }
 
-    fun updateTummyTime(updated: TummyTimeEvent) {
-        _tummyTimes.update { list -> list.map { if (it.id == updated.id) updated else it }.sortedByDescending { it.timeMillis } }
-        enqueue(QueuedWrite(Endpoints.TUMMY, QueuedWrite.ACTION_UPDATE, updated.id, knownServerId(updated.id, updated.serverId), tummyBody(updated)))
-    }
+    fun updateTummyTime(updated: TummyTimeEvent) = tummyStore.update(updated)
 
-    fun deleteTummyTime(id: Long) {
-        val event = _tummyTimes.value.firstOrNull { it.id == id } ?: return
-        _tummyTimes.update { list -> list.filterNot { it.id == id } }
-        enqueue(QueuedWrite(Endpoints.TUMMY, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
-    }
+    fun deleteTummyTime(id: Long) = tummyStore.find(id)?.let(tummyStore::delete)
 
     /** [startMillis] defaults to "just finished": now minus the duration. */
     fun logPumping(ml: Int, minutes: Int, notes: String, startMillis: Long? = null): Long {
@@ -809,9 +778,7 @@ class BabyBuddyRepository {
             notes = notes,
             caregiver = myName()
         )
-        _pumpings.update { (listOf(event) + it).sortedByDescending { e -> e.timeMillis } }
-        enqueue(QueuedWrite(Endpoints.PUMPING, QueuedWrite.ACTION_CREATE, event.id, body = pumpingBody(event)))
-        return event.id
+        return pumpingStore.add(event)
     }
 
     fun logTemperature(value: Double, notes: String): Long {
@@ -824,16 +791,10 @@ class BabyBuddyRepository {
             notes = notes,
             caregiver = myName()
         )
-        _temperatures.update { (listOf(event) + it).sortedByDescending { e -> e.timeMillis } }
-        enqueue(QueuedWrite(Endpoints.TEMPERATURE, QueuedWrite.ACTION_CREATE, event.id, body = temperatureBody(event)))
-        return event.id
+        return temperatureStore.add(event)
     }
 
-    fun deleteTemperature(id: Long) {
-        val event = _temperatures.value.firstOrNull { it.id == id } ?: return
-        _temperatures.update { list -> list.filterNot { it.id == id } }
-        enqueue(QueuedWrite(Endpoints.TEMPERATURE, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
-    }
+    fun deleteTemperature(id: Long) = temperatureStore.find(id)?.let(temperatureStore::delete)
 
     /** Logs one measurement (kg or cm) on the day of [dateMillis]; returns its id (for undo). */
     fun logGrowth(kind: GrowthKind, value: Double, dateMillis: Long = System.currentTimeMillis(), notes: String = ""): Long {
@@ -845,51 +806,27 @@ class BabyBuddyRepository {
             notes = notes,
             caregiver = myName()
         )
-        _growth.update { (listOf(event) + it).sortedByDescending { e -> e.dateMillis } }
-        enqueue(QueuedWrite(kind.endpoint, QueuedWrite.ACTION_CREATE, event.id, body = growthBody(event)))
-        return event.id
+        return growthStore.add(event)
     }
-
-    // Each kind has its own server endpoint and ids, so a weight and a length can share an id: match on both.
 
     /** Saves a changed measurement (value, day or note); the day is kept as local noon like the server's date. */
-    fun updateGrowth(updated: GrowthEvent) {
-        val event = updated.copy(dateMillis = parseLocalDateNoon(localDate(updated.dateMillis)) ?: updated.dateMillis)
-        _growth.update { list -> list.map { if (it.id == event.id && it.kind == event.kind) event else it }.sortedByDescending { it.dateMillis } }
-        enqueue(QueuedWrite(event.kind.endpoint, QueuedWrite.ACTION_UPDATE, event.id, knownServerId(event.id, event.serverId), growthBody(event)))
-    }
+    fun updateGrowth(updated: GrowthEvent) = growthStore.update(updated.copy(dateMillis = parseLocalDateNoon(localDate(updated.dateMillis)) ?: updated.dateMillis))
 
-    fun deleteGrowth(kind: GrowthKind, id: Long) {
-        val event = _growth.value.firstOrNull { it.id == id && it.kind == kind } ?: return
-        _growth.update { list -> list.filterNot { it.id == id && it.kind == kind } }
-        enqueue(QueuedWrite(event.kind.endpoint, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
-    }
+    /** Each kind has its own endpoint and ids, so a weight and a length can share an id. */
+    fun deleteGrowth(kind: GrowthKind, id: Long) = growthStore.find(id, kind.endpoint)?.let(growthStore::delete)
 
-    fun addNote(text: String, tags: List<String> = emptyList(), timeMillis: Long = System.currentTimeMillis()): Long {
-        val now = timeMillis
-        val event = NoteEvent(id = nextLocalId(), timeMillis = now, timeFormatted = formatClock(now), text = text, tags = tags)
-        _notes.update { (listOf(event) + it).sortedByDescending { e -> e.timeMillis } }
-        val body = mapOf("note" to text, "time" to isoUtc(now), "tags" to tags.takeIf { it.isNotEmpty() })
-        enqueue(QueuedWrite(Endpoints.NOTES, QueuedWrite.ACTION_CREATE, event.id, body = body))
-        return event.id
-    }
+    fun addNote(text: String, tags: List<String> = emptyList(), timeMillis: Long = System.currentTimeMillis()): Long = noteStore.add(NoteEvent(id = nextLocalId(), timeMillis = timeMillis, timeFormatted = formatClock(timeMillis), text = text, tags = tags))
 
     // --- Baths: notes tagged BATH_TAG ---
 
     fun logBath(timeMillis: Long, notes: String): Long = addNote(notes.ifBlank { BATH_NOTE_TEXT }, listOf(BATH_TAG), timeMillis)
 
     /** Saves a changed note or bath (from today or an earlier day in History); its tags are kept. */
-    fun updateNote(updated: NoteEvent) {
-        val event = updated.copy(timeFormatted = formatClock(updated.timeMillis))
-        _notes.update { list -> list.map { if (it.id == event.id) event else it }.sortedByDescending { it.timeMillis } }
-        val body = mapOf("note" to event.text, "time" to isoUtc(event.timeMillis), "tags" to event.tags)
-        enqueue(QueuedWrite(Endpoints.NOTES, QueuedWrite.ACTION_UPDATE, event.id, knownServerId(event.id, event.serverId), body))
-    }
+    fun updateNote(updated: NoteEvent) = noteStore.update(updated.copy(timeFormatted = formatClock(updated.timeMillis)))
 
     /** Deletes a note or bath (from today or an earlier day in History). */
     fun deleteNoteEvent(note: NoteEvent) {
-        _notes.update { list -> list.filterNot { it.id == note.id } }
-        enqueue(QueuedWrite(Endpoints.NOTES, QueuedWrite.ACTION_DELETE, note.id, knownServerId(note.id, note.serverId)))
+        noteStore.delete(note)
         // The server's "last bath" may have been this one
         if (BATH_TAG in note.tags && _lastBathRemote.value == note.timeMillis) _lastBathRemote.value = null
     }
@@ -959,77 +896,24 @@ class BabyBuddyRepository {
         }
     }
 
-    fun deleteNote(id: Long) {
-        val event = _notes.value.firstOrNull { it.id == id } ?: return
-        _notes.update { list -> list.filterNot { it.id == id } }
-        enqueue(QueuedWrite(Endpoints.NOTES, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
-    }
+    fun deleteNote(id: Long) = noteStore.find(id)?.let(noteStore::delete)
 
-    fun updatePumping(updated: PumpingEvent) {
-        _pumpings.update { list -> list.map { if (it.id == updated.id) updated else it }.sortedByDescending { it.timeMillis } }
-        enqueue(QueuedWrite(Endpoints.PUMPING, QueuedWrite.ACTION_UPDATE, updated.id, knownServerId(updated.id, updated.serverId), pumpingBody(updated)))
-    }
+    fun updatePumping(updated: PumpingEvent) = pumpingStore.update(updated)
 
-    fun deletePumping(id: Long) {
-        val event = _pumpings.value.firstOrNull { it.id == id } ?: return
-        _pumpings.update { list -> list.filterNot { it.id == id } }
-        enqueue(QueuedWrite(Endpoints.PUMPING, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
-    }
-
-    private fun knownServerId(localId: Long, serverId: Long?): Long? = serverId ?: writeQueue.knownServerId(localId)
+    fun deletePumping(id: Long) = pumpingStore.find(id)?.let(pumpingStore::delete)
 
     private fun formatClock(millis: Long): String = TimeFormat.clock(millis)
 
     /** Returns the new entry's id (for undo), or null if the category isn't known. */
     fun addQuickLog(category: String, amount: String? = null, note: String? = null): Long? {
-        val nowFormatted = TimeFormat.clock(System.currentTimeMillis())
-        return when (category.lowercase()) {
-            "pee", "wet" -> {
-                addDiaperLog(
-                    DiaperEvent(
-                        timeFormatted = nowFormatted,
-                        type = DiaperType.WET,
-                        amount = "",
-                        consistency = "",
-                        color = "",
-                        skinBarrierApplied = emptyList(),
-                        notes = note.orEmpty()
-                    )
-                )
-            }
-
-            "poop", "dirty" -> {
-                addDiaperLog(
-                    DiaperEvent(
-                        timeFormatted = nowFormatted,
-                        type = DiaperType.DIRTY,
-                        amount = "",
-                        consistency = "",
-                        color = "",
-                        skinBarrierApplied = emptyList(),
-                        notes = note.orEmpty()
-                    )
-                )
-            }
-
-            "both" -> {
-                addDiaperLog(
-                    DiaperEvent(
-                        timeFormatted = nowFormatted,
-                        type = DiaperType.BOTH,
-                        amount = "",
-                        consistency = "",
-                        color = "",
-                        skinBarrierApplied = emptyList(),
-                        notes = note.orEmpty()
-                    )
-                )
-            }
-
-            "bottle" -> logBottle(amount?.toIntOrNull() ?: 120, formula = false)
-
-            else -> null
+        val type = when (category.lowercase()) {
+            "pee", "wet" -> DiaperType.WET
+            "poop", "dirty" -> DiaperType.DIRTY
+            "both" -> DiaperType.BOTH
+            "bottle" -> return logBottle(amount?.toIntOrNull() ?: 120, formula = false)
+            else -> return null
         }
+        return addDiaperLog(DiaperEvent(type = type, notes = note.orEmpty()))
     }
 
     // --- Sleep: a timer on this phone, or a past sleep entered by hand ---
@@ -1045,21 +929,12 @@ class BabyBuddyRepository {
             notes = notes.trim(),
             caregiver = myName()
         )
-        _sleeps.update { (listOf(event) + it).sortedByDescending { e -> e.timeMillis } }
-        enqueue(QueuedWrite(Endpoints.SLEEP, QueuedWrite.ACTION_CREATE, event.id, body = sleepBody(event)))
-        return event.id
+        return sleepStore.add(event)
     }
 
-    fun updateSleep(updated: SleepEvent) {
-        _sleeps.update { list -> list.map { if (it.id == updated.id) updated else it }.sortedByDescending { it.timeMillis } }
-        enqueue(QueuedWrite(Endpoints.SLEEP, QueuedWrite.ACTION_UPDATE, updated.id, knownServerId(updated.id, updated.serverId), sleepBody(updated)))
-    }
+    fun updateSleep(updated: SleepEvent) = sleepStore.update(updated)
 
-    fun deleteSleep(id: Long) {
-        val event = _sleeps.value.firstOrNull { it.id == id } ?: return
-        _sleeps.update { list -> list.filterNot { it.id == id } }
-        enqueue(QueuedWrite(Endpoints.SLEEP, QueuedWrite.ACTION_DELETE, id, knownServerId(id, event.serverId)))
-    }
+    fun deleteSleep(id: Long) = sleepStore.find(id)?.let(sleepStore::delete)
 
     fun startSleep(startMillis: Long = System.currentTimeMillis()) {
         if (_sleepTimer.value.isRunning) return
@@ -1148,7 +1023,7 @@ class BabyBuddyRepository {
 
     /** How the write queue reaches the local entries. */
     private val localEntries = object : WriteQueue.LocalEntries {
-        override fun serverIdOf(write: QueuedWrite): Long? = localStore(write.endpoint).serverIdOf(write.localId)
+        override fun serverIdOf(write: QueuedWrite): Long? = storeFor(write.endpoint).serverIdOf(write.endpoint, write.localId)
 
         override fun onCreated(write: QueuedWrite, serverId: Long) {
             if (write.endpoint == Endpoints.FEEDINGS && write.localId == nursing.state.value.feedingLocalId) {
@@ -1156,36 +1031,12 @@ class BabyBuddyRepository {
                 nursing.state.update { it.copy(feedingServerId = serverId) }
                 timers.feedRecordCreated()
             }
-            localStore(write.endpoint).setServerId(write.localId, serverId)
+            storeFor(write.endpoint).setServerId(write.endpoint, write.localId, serverId)
         }
 
         override suspend fun findExisting(write: QueuedWrite, target: WriteQueue.Target): Long? = findExistingRecord(write, target)
 
         override fun describe(write: QueuedWrite): String = describeWrite(write)
-    }
-
-    /** One endpoint's local entries, for filling in and looking up server ids. */
-    private class LocalStore<T>(
-        private val flow: MutableStateFlow<List<T>>,
-        private val localId: (T) -> Long,
-        private val serverId: (T) -> Long?,
-        private val withServerId: (T, Long) -> T,
-        private val sameKind: (T) -> Boolean = { true } // growth: one flow for several endpoints
-    ) {
-        fun serverIdOf(id: Long): Long? = flow.value.firstOrNull { localId(it) == id && sameKind(it) }?.let(serverId)
-
-        fun setServerId(id: Long, server: Long) = flow.update { list -> list.map { if (localId(it) == id && sameKind(it)) withServerId(it, server) else it } }
-    }
-
-    private fun localStore(endpoint: String): LocalStore<*> = when (endpoint) {
-        Endpoints.FEEDINGS -> LocalStore(_feedings, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-        Endpoints.CHANGES -> LocalStore(_diapers, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-        Endpoints.PUMPING -> LocalStore(_pumpings, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-        Endpoints.TEMPERATURE -> LocalStore(_temperatures, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-        Endpoints.NOTES -> LocalStore(_notes, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-        Endpoints.SLEEP -> LocalStore(_sleeps, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
-        in Endpoints.GROWTH -> LocalStore(_growth, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) }) { it.kind.endpoint == endpoint }
-        else -> LocalStore(_tummyTimes, { it.id }, { it.serverId }, { e, id -> e.copy(serverId = id) })
     }
 
     // --- Process-level setup: persistence, timer, widgets ---
@@ -1347,12 +1198,9 @@ class BabyBuddyRepository {
             timeMillis = startMs,
             timeFormatted = formatClock(startMs),
             durationMinutes = additionalMinutes,
-            milestone = "",
             caregiver = myName()
         )
-        _tummyTimes.update { (listOf(event) + it).sortedByDescending { e -> e.timeMillis } }
-        enqueue(QueuedWrite(Endpoints.TUMMY, QueuedWrite.ACTION_CREATE, event.id, body = tummyBody(event)))
-        return event.id
+        return tummyStore.add(event)
     }
 
     /** Re-fetches today's entries (e.g. ones another caregiver logged) and resends anything queued. */

@@ -9,17 +9,18 @@ import com.example.data.model.TimeFormat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** How the nursing timer reaches the feeding entries: the list it edits, and how new and changed entries get saved. */
+/** How the nursing timer reaches the feeding entries: the shown list, and saving a new or changed feed. */
 class FeedRecords(
-    val feedings: MutableStateFlow<List<FeedingEvent>>,
+    val feedings: StateFlow<List<FeedingEvent>>,
     val nextId: () -> Long,
     val add: (FeedingEvent) -> Long,
-    val queueUpdate: (FeedingEvent) -> Unit
+    val update: (FeedingEvent) -> Unit
 )
 
 /**
@@ -114,9 +115,7 @@ class NursingTimer(
         val id = state.value.feedingLocalId ?: return
         val existing = records.feedings.value.firstOrNull { it.id == id } ?: return
         val updated = existing.copy(notes = notes.trim())
-        if (updated == existing) return
-        records.feedings.update { list -> list.map { if (it.id == id) updated else it } }
-        records.queueUpdate(updated)
+        if (updated != existing) records.update(updated)
     }
 
     /** Shows the start in the current clock format. */
@@ -160,9 +159,7 @@ class NursingTimer(
             },
             sides = (t.firstSide ?: t.activeBreast).let { first -> if (first == t.activeBreast) first.name else "${first.name} -> ${t.activeBreast.name}" }
         )
-        if (updated == existing) return
-        records.feedings.update { list -> list.map { if (it.id == id) updated else it }.sortedByDescending { it.timeMillis } }
-        records.queueUpdate(updated)
+        if (updated != existing) records.update(updated)
     }
 
     /**

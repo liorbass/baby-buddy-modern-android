@@ -418,6 +418,12 @@ internal fun tummyBody(e: TummyTimeEvent): Map<String, Any?> = mapOf(
     "notes" to withCaregiver("", e.caregiver)
 )
 
+/** A note's fields; its tags are sent as they are, so an edit keeps them (and can clear them). */
+internal fun noteBody(e: NoteEvent): Map<String, Any?> = mapOf("note" to e.text, "time" to isoUtc(e.timeMillis), "tags" to e.tags)
+
+/** A new note leaves out empty tags. */
+internal fun newNoteBody(e: NoteEvent): Map<String, Any?> = noteBody(e) + ("tags" to e.tags.takeIf { it.isNotEmpty() })
+
 internal fun isoUtc(millis: Long): String = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
     .apply { timeZone = TimeZone.getTimeZone("UTC") }
     .format(Date(millis))
