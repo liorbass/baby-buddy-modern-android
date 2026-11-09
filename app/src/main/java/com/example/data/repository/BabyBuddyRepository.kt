@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import com.example.R
 import com.example.data.api.BabyBuddyApiClient
 import com.example.data.api.UntrustedCertificateException
-import com.example.data.api.findInChain
 import com.example.data.ml.RhythmEvents
 import com.example.data.ml.RhythmPrediction
 import com.example.data.ml.RhythmTarget
@@ -42,6 +41,7 @@ import com.example.data.model.TrackedItem
 import com.example.data.model.TummyTimeEvent
 import com.example.data.model.TummyTimeGoal
 import com.example.data.model.startOfDay
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -353,6 +353,10 @@ class BabyBuddyRepository {
         settings.showAllCards()
     }
 
+    /**
+     * Logs in to the server at [serverUrl] (finding the child entries go to), then syncs today. On success the login is
+     * saved; the result is the message to show.
+     */
     suspend fun testConnection(
         serverUrl: String,
         token: String,
@@ -361,176 +365,116 @@ class BabyBuddyRepository {
         cfClientSecret: String = "",
         pinnedCertSha256: String = ""
     ): Result<String> = withContext(Dispatchers.IO) {
+        val pin = pinnedCertSha256.takeIf { allowSelfSigned }.orEmpty()
         try {
-            val pin = pinnedCertSha256.takeIf { allowSelfSigned }.orEmpty()
             val api = BabyBuddyApiClient.createService(serverUrl, allowSelfSigned, cfClientId, cfClientSecret, pin)
             val authHeader = RemoteSession.authHeader(token)
             val response = api.getChildren(authHeader)
-            if (response.isSuccessful) {
-                val children = response.body()?.results ?: emptyList()
-                val detectedChild = children.firstOrNull()
-                val detectedName = detectedChild?.let { "${it.firstName} ${it.lastName}".trim() } ?: AppText.get(R.string.profile_baby)
-                val detectedShort = detectedChild?.firstName ?: AppText.get(R.string.profile_baby)
-
-                _babyProfile.update {
-                    it.copy(
-                        name = detectedName,
-                        shortName = detectedShort,
-                        birthDate = detectedChild?.birthDate ?: it.birthDate,
-                        ageFormatted = detectedChild?.birthDate?.let(::formatAge) ?: it.ageFormatted
-                    )
+            if (!response.isSuccessful) {
+                val code = response.code()
+                val message = if (code == 401 || code == 403) {
+                    loginRefusedMessage(code, behindCloudflare = response.headers()["cf-ray"] != null, hasCloudflareToken = cfClientId.isNotBlank())
+                } else {
+                    "HTTP $code: ${response.message()}"
                 }
-
-                _connectionConfig.update {
-                    it.copy(
-                        serverUrl = serverUrl,
-                        apiToken = token,
-                        isConnected = true,
-                        isDemoMode = false,
-                        allowSelfSignedCert = allowSelfSigned,
-                        pinnedCertSha256 = pin,
-                        cfClientId = cfClientId,
-                        cfClientSecret = cfClientSecret,
-                        detectedChildName = detectedName
-                    )
-                }
-
-                val connected = RemoteSession(api, authHeader, detectedChild?.id)
-                session = connected
-                prefs?.let { SavedLogin(serverUrl, token, allowSelfSigned, pin, cfClientId, cfClientSecret, detectedChild?.id, detectedName, detectedChild?.birthDate).save(it) }
-
-                syncToday(connected)
-                flushPendingWrites()
-                pollSharedTimers()
-                loadMilkStash()
-
-                Result.success(AppText.get(R.string.connected_as, detectedShort))
-            } else if (response.code() == 401 || response.code() == 403) {
-                val behindCloudflare = response.headers()["cf-ray"] != null
-                Result.failure(
-                    Exception(
-                        if (behindCloudflare && cfClientId.isBlank()) {
-                            AppText.get(R.string.error_blocked_by_cloudflare, response.code())
-                        } else {
-                            AppText.get(if (behindCloudflare) R.string.error_check_token_and_cloudflare else R.string.error_check_token, response.code())
-                        }
-                    )
-                )
-            } else {
-                Result.failure(Exception("HTTP ${response.code()}: ${response.message()}"))
+                return@withContext Result.failure(Exception(message))
             }
-        } catch (e: com.squareup.moshi.JsonDataException) {
-            Result.failure(Exception(AppText.get(R.string.error_web_page_not_api)))
-        } catch (e: com.squareup.moshi.JsonEncodingException) {
-            Result.failure(Exception(AppText.get(R.string.error_web_page_not_api)))
+            val child = response.body()?.results?.firstOrNull()
+            val name = child?.let { "${it.firstName} ${it.lastName}".trim() } ?: AppText.get(R.string.profile_baby)
+            val shortName = child?.firstName ?: AppText.get(R.string.profile_baby)
+            val login = SavedLogin(serverUrl, token, allowSelfSigned, pin, cfClientId, cfClientSecret, child?.id, name, child?.birthDate)
+            _babyProfile.update {
+                it.copy(
+                    name = name,
+                    shortName = shortName,
+                    birthDate = child?.birthDate ?: it.birthDate,
+                    ageFormatted = child?.birthDate?.let(::formatAge) ?: it.ageFormatted
+                )
+            }
+            showLogin(login)
+            val connected = RemoteSession(api, authHeader, child?.id)
+            session = connected
+            prefs?.let(login::save)
+
+            syncToday(connected)
+            flushPendingWrites()
+            pollSharedTimers()
+            loadMilkStash()
+            Result.success(AppText.get(R.string.connected_as, shortName))
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            // OkHttp wraps the trust manager's verdict in an SSLHandshakeException; surface it so the user can trust the certificate
-            val untrusted = e.findInChain { it is UntrustedCertificateException }
-            Result.failure(
-                when {
-                    untrusted != null -> untrusted
-
-                    !allowSelfSigned && e.findInChain { it is java.security.cert.CertPathValidatorException } != null ->
-                        Exception(AppText.get(R.string.error_certificate_not_trusted))
-
-                    else -> e
-                }
-            )
+            Result.failure(loginFailure(e, allowSelfSigned))
         }
     }
 
-    /** Replaces local lists with today's (device-local midnight onwards) entries from the server. */
+    /** Shows [login] as the connection in Settings. */
+    private fun showLogin(login: SavedLogin) = _connectionConfig.update {
+        it.copy(
+            serverUrl = login.url,
+            apiToken = login.token,
+            isConnected = true,
+            isDemoMode = false,
+            allowSelfSignedCert = login.allowSelfSigned,
+            pinnedCertSha256 = login.certPin,
+            cfClientId = login.cfClientId,
+            cfClientSecret = login.cfClientSecret,
+            detectedChildName = login.childName.orEmpty()
+        )
+    }
+
+    /**
+     * Replaces local lists with today's (device-local midnight onwards) entries from the server, and refreshes the
+     * latest feed, diaper change, sleep and bath from before today. A step that fails (offline, or an older server
+     * without that endpoint) leaves its list as it was.
+     */
     private suspend fun syncToday(remote: RemoteSession) {
         val api = remote.api
-        val authHeader = remote.auth
-        val childId = remote.child
+        val auth = remote.auth
+        val child = remote.child
         val since = isoUtc(startOfDay())
 
-        runCatching {
-            api.getFeedings(authHeader, childId, since).body()!!.results.map(::mapFeeding)
-        }.onSuccess { remote ->
-            feedStore.mergeRemote(Endpoints.FEEDINGS, remote)
+        fetchOrNull { api.getFeedings(auth, child, since).body()!!.results.map(::mapFeeding) }?.let { feedStore.mergeRemote(Endpoints.FEEDINGS, it) }
+        fetchOrNull { api.getChanges(auth, child, since).body()!!.results.map(::mapChange) }?.let { diaperStore.mergeRemote(Endpoints.CHANGES, it) }
+        fetchOrNull { api.getTummyTimes(auth, child, since).body()!!.results.map(::mapTummyTime) }?.let { tummyStore.mergeRemote(Endpoints.TUMMY, it) }
+        fetchOrNull { api.getPumping(auth, child, since).body()!!.results.map(::mapPumping) }?.let { pumpingStore.mergeRemote(Endpoints.PUMPING, it) }
+        // Sleeps that ended today, so last night's sleep counts too
+        fetchOrNull { api.getSleep(auth, child, endedSince = since).body()!!.results.map(::mapSleep) }?.let { sleepStore.mergeRemote(Endpoints.SLEEP, it) }
+        fetchOrNull { api.getTemperatures(auth, child, since).body()!!.results.map(::mapTemperature) }?.let { temperatureStore.mergeRemote(Endpoints.TEMPERATURE, it) }
+        fetchOrNull { api.getNotes(auth, child, since).body()!!.results.map(::mapNote) }?.let { noteStore.mergeRemote(Endpoints.NOTES, it) }
+        if (TrackedItem.GROWTH !in settings.hiddenItems.value) {
+            GrowthKind.entries.forEach { kind ->
+                fetchOrNull { api.getGrowth(auth, kind.endpoint, child).body()!!.results.map { mapGrowth(kind, it) } }?.let { growthStore.mergeRemote(kind.endpoint, it) }
+            }
         }
 
-        runCatching {
-            // Newest first; skip bottles to find the last breastfeed, which may be from yesterday
-            api.getFeedings(authHeader, childId, limit = 10).body()!!.results.map(::mapFeeding)
-        }.onSuccess { recent ->
+        // The latest from before today too (newest first): the last side, "last diaper", "awake for", "last bath"
+        fetchOrNull { api.getFeedings(auth, child, limit = 10).body()!!.results.map(::mapFeeding) }?.let { recent ->
             _lastBreastfeedRemote.value = recent.firstOrNull { it.type == FeedType.NURSING }
             _recentFeedsRemote.value = recent.sortedByDescending { it.timeMillis }
         }
-
-        runCatching {
-            // Newest first (may be from yesterday)
-            api.getChanges(authHeader, childId, limit = 1).body()!!.results.map(::mapChange).firstOrNull()
-        }.onSuccess { _lastDiaperRemote.value = it }
-
-        runCatching {
-            api.getSleep(authHeader, childId, limit = 5).body()!!.results.map(::mapSleep)
-        }.onSuccess { recent -> _lastSleepEndRemote.value = recent.maxOfOrNull { it.endMillis } }
-
-        runCatching {
-            api.getTags(authHeader).body()!!.results
-        }.onSuccess { tags ->
+        fetchOrNull { api.getChanges(auth, child, limit = 1).body()!!.results.map(::mapChange) }?.let { _lastDiaperRemote.value = it.firstOrNull() }
+        fetchOrNull { api.getSleep(auth, child, limit = 5).body()!!.results.map(::mapSleep) }?.let { recent -> _lastSleepEndRemote.value = recent.maxOfOrNull { it.endMillis } }
+        fetchOrNull {
+            api.getNotes(auth, child, since = isoUtc(System.currentTimeMillis() - 45L * 24 * 60 * 60_000L), limit = 1000).body()!!.results
+                .filter { BATH_TAG in it.tags.orEmpty() }
+                .mapNotNull { it.time?.let(::parseServerTime)?.time }
+        }?.let { _lastBathRemote.value = it.maxOrNull() }
+        fetchOrNull { api.getTags(auth).body()!!.results }?.let { tags ->
             _noteTags.value = tags.filter { it.name.isNotBlank() && it.name != MILK_STASH_TAG && it.name != BATH_TAG }
                 .map { NoteTag(it.name, it.color, it.lastUsed?.let(::parseServerTime)?.time ?: 0L) }
                 .sortedByDescending { it.lastUsedMillis }
         }
+        _connectionConfig.update { it.copy(lastSyncMillis = System.currentTimeMillis()) }
+    }
 
-        runCatching {
-            val monthAgo = isoUtc(System.currentTimeMillis() - 45L * 24 * 60 * 60_000L)
-            api.getNotes(authHeader, childId, since = monthAgo, limit = 1000).body()!!.results
-                .filter { BATH_TAG in it.tags.orEmpty() }
-                .mapNotNull { it.time?.let(::parseServerTime)?.time }
-                .maxOrNull()
-        }.onSuccess { _lastBathRemote.value = it }
-
-        runCatching {
-            api.getChanges(authHeader, childId, since).body()!!.results.map(::mapChange)
-        }.onSuccess { remote ->
-            diaperStore.mergeRemote(Endpoints.CHANGES, remote)
-        }
-
-        runCatching {
-            api.getTummyTimes(authHeader, childId, since).body()!!.results.map(::mapTummyTime)
-        }.onSuccess { remote ->
-            tummyStore.mergeRemote(Endpoints.TUMMY, remote)
-        }
-
-        runCatching {
-            api.getPumping(authHeader, childId, since).body()!!.results.map(::mapPumping)
-        }.onSuccess { remote ->
-            pumpingStore.mergeRemote(Endpoints.PUMPING, remote)
-        }
-
-        runCatching {
-            // Sleeps that ended today, so last night's sleep counts too
-            api.getSleep(authHeader, childId, endedSince = since).body()!!.results.map(::mapSleep)
-        }.onSuccess { remote ->
-            sleepStore.mergeRemote(Endpoints.SLEEP, remote)
-        }
-
-        runCatching {
-            api.getTemperatures(authHeader, childId, since).body()!!.results.map(::mapTemperature)
-        }.onSuccess { remote ->
-            temperatureStore.mergeRemote(Endpoints.TEMPERATURE, remote)
-        }
-
-        runCatching {
-            api.getNotes(authHeader, childId, since).body()!!.results.map(::mapNote)
-        }.onSuccess { remote ->
-            noteStore.mergeRemote(Endpoints.NOTES, remote)
-        }
-
-        if (TrackedItem.GROWTH !in settings.hiddenItems.value) {
-            GrowthKind.entries.forEach { kind ->
-                runCatching {
-                    api.getGrowth(authHeader, kind.endpoint, childId).body()!!.results.map { mapGrowth(kind, it) }
-                }.onSuccess { remote -> growthStore.mergeRemote(kind.endpoint, remote) }
-            }
-        }
-        val syncedAt = System.currentTimeMillis()
-        _connectionConfig.update { it.copy(lastSyncMillis = syncedAt) }
+    /** [load]'s result, or null if it failed; a cancelled coroutine stays cancelled. */
+    private inline fun <T> fetchOrNull(load: () -> T): T? = try {
+        load()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        null
     }
 
     // Mapping server records to entries and back, and the generated note segments: ServerMapping.kt
@@ -923,11 +867,11 @@ class BabyBuddyRepository {
             flushPendingWrites() // retries on its own if the server isn't reachable yet
             syncScope.launch {
                 val c = _connectionConfig.value
-                val result = testConnection(c.serverUrl, restoredToken.orEmpty(), c.allowSelfSignedCert, c.cfClientId, c.cfClientSecret, c.pinnedCertSha256)
+                val result = testConnection(c.serverUrl, c.apiToken, c.allowSelfSignedCert, c.cfClientId, c.cfClientSecret, c.pinnedCertSha256)
                 // Logins saved before pinning trusted every certificate: keep the server's current one rather than locking them out
                 val untrusted = result.exceptionOrNull() as? UntrustedCertificateException
                 if (untrusted != null && c.allowSelfSignedCert && c.pinnedCertSha256.isBlank()) {
-                    testConnection(c.serverUrl, restoredToken.orEmpty(), true, c.cfClientId, c.cfClientSecret, untrusted.fingerprint)
+                    testConnection(c.serverUrl, c.apiToken, true, c.cfClientId, c.cfClientSecret, untrusted.fingerprint)
                 }
             }
         } else {
@@ -948,8 +892,6 @@ class BabyBuddyRepository {
             }
         }
     }
-
-    private var restoredToken: String? = null
 
     private fun restoreOffline(offline: OfflineStore) {
         writeQueue.restore(offline.loadQueue())
@@ -987,23 +929,10 @@ class BabyBuddyRepository {
             return true
         }
         val login = SavedLogin.read(p) ?: return false
-        restoredToken = login.token
         // Set up writes right away so entries logged while the server is unreachable get queued
         val api = BabyBuddyApiClient.createService(login.url, login.allowSelfSigned, login.cfClientId, login.cfClientSecret, login.certPin)
         session = RemoteSession(api, RemoteSession.authHeader(login.token), login.childId)
-        _connectionConfig.update {
-            it.copy(
-                serverUrl = login.url,
-                apiToken = login.token,
-                allowSelfSignedCert = login.allowSelfSigned,
-                pinnedCertSha256 = login.certPin,
-                cfClientId = login.cfClientId,
-                cfClientSecret = login.cfClientSecret,
-                isConnected = true,
-                isDemoMode = false,
-                detectedChildName = login.childName.orEmpty()
-            )
-        }
+        showLogin(login)
         login.childName?.let { name ->
             _babyProfile.update {
                 it.copy(
