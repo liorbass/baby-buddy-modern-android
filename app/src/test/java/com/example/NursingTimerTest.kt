@@ -28,7 +28,10 @@ class NursingTimerTest {
                 feedings.update { listOf(e) + it }
                 e.id
             },
-            queueUpdate = { updates += it }
+            update = { e ->
+                feedings.update { list -> list.map { if (it.id == e.id) e else it } }
+                updates += e
+            }
         ),
         onChanged = { changes++ },
         onEnded = { ends++ }

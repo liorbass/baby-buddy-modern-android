@@ -2,13 +2,11 @@ package com.example
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.example.data.model.BreastSide
 import com.example.data.model.DiaperType
 import com.example.data.repository.BabyBuddyRepository
 import com.example.ui.MainViewModel
 import com.example.ui.ScreenDestination
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
