@@ -10,7 +10,6 @@ import com.example.data.ml.RhythmEvents
 import com.example.data.ml.RhythmPrediction
 import com.example.data.ml.RhythmTarget
 import com.example.data.ml.SavedRhythmModel
-import com.example.data.ml.trainRhythmModels
 import com.example.data.model.AppText
 import com.example.data.model.BATH_NOTE_TEXT
 import com.example.data.model.BATH_TAG
@@ -42,7 +41,6 @@ import com.example.data.model.TimeFormat
 import com.example.data.model.TrackedItem
 import com.example.data.model.TummyTimeEvent
 import com.example.data.model.TummyTimeGoal
-import com.example.data.model.isNapTime
 import com.example.data.model.startOfDay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -66,7 +64,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -196,9 +193,9 @@ class BabyBuddyRepository {
     private val _sleeps = MutableStateFlow<List<SleepEvent>>(emptyList())
     val sleeps: StateFlow<List<SleepEvent>> = _sleeps.asStateFlow()
 
-    /** A sleep being timed on this phone; saved as a sleep entry when it ends. */
-    private val _sleepTimer = MutableStateFlow(SleepTimerState())
-    val sleepTimer: StateFlow<SleepTimerState> = _sleepTimer.asStateFlow()
+    /** A sleep being timed on this phone; saved as a sleep entry when it ends ([SleepTimer]). */
+    private val sleeping = SleepTimer(logSleep = ::logSleep, onChanged = { timers.sleepChanged() }, onEnded = { timers.sleepEnded() })
+    val sleepTimer: StateFlow<SleepTimerState> = sleeping.state
 
     private val _diapers = MutableStateFlow<List<DiaperEvent>>(emptyList())
     val diapers: StateFlow<List<DiaperEvent>> = _diapers.asStateFlow()
@@ -291,23 +288,12 @@ class BabyBuddyRepository {
         if (!_connectionConfig.value.isConnected) return
         val from = maxOf(since, System.currentTimeMillis() - 24 * 60 * 60_000L)
         val today = TimedEvents(_feedings.value, _diapers.value, _sleeps.value)
-        val (feeds, changes, sleeps) = if (from >= startOfDay()) {
+        val events = if (from >= startOfDay()) {
             today
         } else {
             withContext(Dispatchers.IO) { runCatching { queries.fetchEvents(from) }.getOrNull() } ?: today
         }
-        val me = myName()
-        fun byOther(caregiver: String?) = if (me != null) !caregiver.equals(me, ignoreCase = true) else !caregiver.isNullOrBlank()
-        val hidden = settings.hiddenItems.value
-        val summary = HandoffSummary(
-            sinceMillis = from,
-            feedings = feeds.filter { f ->
-                f.timeMillis >= from && byOther(f.caregiver) &&
-                    (if (f.type == FeedType.NURSING) TrackedItem.BREASTFEEDING else TrackedItem.BOTTLE) !in hidden
-            }.sortedBy { it.timeMillis },
-            diapers = changes.filter { it.timeMillis >= from && byOther(it.caregiver) && TrackedItem.DIAPERS !in hidden }.sortedBy { it.timeMillis },
-            sleeps = sleeps.filter { it.id != ServerQueries.RUNNING_SLEEP_ID && it.endMillis >= from && byOther(it.caregiver) && TrackedItem.SLEEP !in hidden }.sortedBy { it.timeMillis }
-        )
+        val summary = handoffSummary(events, from, myName(), settings.hiddenItems.value)
         if (!summary.isEmpty) _handoff.value = summary
     }
 
@@ -318,11 +304,7 @@ class BabyBuddyRepository {
 
     fun enterDemoMode() {
         clearRemote()
-        prefs?.edit()
-            ?.remove(PREF_URL)?.remove(PREF_TOKEN_ENC)?.remove(PREF_CF_ID)
-            ?.remove(PREF_CF_SECRET_ENC)?.remove(PREF_CERT_PIN)?.remove(PREF_CHILD_ID)
-            ?.remove(PREF_CHILD_NAME)?.remove(PREF_BIRTH_DATE)
-            ?.putBoolean(PREF_DEMO_MODE, true)?.apply()
+        prefs?.let { SavedLogin.clear(it, demoMode = true) }
 
         settings.setCaregiverName("Sarah")
 
@@ -334,45 +316,13 @@ class BabyBuddyRepository {
         settings.setModelsTab(true)
         val demo = demoHistory ?: return
         syncScope.launch(Dispatchers.Default) {
-            val now = System.currentTimeMillis()
-            val from = now - 60 * 86_400_000L
-            val events = RhythmEvents(
-                demo.feeds.filter { it.timeMillis >= from },
-                demo.diapers.filter { it.timeMillis >= from },
-                demo.sleeps.filter { it.timeMillis >= from },
-                birthMillis = parseLocalDate(_babyProfile.value.birthDate) ?: from
-            )
-            val r = settings.reminders.value
-            val defaults = mapOf(
-                RhythmTarget.FEED_GAP to r.feedAfterMinutes,
-                RhythmTarget.DIAPER_GAP to r.diaperAfterMinutes,
-                RhythmTarget.SLEEP_LENGTH to r.sleepAfterMinutes,
-                RhythmTarget.AWAKE_WINDOW to r.awakeAfterMinutes
-            )
-            trainRhythmModels(events, defaults).forEach { m ->
-                val result = m.result ?: return@forEach
-                setUsedModel(
-                    m.target,
-                    SavedRhythmModel(m.target, result.best.family, result.best.settings, result.best.mae, result.model, m.ageOriginMillis ?: from, now, m.inputs, result.best.residuals)
-                )
-            }
+            fitDemoModels(demo, parseLocalDate(_babyProfile.value.birthDate), settings.reminders.value, System.currentTimeMillis())
+                .forEach { setUsedModel(it.target, it) }
         }
     }
 
     private fun loadDemoData() {
         val today = startOfDay()
-        val cal = Calendar.getInstance()
-
-        fun clockMs(daysAgo: Int, hour: Int, minute: Int): Long {
-            cal.timeInMillis = today
-            cal.add(Calendar.DAY_OF_YEAR, -daysAgo)
-            cal.set(Calendar.HOUR_OF_DAY, hour)
-            cal.set(Calendar.MINUTE, minute)
-            cal.set(Calendar.SECOND, 0)
-            cal.set(Calendar.MILLISECOND, 0)
-            return cal.timeInMillis
-        }
-
         // Simulated up to now, so "last feed", "awake for" and the charts read naturally at any time of day
         val now = System.currentTimeMillis()
         val birth = parseLocalDate(_babyProfile.value.birthDate) ?: (today - 270 * 86_400_000L)
@@ -394,8 +344,9 @@ class BabyBuddyRepository {
         _lastDiaperRemote.value = demo.diapers.firstOrNull()
         _lastSleepEndRemote.value = demo.sleeps.maxOfOrNull { it.endMillis }
         _lastBathRemote.value = demo.notes.firstOrNull { BATH_TAG in it.tags }?.timeMillis
-        _stashBase.value = StashBase(450, now, 0, 0)
-        val temperatureAt = clockMs(0, 9, 30).let { if (it < now) it else clockMs(1, 9, 30) }
+        stash.set(450, now)
+        // This morning's 9:30, or yesterday's before then
+        val temperatureAt = (today + 9 * 3_600_000L + 30 * 60_000L).let { if (it < now) it else it - 86_400_000L }
         _temperatures.value = listOf(
             TemperatureEvent(id = 900L, temperature = 36.8, timeMillis = temperatureAt, timeFormatted = formatClock(temperatureAt), caregiver = "Sarah")
         )
@@ -446,18 +397,7 @@ class BabyBuddyRepository {
 
                 val connected = RemoteSession(api, authHeader, detectedChild?.id)
                 session = connected
-                prefs?.edit()
-                    ?.putString(PREF_URL, serverUrl)
-                    ?.putString(PREF_TOKEN_ENC, runCatching { SecretCipher.encrypt(token) }.getOrNull())
-                    ?.putBoolean(PREF_SELF_SIGNED, allowSelfSigned)
-                    ?.putString(PREF_CERT_PIN, pin)
-                    ?.remove(PREF_DEMO_MODE) // logging in from demo mode must stick after a restart
-                    ?.putString(PREF_CF_ID, cfClientId)
-                    ?.putString(PREF_CF_SECRET_ENC, cfClientSecret.takeIf { it.isNotBlank() }?.let { runCatching { SecretCipher.encrypt(it) }.getOrNull() })
-                    ?.putInt(PREF_CHILD_ID, detectedChild?.id ?: -1)
-                    ?.putString(PREF_CHILD_NAME, detectedName)
-                    ?.putString(PREF_BIRTH_DATE, detectedChild?.birthDate)
-                    ?.apply()
+                prefs?.let { SavedLogin(serverUrl, token, allowSelfSigned, pin, cfClientId, cfClientSecret, detectedChild?.id, detectedName, detectedChild?.birthDate).save(it) }
 
                 syncToday(connected)
                 flushPendingWrites()
@@ -599,7 +539,7 @@ class BabyBuddyRepository {
     private val queries = ServerQueries(
         session = { session },
         demo = { demoHistory.takeIf { _connectionConfig.value.isDemoMode } },
-        sleepTimer = { _sleepTimer.value },
+        sleepTimer = { sleeping.state.value },
         hiddenItems = { settings.hiddenItems.value }
     )
 
@@ -673,12 +613,11 @@ class BabyBuddyRepository {
 
     fun disconnect() {
         clearRemote()
-        prefs?.edit()?.remove(PREF_URL)?.remove(PREF_TOKEN_ENC)?.remove(PREF_CF_ID)?.remove(PREF_CF_SECRET_ENC)?.remove(PREF_CERT_PIN)?.remove(PREF_CHILD_ID)?.remove(PREF_CHILD_NAME)?.remove(PREF_BIRTH_DATE)?.remove(PREF_DEMO_MODE)?.apply()
+        prefs?.let { SavedLogin.clear(it) }
         _connectionConfig.value = ServerConnectionConfig()
         _feedings.value = emptyList()
         _sleeps.value = emptyList()
-        _sleepTimer.value = SleepTimerState()
-        prefs?.edit()?.remove(PREF_SLEEP_START)?.remove(PREF_SLEEP_NOTES)?.apply()
+        sleeping.reset()
         _diapers.value = emptyList()
         _tummyTimes.value = emptyList()
         _pumpings.value = emptyList()
@@ -688,7 +627,7 @@ class BabyBuddyRepository {
         _lastSleepEndRemote.value = null
         _lastBathRemote.value = null
         _noteTags.value = emptyList()
-        _stashBase.value = null
+        stash.clear()
         timers.reset()
         _temperatures.value = emptyList()
         _notes.value = emptyList()
@@ -834,66 +773,25 @@ class BabyBuddyRepository {
     // --- Milk stash: the last amount someone entered (a note tagged "milk-stash", so every phone shares it)
     // plus pumped milk since then, minus breast-milk bottles since then ---
 
-    private data class StashBase(val ml: Int, val sinceMillis: Long, val pumpedBeforeToday: Int, val bottlesBeforeToday: Int)
+    private val stash = MilkStash(syncScope, _pumpings, _feedings)
 
-    private val _stashBase = MutableStateFlow<StashBase?>(null)
+    /** Breast milk on hand in ml, or null until someone enters an amount ([MilkStash]). */
+    val milkStash: StateFlow<Int?> get() = stash.amount
 
-    /** Breast milk on hand in ml, or null until someone enters an amount. */
-    val milkStash: StateFlow<Int?> by lazy {
-        combine(_stashBase, _pumpings, _feedings) { base, pumps, feeds ->
-            if (base == null) return@combine null
-            // Today's part comes from the live lists, which include unsent entries
-            val from = maxOf(base.sinceMillis, startOfDay())
-            val pumped = pumps.filter { it.timeMillis >= from }.sumOf { it.amountMl }
-            val given = feeds.filter { it.timeMillis >= from && isBreastMilkBottle(it) }.sumOf { it.amountMl ?: 0 }
-            (base.ml + base.pumpedBeforeToday - base.bottlesBeforeToday + pumped - given).coerceAtLeast(0)
-        }.stateIn(syncScope, SharingStarted.Eagerly, null)
-    }
-
-    private fun isBreastMilkBottle(f: FeedingEvent) = f.type == FeedType.BOTTLE && !f.bottleFormula && f.amountMl != null
-
-    /** Records how much milk is on hand now; later pumping and bottles count from here. */
-    fun setMilkStash(ml: Int): Long {
-        _stashBase.value = StashBase(ml, System.currentTimeMillis(), 0, 0)
-        return addNote("Milk stash: $ml ml", listOf(MILK_STASH_TAG))
-    }
+    /** Records how much milk is on hand now (a note every phone sees); later pumping and bottles count from here. */
+    fun setMilkStash(ml: Int): Long = addNote(stash.set(ml), listOf(MILK_STASH_TAG))
 
     fun undoMilkStash(noteId: Long) {
         deleteNote(noteId)
-        _stashBase.value = null
+        stash.clear()
         syncScope.launch {
             delay(5_000L) // let the delete reach the server, then use the previous amount
             loadMilkStash()
         }
     }
 
-    /** Finds the latest stash amount on the server and totals the days between it and today. */
-    suspend fun loadMilkStash() {
-        val remote = session ?: return
-        val api = remote.api
-        val child = remote.child ?: return
-        runCatching {
-            val since = isoUtc(System.currentTimeMillis() - 180L * 24 * 60 * 60_000L)
-            val note = api.getNotes(remote.auth, child, since = since, limit = 1000).body()!!.results
-                .filter { MILK_STASH_TAG in it.tags.orEmpty() }
-                .maxByOrNull { it.time?.let(::parseServerTime)?.time ?: 0L }
-                ?: return@runCatching null
-            val ml = Regex("""(\d+)""").find(note.note.orEmpty())?.value?.toIntOrNull() ?: return@runCatching null
-            val sinceMillis = note.time?.let(::parseServerTime)?.time ?: return@runCatching null
-            val todayStart = startOfDay()
-            if (sinceMillis >= todayStart) return@runCatching StashBase(ml, sinceMillis, 0, 0)
-            val from = isoUtc(sinceMillis)
-            val pumped = api.getPumping(remote.auth, child, since = from, limit = 1000).body()!!.results
-                .map(::mapPumping).filter { it.timeMillis in sinceMillis until todayStart }.sumOf { it.amountMl }
-            val given = api.getFeedings(remote.auth, child, since = from, limit = 1000).body()!!.results
-                .map(::mapFeeding).filter { it.timeMillis in sinceMillis until todayStart && isBreastMilkBottle(it) }
-                .sumOf { it.amountMl ?: 0 }
-            StashBase(ml, sinceMillis, pumped, given)
-        }.onSuccess { base ->
-            // Keep an amount entered on this phone that the server hasn't returned yet
-            val local = _stashBase.value
-            if (base != null && (local == null || base.sinceMillis >= local.sinceMillis - 60_000L)) _stashBase.value = base
-        }
+    private suspend fun loadMilkStash() {
+        session?.let { stash.load(it) }
     }
 
     fun deleteNote(id: Long) = noteStore.find(id)?.let(noteStore::delete)
@@ -936,54 +834,15 @@ class BabyBuddyRepository {
 
     fun deleteSleep(id: Long) = sleepStore.find(id)?.let(sleepStore::delete)
 
-    fun startSleep(startMillis: Long = System.currentTimeMillis()) {
-        if (_sleepTimer.value.isRunning) return
-        setSleepTimer(SleepTimerState(startMillis = startMillis, changedAtMillis = nextChangeMillis(_sleepTimer.value.changedAtMillis)))
-        timers.sleepChanged()
-    }
+    fun startSleep(startMillis: Long = System.currentTimeMillis()) = sleeping.start(startMillis)
 
-    /** Corrects when the running sleep started (never in the future). */
-    fun setSleepStart(startMillis: Long) {
-        val t = _sleepTimer.value
-        if (!t.isRunning) return
-        setSleepTimer(
-            t.copy(
-                startMillis = startMillis.coerceAtMost(System.currentTimeMillis()),
-                changedAtMillis = nextChangeMillis(t.changedAtMillis)
-            )
-        )
-        timers.sleepChanged()
-    }
+    fun setSleepStart(startMillis: Long) = sleeping.setStart(startMillis)
 
-    fun setSleepNotes(notes: String) {
-        val t = _sleepTimer.value
-        if (!t.isRunning) return
-        setSleepTimer(t.copy(notes = notes))
-    }
+    fun setSleepNotes(notes: String) = sleeping.setNotes(notes)
 
-    /** Ends the running sleep at [endMillis] and saves it; returns the entry id, or null if none was running. */
-    fun stopSleep(endMillis: Long = System.currentTimeMillis(), isNap: Boolean? = null): Long? {
-        val t = _sleepTimer.value
-        if (!t.isRunning) return null
-        sleepEnded()
-        return logSleep(t.startMillis, endMillis, isNap ?: isNapTime(t.startMillis), t.notes)
-    }
+    fun stopSleep(endMillis: Long = System.currentTimeMillis(), isNap: Boolean? = null): Long? = sleeping.stop(endMillis, isNap)
 
-    fun cancelSleep() = sleepEnded()
-
-    private fun sleepEnded() {
-        setSleepTimer(SleepTimerState())
-        timers.sleepEnded()
-    }
-
-    private fun setSleepTimer(state: SleepTimerState) {
-        _sleepTimer.value = state
-        prefs?.edit()
-            ?.putLong(PREF_SLEEP_START, state.startMillis)
-            ?.putString(PREF_SLEEP_NOTES, state.notes)
-            ?.putLong(PREF_SLEEP_CHANGED, state.changedAtMillis)
-            ?.apply()
-    }
+    fun cancelSleep() = sleeping.cancel()
 
     /** Mirrors the running feed and sleep to the server's timers ([SharedTimerSync]). */
     private val timers: SharedTimerSync by lazy {
@@ -991,8 +850,8 @@ class BabyBuddyRepository {
             scope = syncScope,
             target = { session?.target },
             feed = nursing.state,
-            sleep = _sleepTimer,
-            setSleep = ::setSleepTimer,
+            sleep = sleeping.state,
+            setSleep = sleeping::set,
             feedings = _feedings,
             writeQueue = writeQueue,
             syncToday = { syncToday(RemoteSession(it.api, it.auth, it.child)) }
@@ -1048,16 +907,13 @@ class BabyBuddyRepository {
         if (prefs != null) return
         val p = context.applicationContext.getSharedPreferences("baby_buddy", Context.MODE_PRIVATE)
         prefs = p
-        p.edit().remove(LEGACY_PREF_TOKEN).apply() // earlier builds stored the token in plain text
         settings.load(p, syncScope)
         predictor.load(context.applicationContext.getSharedPreferences(MODEL_PREFS, Context.MODE_PRIVATE))
         val offline = OfflineStore(File(context.applicationContext.filesDir, "offline"))
         store = offline
         writeQueue.store = offline
         nursing.restore(p)
-        p.getLong(PREF_SLEEP_START, 0L).takeIf { it > 0 }?.let { start ->
-            _sleepTimer.value = SleepTimerState(start, p.getString(PREF_SLEEP_NOTES, "").orEmpty(), p.getLong(PREF_SLEEP_CHANGED, 0L))
-        }
+        sleeping.load(p)
         timers.load(p)
         timers.start()
         nursing.start(syncScope, p)
@@ -1125,42 +981,36 @@ class BabyBuddyRepository {
 
     /** Restores the saved login; returns false if there is none (or the token can't be decrypted). */
     private fun restoreConnection(p: SharedPreferences): Boolean {
-        if (p.getBoolean(PREF_DEMO_MODE, false)) {
+        if (SavedLogin.isDemoMode(p)) {
             if (settings.caregiverName.value.isBlank()) settings.setCaregiverName("Sarah", save = false)
             showDemoBaby()
             return true
         }
-        val url = p.getString(PREF_URL, null) ?: return false
-        val token = p.getString(PREF_TOKEN_ENC, null)?.let(SecretCipher::decrypt) ?: return false
-        restoredToken = token
-        val selfSigned = p.getBoolean(PREF_SELF_SIGNED, false)
-        val certPin = p.getString(PREF_CERT_PIN, null).orEmpty()
-        val cfId = p.getString(PREF_CF_ID, null).orEmpty()
-        val cfSecret = p.getString(PREF_CF_SECRET_ENC, null)?.let(SecretCipher::decrypt).orEmpty()
-        val childId = p.getInt(PREF_CHILD_ID, -1).takeIf { it >= 0 }
+        val login = SavedLogin.read(p) ?: return false
+        restoredToken = login.token
         // Set up writes right away so entries logged while the server is unreachable get queued
-        session = RemoteSession(BabyBuddyApiClient.createService(url, selfSigned, cfId, cfSecret, certPin), RemoteSession.authHeader(token), childId)
+        val api = BabyBuddyApiClient.createService(login.url, login.allowSelfSigned, login.cfClientId, login.cfClientSecret, login.certPin)
+        session = RemoteSession(api, RemoteSession.authHeader(login.token), login.childId)
         _connectionConfig.update {
             it.copy(
-                serverUrl = url,
-                apiToken = token,
-                allowSelfSignedCert = selfSigned,
-                pinnedCertSha256 = certPin,
-                cfClientId = cfId,
-                cfClientSecret = cfSecret,
+                serverUrl = login.url,
+                apiToken = login.token,
+                allowSelfSignedCert = login.allowSelfSigned,
+                pinnedCertSha256 = login.certPin,
+                cfClientId = login.cfClientId,
+                cfClientSecret = login.cfClientSecret,
                 isConnected = true,
                 isDemoMode = false,
-                detectedChildName = p.getString(PREF_CHILD_NAME, "").orEmpty()
+                detectedChildName = login.childName.orEmpty()
             )
         }
-        p.getString(PREF_CHILD_NAME, null)?.let { name ->
-            val birthDate = p.getString(PREF_BIRTH_DATE, null)
+        login.childName?.let { name ->
             _babyProfile.update {
                 it.copy(
                     name = name,
                     shortName = name.substringBefore(" "),
-                    birthDate = birthDate ?: it.birthDate,
-                    ageFormatted = birthDate?.let(::formatAge) ?: ""
+                    birthDate = login.birthDate ?: it.birthDate,
+                    ageFormatted = login.birthDate?.let(::formatAge).orEmpty()
                 )
             }
         }
@@ -1171,22 +1021,8 @@ class BabyBuddyRepository {
 
         val instance: BabyBuddyRepository by lazy { BabyBuddyRepository() }
 
-        private const val PREF_URL = "server_url"
-        private const val PREF_TOKEN_ENC = "api_token_enc"
-        private const val LEGACY_PREF_TOKEN = "api_token"
-        private const val PREF_SLEEP_CHANGED = "sleep_timer_changed_at"
         private const val MODEL_PREFS = "rhythm_models"
-        private const val PREF_SLEEP_START = "sleep_timer_start"
-        private const val PREF_SLEEP_NOTES = "sleep_timer_notes"
         private const val PREF_AWAY_SINCE = "away_since"
-        private const val PREF_SELF_SIGNED = "allow_self_signed"
-        private const val PREF_CERT_PIN = "pinned_cert_sha256"
-        private const val PREF_CF_ID = "cf_access_client_id"
-        private const val PREF_CF_SECRET_ENC = "cf_access_client_secret_enc"
-        private const val PREF_CHILD_ID = "child_id"
-        private const val PREF_CHILD_NAME = "child_name"
-        private const val PREF_BIRTH_DATE = "birth_date"
-        private const val PREF_DEMO_MODE = "is_demo_mode"
     }
 
     /** Logs a tummy-time session that just ended; returns its id (for undo). */

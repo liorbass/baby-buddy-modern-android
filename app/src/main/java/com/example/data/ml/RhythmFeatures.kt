@@ -6,6 +6,7 @@ import com.example.data.model.DiaperEvent
 import com.example.data.model.DiaperType
 import com.example.data.model.FeedType
 import com.example.data.model.FeedingEvent
+import com.example.data.model.ReminderSettings
 import com.example.data.model.SleepEvent
 import com.example.data.model.formatMinutes
 import com.example.data.model.isLikelyNightWaking
@@ -172,6 +173,17 @@ class RhythmModel(
     val anchorMillis: Long?,
     val ageOriginMillis: Long?,
     val inputs: Int
+) {
+    /** One of this rhythm's leaderboard entries ([score]) with its fitted [regressor], to save and use. */
+    fun toSaved(score: Score, regressor: Regressor, trainedAt: Long): SavedRhythmModel = SavedRhythmModel(target, score.family, score.settings, score.mae, regressor, ageOriginMillis ?: trainedAt, trainedAt, inputs, score.residuals)
+}
+
+/** The reminder intervals as each rhythm's default estimate ([trainRhythmModels]; 0 = off, so the average interval). */
+fun ReminderSettings.rhythmDefaults(): Map<RhythmTarget, Int> = mapOf(
+    RhythmTarget.FEED_GAP to feedAfterMinutes,
+    RhythmTarget.DIAPER_GAP to diaperAfterMinutes,
+    RhythmTarget.SLEEP_LENGTH to sleepAfterMinutes,
+    RhythmTarget.AWAKE_WINDOW to awakeAfterMinutes
 )
 
 /**

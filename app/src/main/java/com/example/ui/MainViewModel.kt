@@ -9,6 +9,7 @@ import com.example.data.ml.RhythmModel
 import com.example.data.ml.RhythmTarget
 import com.example.data.ml.SavedRhythmModel
 import com.example.data.ml.Score
+import com.example.data.ml.rhythmDefaults
 import com.example.data.ml.trainRhythmModels
 import com.example.data.model.AppText
 import com.example.data.model.BATH_TAG
@@ -275,13 +276,7 @@ class MainViewModel(
                 return@launch
             }
             val targets = RhythmTarget.entries.size
-            val r = repository.settings.reminders.value
-            val defaults = mapOf(
-                RhythmTarget.FEED_GAP to r.feedAfterMinutes,
-                RhythmTarget.DIAPER_GAP to r.diaperAfterMinutes,
-                RhythmTarget.SLEEP_LENGTH to r.sleepAfterMinutes,
-                RhythmTarget.AWAKE_WINDOW to r.awakeAfterMinutes
-            )
+            val defaults = repository.settings.reminders.value.rhythmDefaults()
             val models = withContext(Dispatchers.Default) {
                 trainRhythmModels(events, defaults) { target, fraction ->
                     _modelsState.value = ModelsState.Training(AppText.get(R.string.models_fitting, target.title.lowercase()), (target.ordinal + fraction) / targets)
@@ -296,17 +291,7 @@ class MainViewModel(
         val result = model.result ?: return
         viewModelScope.launch {
             val fitted = withContext(Dispatchers.Default) { result.refit(score) }
-            val saved = SavedRhythmModel(
-                target = model.target,
-                family = score.family,
-                settings = score.settings,
-                mae = score.mae,
-                model = fitted,
-                ageOriginMillis = model.ageOriginMillis ?: System.currentTimeMillis(),
-                trainedAt = (_modelsState.value as? ModelsState.Ready)?.trainedAt ?: System.currentTimeMillis(),
-                inputs = model.inputs,
-                residuals = score.residuals
-            )
+            val saved = model.toSaved(score, fitted, trainedAt = (_modelsState.value as? ModelsState.Ready)?.trainedAt ?: System.currentTimeMillis())
             repository.setUsedModel(model.target, saved)
             showToast(AppText.get(R.string.models_now_estimated_by, model.target.title, score.family.lowercase()))
         }

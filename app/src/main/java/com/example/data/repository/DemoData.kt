@@ -1,5 +1,9 @@
 package com.example.data.repository
 
+import com.example.data.ml.RhythmEvents
+import com.example.data.ml.SavedRhythmModel
+import com.example.data.ml.rhythmDefaults
+import com.example.data.ml.trainRhythmModels
 import com.example.data.model.BATH_TAG
 import com.example.data.model.BreastSide
 import com.example.data.model.DIAPER_AMOUNTS
@@ -11,6 +15,7 @@ import com.example.data.model.GrowthEvent
 import com.example.data.model.GrowthKind
 import com.example.data.model.NoteEvent
 import com.example.data.model.PumpingEvent
+import com.example.data.model.ReminderSettings
 import com.example.data.model.SleepEvent
 import com.example.data.model.TummyTimeEvent
 import com.example.data.model.startOfDay
@@ -187,4 +192,19 @@ fun generateDemoHistory(now: Long, birthMillis: Long, days: Int = 90, clock: (Lo
         notes.sortedByDescending { it.timeMillis },
         growth.sortedByDescending { it.dateMillis }
     )
+}
+
+/**
+ * Rhythm models fitted on the last 60 days of [demo] (with the [reminders] intervals as default estimates), so demo
+ * mode shows them in use. CPU-bound: call off the main thread.
+ */
+internal fun fitDemoModels(demo: DemoHistory, birthMillis: Long?, reminders: ReminderSettings, now: Long): List<SavedRhythmModel> {
+    val from = now - 60 * 86_400_000L
+    val events = RhythmEvents(
+        demo.feeds.filter { it.timeMillis >= from },
+        demo.diapers.filter { it.timeMillis >= from },
+        demo.sleeps.filter { it.timeMillis >= from },
+        birthMillis = birthMillis ?: from
+    )
+    return trainRhythmModels(events, reminders.rhythmDefaults()).mapNotNull { m -> m.result?.let { m.toSaved(it.best, it.model, trainedAt = now) } }
 }
