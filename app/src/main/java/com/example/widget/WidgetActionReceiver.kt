@@ -4,11 +4,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import com.example.MainActivity
 import com.example.R
 import com.example.data.model.BreastSide
-import com.example.data.model.DiaperEvent
-import com.example.data.model.DiaperType
 import com.example.data.repository.BabyBuddyRepository
 
 class WidgetActionReceiver : BroadcastReceiver() {
