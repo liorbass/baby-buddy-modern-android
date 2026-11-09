@@ -1,0 +1,4 @@
+- Growth charts no longer guess a birth date when the server has none for the child
+- Today's card names follow a change of app language right away
+- Demo mode no longer fills the login form's token field
+- Internal cleanup: smaller, tested pieces behind sync, timers and reminders
