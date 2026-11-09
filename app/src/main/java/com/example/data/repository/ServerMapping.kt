@@ -241,10 +241,11 @@ internal fun growthValue(kind: GrowthKind, dto: BabyBuddyGrowthDto): Double? = w
     GrowthKind.HEAD -> dto.headCircumference
 }
 
+/** "2026-10-12" → local midnight starting that day, or null if it doesn't parse. */
+internal fun parseLocalDate(date: String): Long? = runCatching { SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(date)?.time }.getOrNull()
+
 /** "2026-10-12" → local noon of that day (so the day never shifts with time zones). */
-internal fun parseLocalDateNoon(date: String): Long? = runCatching {
-    SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(date)!!.time + 12 * 3_600_000L
-}.getOrNull()
+internal fun parseLocalDateNoon(date: String): Long? = parseLocalDate(date)?.plus(12 * 3_600_000L)
 
 internal fun localDate(millis: Long): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(millis))
 
@@ -338,8 +339,8 @@ internal fun formatServerTime(isoString: String): String {
 }
 
 internal fun formatAge(birthDate: String): String? {
-    val birth = runCatching { SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(birthDate) }.getOrNull() ?: return null
-    val b = Calendar.getInstance().apply { time = birth }
+    val birth = parseLocalDate(birthDate) ?: return null
+    val b = Calendar.getInstance().apply { timeInMillis = birth }
     val now = Calendar.getInstance()
     var months = (now.get(Calendar.YEAR) - b.get(Calendar.YEAR)) * 12 + now.get(Calendar.MONTH) - b.get(Calendar.MONTH)
     if (now.get(Calendar.DAY_OF_MONTH) < b.get(Calendar.DAY_OF_MONTH)) months--
