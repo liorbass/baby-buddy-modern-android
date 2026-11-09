@@ -389,8 +389,7 @@ object WhoGrowthStandards {
     }
 
     /** Percentile (0–100) of [value] at this age. */
-    fun percentile(kind: GrowthKind, sex: BabySex, ageDays: Double, value: Double): Double =
-        normalCdf(zScore(kind, sex, ageDays, value)) * 100
+    fun percentile(kind: GrowthKind, sex: BabySex, ageDays: Double, value: Double): Double = normalCdf(zScore(kind, sex, ageDays, value)) * 100
 
     /** The curves drawn on WHO charts: percentile and its z-score. */
     val CURVES: List<Pair<Int, Double>> = listOf(3 to -1.881, 15 to -1.036, 50 to 0.0, 85 to 1.036, 97 to 1.881)
