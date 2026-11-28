@@ -12,7 +12,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** The German, Dutch, Spanish and Hebrew translations are picked up for their locales (French: FrenchStringsTest). */
+/** The German, Dutch, Spanish, Hebrew and Simplified Chinese translations are picked up for their locales (French: FrenchStringsTest). */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class TranslatedStringsTest {
@@ -41,4 +41,8 @@ class TranslatedStringsTest {
     @Test
     @Config(qualifiers = "iw")
     fun hebrew() = assertLocale("2 ש׳ 05 דק׳", "זמן בטן", "שניהם", "רך מאוד / נוזלי", "בן")
+
+    @Test
+    @Config(qualifiers = "zh-rCN")
+    fun chineseSimplified() = assertLocale("2小时05分", "趴玩时间", "大小便", "稀软 / 水样", "男宝")
 }

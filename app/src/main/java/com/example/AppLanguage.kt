@@ -16,8 +16,8 @@ import java.util.Locale
  */
 object AppLanguage {
 
-    /** The translated languages (the values-* folders; Hebrew is packaged as values-iw). Checked by AppLanguageTest. */
-    val TAGS = listOf("en", "fr", "de", "nl", "es", "he")
+    /** The translated languages (the values-* folders; Hebrew is packaged as values-iw, Simplified Chinese as values-zh-rCN). Checked by AppLanguageTest. */
+    val TAGS = listOf("en", "fr", "de", "nl", "es", "he", "zh-CN")
 
     private const val PREFS = "baby_buddy"
     private const val PREF_LANGUAGE = "app_language"
@@ -62,10 +62,20 @@ object AppLanguage {
         return locale.getDisplayName(locale).replaceFirstChar { it.titlecase(locale) }
     }
 
-    /** One of [TAGS] for [locale] ("iw" and "he" are both Hebrew; "fr-CA" is French). */
+    /** One of [TAGS] for [locale] ("iw" and "he" are both Hebrew; "fr-CA" is French; "zh-Hans-CN" / "zh-CN" is Simplified Chinese). */
     fun tagOf(locale: Locale): String {
         val language = if (locale.language == "iw") "he" else locale.language
-        return TAGS.firstOrNull { it == language } ?: locale.toLanguageTag()
+        val tag = locale.toLanguageTag()
+        TAGS.firstOrNull { it.equals(tag, ignoreCase = true) }?.let { return it }
+        if (locale.country.isNotEmpty()) {
+            val langRegion = "$language-${locale.country}"
+            TAGS.firstOrNull { it.equals(langRegion, ignoreCase = true) }?.let { return it }
+        }
+        TAGS.firstOrNull { it == language }?.let { return it }
+        if (language == "zh" && (locale.script.equals("Hans", ignoreCase = true) || locale.country.equals("SG", ignoreCase = true) || (locale.script.isEmpty() && locale.country.isEmpty()))) {
+            TAGS.firstOrNull { it == "zh-CN" }?.let { return it }
+        }
+        return tag
     }
 
     private fun saved(context: Context): String = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(PREF_LANGUAGE, "").orEmpty()

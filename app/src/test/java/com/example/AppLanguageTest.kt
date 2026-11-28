@@ -15,10 +15,14 @@ class AppLanguageTest {
 
     @Test
     fun `every translation is offered`() {
-        // Unit tests run in the app module's folder; Hebrew is values-iw
+        // Unit tests run in the app module's folder; Hebrew is values-iw, Simplified Chinese is values-zh-rCN
         val translated = File("src/main/res").listFiles()!!
             .filter { it.name.startsWith("values-") && File(it, "strings.xml").exists() }
-            .map { it.name.removePrefix("values-").let { code -> if (code == "iw") "he" else code } }
+            .map {
+                it.name.removePrefix("values-").let { code ->
+                    if (code == "iw") "he" else code.replace("-r", "-")
+                }
+            }
         assertEquals((translated + "en").sorted(), AppLanguage.TAGS.sorted())
     }
 
@@ -28,6 +32,7 @@ class AppLanguageTest {
         assertEquals("Français", AppLanguage.displayName("fr"))
         assertEquals("Español", AppLanguage.displayName("es"))
         assertEquals("עברית", AppLanguage.displayName("he"))
+        assertEquals("中文 (中国)", AppLanguage.displayName("zh-CN"))
     }
 
     @Test
@@ -35,5 +40,9 @@ class AppLanguageTest {
         assertEquals("he", AppLanguage.tagOf(Locale.forLanguageTag("iw")))
         assertEquals("he", AppLanguage.tagOf(Locale.forLanguageTag("he-IL")))
         assertEquals("fr", AppLanguage.tagOf(Locale.forLanguageTag("fr-CA")))
+        assertEquals("zh-CN", AppLanguage.tagOf(Locale.forLanguageTag("zh-CN")))
+        assertEquals("zh-CN", AppLanguage.tagOf(Locale.forLanguageTag("zh-Hans-CN")))
+        assertEquals("zh-CN", AppLanguage.tagOf(Locale.forLanguageTag("zh-Hans")))
+        assertEquals("zh-CN", AppLanguage.tagOf(Locale.forLanguageTag("zh")))
     }
 }
