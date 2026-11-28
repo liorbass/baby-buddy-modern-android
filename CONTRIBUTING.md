@@ -51,7 +51,7 @@ All UI text lives in `app/src/main/res/values/strings.xml`; a translation is a `
 - Use positional arguments (`%1$s`, `%2$d`) when a string has more than one, and `plurals` for counts.
 - Use the Baby Buddy server's own words, so the app and the web UI match: `python3 tools/i18n/server_glossary.py <lang>` (the server's locale folder: `de`, `pt_BR`, `zh_Hans`, …) lists the app strings the server already translates and the server's short terms.
 - `python3 tools/i18n/check_strings.py` checks every translation against the English file (same names and kinds, the same format arguments, escaped `'` and `"`, an `other` form in each plurals entry); it runs in pre-commit.
-- French was checked on phones by a French speaker; German, Dutch, Spanish and Hebrew were machine-translated with the server glossary and need a native speaker's review. Corrections are welcome as PRs.
+- French was checked on phones by a French speaker; German, Dutch, Spanish, Hebrew and Simplified Chinese (`values-zh-rCN`) were translated with the server glossary and need a native speaker's review. Corrections are welcome as PRs.
 - Not translated yet: the rhythm models' internals (model families, settings and input names in `data/ml/`), which also key saved models and tests, and the low-level `HTTP … loading …` errors.
 
 ## Project layout

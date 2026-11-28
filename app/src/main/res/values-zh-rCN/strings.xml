@@ -1,0 +1,871 @@
+<resources>
+    <string name="app_name">Baby Buddy Companion</string>
+    <string name="widget_quick_log_name">Baby Buddy 快捷记录</string>
+    <string name="widget_quick_log_desc">一键记录喂食、换尿布和趴玩时间。</string>
+    <string name="widget_timer_name">Baby Buddy 哺乳计时器</string>
+    <string name="widget_timer_desc">在主屏幕上直接控制哺乳计时：暂停、继续以及切换左右侧。</string>
+    <string name="widget_summary_name">Baby Buddy 今日概览</string>
+    <string name="tile_feed_name">亲喂</string>
+    <string name="tile_sleep_name">睡眠</string>
+    <string name="tile_diaper_name">尿布</string>
+    <string name="widget_summary_desc">今日喂食与换尿布情况一目了然。</string>
+
+    <!-- Shared formats -->
+    <string name="duration_hours_minutes">%1$d小时%2$02d分</string>
+    <string name="duration_minutes">%d分钟</string>
+    <string name="percentile_below">&lt;%s</string>
+    <string name="percentile_above">&gt;%s</string>
+    <string name="yesterday_at">昨天 %s</string>
+    <string name="date_at">%1$s %2$s</string>
+
+    <!-- Tracked items (Settings) -->
+    <string name="item_breastfeeding">亲喂</string>
+    <string name="item_breastfeeding_desc">左右侧计时器、上次喂养侧、哺乳统计</string>
+    <string name="item_bottle">奶瓶喂养</string>
+    <string name="item_bottle_desc">配方奶和母乳瓶喂</string>
+    <string name="item_diapers">尿布</string>
+    <string name="item_diapers_desc">换尿布、大小便次数、换尿布规律</string>
+    <string name="item_sleep">睡眠</string>
+    <string name="item_sleep_desc">睡眠计时、小睡、清醒时间、睡眠规律</string>
+    <string name="item_pumping">吸奶</string>
+    <string name="item_pumping_desc">吸奶次数和吸奶量</string>
+    <string name="item_milk_stash">存奶</string>
+    <string name="item_milk_stash_desc">在“今天”页面显示已储存的母乳量</string>
+    <string name="item_tummy_time">趴玩时间</string>
+    <string name="item_tummy_time_desc">趴玩记录与每日目标卡片</string>
+    <string name="item_quick_notes">快捷记录</string>
+    <string name="item_quick_notes_desc">在“今天”页面一键记录带标签的事项</string>
+    <string name="item_bath">洗澡</string>
+    <string name="item_bath_desc">洗澡记录与距离上次洗澡的时间</string>
+    <string name="item_growth">生长发育</string>
+    <string name="item_growth_desc">体重、身高和头围，并在“趋势”中查看 WHO 生长曲线</string>
+
+    <!-- Settings choices -->
+    <string name="start_side_opposite">与上次相反侧</string>
+    <string name="start_side_opposite_desc">交替哺乳：从上次喂养未结束的那一侧开始</string>
+    <string name="start_side_same">与上次相同侧</string>
+    <string name="start_side_same_desc">从上次喂养结束的那一侧开始</string>
+    <string name="start_side_left">始终左侧</string>
+    <string name="start_side_left_desc">每次喂养都从左侧开始</string>
+    <string name="start_side_right">始终右侧</string>
+    <string name="start_side_right_desc">每次喂养都从右侧开始</string>
+    <string name="theme_by_time">按时段切换</string>
+    <string name="theme_by_time_desc">%1$s 至 %2$s 使用深色模式</string>
+    <string name="theme_system">跟随系统</string>
+    <string name="theme_system_desc">跟随手机系统的深色主题设置</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_light_desc">始终使用浅色模式</string>
+    <string name="theme_dark">深色</string>
+    <string name="theme_dark_desc">始终使用深色模式</string>
+    <string name="sex_boy">男宝</string>
+    <string name="sex_girl">女宝</string>
+
+    <!-- Today: quick actions, cards, tiles -->
+    <string name="action_feeding">喂食</string>
+    <string name="action_diaper">换尿布</string>
+    <string name="action_pump">吸奶</string>
+    <string name="action_tummy_time">趴玩时间</string>
+    <string name="action_sleep">睡眠</string>
+    <string name="action_bath">洗澡</string>
+    <string name="card_last_feed">上次喂食</string>
+    <string name="card_last_diaper">上次换尿布</string>
+    <string name="card_wake_windows">清醒窗口</string>
+    <string name="card_tummy_time">趴玩时间</string>
+    <string name="card_temperature">体温</string>
+    <string name="card_notes">成长记录</string>
+    <string name="card_growth">生长发育</string>
+    <string name="card_category_feeding">喂食</string>
+    <string name="card_category_diapers">尿布</string>
+    <string name="card_category_sleep">睡眠</string>
+    <string name="card_category_activity">活动</string>
+    <string name="card_category_health">健康</string>
+    <string name="card_category_family">家庭</string>
+    <string name="tile_feeds">喂食</string>
+    <string name="tile_diapers">尿布</string>
+    <string name="tile_sleep">睡眠</string>
+    <string name="tile_wake_window">清醒窗口</string>
+    <string name="tile_pumped">吸奶量</string>
+    <string name="tile_milk_stash">存奶</string>
+    <string name="tile_tummy_time">趴玩时间</string>
+    <string name="tile_last_bath">上次洗澡</string>
+    <string name="wake_part_awake_for">已清醒</string>
+    <string name="wake_part_nap_due">预计小睡</string>
+    <string name="wake_part_today_stats">今日平均</string>
+    <string name="wake_part_window_bars">各段清醒时间</string>
+    <string name="growth_weight">体重</string>
+    <string name="growth_length">身高</string>
+    <string name="growth_head">头围</string>
+    <string name="growth_head_short">头围</string>
+
+    <!-- History filters, Log entries, rhythm models -->
+    <string name="history_filter_all">全部</string>
+    <string name="history_filter_feeds">喂食</string>
+    <string name="history_filter_diapers">尿布</string>
+    <string name="history_filter_pumping">吸奶</string>
+    <string name="history_filter_tummy">趴玩时间</string>
+    <string name="history_filter_sleep">睡眠</string>
+    <string name="history_filter_bath">洗澡</string>
+    <string name="history_filter_growth">生长发育</string>
+    <string name="history_filter_notes">成长记录</string>
+    <string name="log_breastfeeding">亲喂</string>
+    <string name="log_bottle">奶瓶</string>
+    <string name="log_diaper">尿布</string>
+    <string name="log_sleep">睡眠</string>
+    <string name="log_pumping">吸奶</string>
+    <string name="log_bath">洗澡</string>
+    <string name="log_growth">生长发育</string>
+    <string name="rhythm_feed_gap">下次喂食</string>
+    <string name="rhythm_feed_gap_desc">从上次喂食开始到下次喂食开始的分钟数</string>
+    <string name="rhythm_diaper_gap">下次换尿布</string>
+    <string name="rhythm_diaper_gap_desc">两次换尿布之间的分钟数</string>
+    <string name="rhythm_awake_window">下次睡眠</string>
+    <string name="rhythm_awake_window_desc">两次睡眠之间的清醒分钟数</string>
+    <string name="rhythm_sleep_length">醒来时间</string>
+    <string name="rhythm_sleep_length_desc">每次睡眠的持续时长</string>
+
+    <!-- Common words -->
+    <string name="side_left">左侧</string>
+    <string name="side_right">右侧</string>
+    <string name="pause">暂停</string>
+    <string name="resume">继续</string>
+
+    <!-- Launcher shortcuts and home-screen widgets -->
+    <string name="shortcut_feed_left">左侧亲喂</string>
+    <string name="shortcut_feed_left_desc">开始或切换到左侧哺乳</string>
+    <string name="shortcut_feed_right">右侧亲喂</string>
+    <string name="shortcut_feed_right_desc">开始或切换到右侧哺乳</string>
+    <string name="shortcut_diaper">换尿布</string>
+    <string name="shortcut_diaper_desc">记录一次换尿布</string>
+    <string name="shortcut_sleep">立即入睡</string>
+    <string name="shortcut_sleep_desc">开始睡眠计时器</string>
+    <string name="widget_last_fed">上次喂食 %s</string>
+    <string name="widget_no_feeds_today">今天尚未记录喂食</string>
+    <string name="widget_wet_dirty">%1$d 小便 · %2$d 大便</string>
+    <string name="next_up_feed">喂食</string>
+    <string name="next_up_diaper">换尿布</string>
+    <string name="next_up_wake_up">睡醒</string>
+    <string name="next_up_nap">小睡</string>
+    <string name="next_up_item">%1$s ~%2$s</string>
+    <string name="next_up_line">下次：%s</string>
+    <string name="widget_last_side">上次：%s</string>
+    <string name="widget_paused_side">已暂停 · %s</string>
+    <string name="widget_on_side_started">%1$s · %2$s开始</string>
+    <string name="widget_last_ended_on">上次结束于%1$s · %2$s</string>
+    <string name="widget_tap_start">点击“开始”进行计时</string>
+    <string name="widget_start_side">开始%s</string>
+
+    <!-- Common words -->
+    <string name="end">结束</string>
+    <string name="sleeping">睡眠中</string>
+    <string name="since_time">自 %s 起</string>
+    <string name="woke_up">醒了</string>
+    <string name="sleep_saved">睡眠已保存</string>
+    <string name="feed_paused">喂食已暂停</string>
+
+    <!-- Notifications, Quick Settings tiles, reminders -->
+    <string name="channel_feed_timer">哺乳计时器</string>
+    <string name="channel_next_up">下次预告</string>
+    <string name="channel_sleep_timer">睡眠计时器</string>
+    <string name="channel_reminders">提醒</string>
+    <string name="feeding_left_side">喂食中 · 左侧</string>
+    <string name="feeding_right_side">喂食中 · 右侧</string>
+    <string name="pause_left">暂停左侧</string>
+    <string name="pause_right">暂停右侧</string>
+    <string name="feed_started_suffix">" · %s开始"</string>
+    <string name="left_short_time">左 %s</string>
+    <string name="right_short_time">右 %s</string>
+    <string name="feed_paused_text">总计 %1$s · 左 %2$s · 右 %3$s</string>
+    <string name="next_up_title_feed">喂食</string>
+    <string name="next_up_title_diaper">尿布</string>
+    <string name="next_up_title_wake_up">睡醒</string>
+    <string name="next_up_title_nap">小睡</string>
+    <string name="reminder_feed_due_in">距离下次喂食还有 %s</string>
+    <string name="reminder_feed_due">该喂食了</string>
+    <string name="reminder_feed_text">上次喂食开始于 %1$s前（%2$s）</string>
+    <string name="reminder_diaper_due_in">距离下次换尿布还有 %s</string>
+    <string name="reminder_diaper_due">该换尿布了</string>
+    <string name="reminder_diaper_text">上次换尿布在 %1$s前（%2$s）</string>
+    <string name="reminder_wake_up_in">距离睡醒还有 %s</string>
+    <string name="reminder_asleep_for">已睡 %s</string>
+    <string name="reminder_fell_asleep_at">于 %s 入睡</string>
+    <string name="reminder_nap_in">距离小睡还有 %s</string>
+    <string name="reminder_awake_for">已清醒 %s</string>
+    <string name="reminder_woke_up_at">于 %s 醒来</string>
+    <string name="reminder_woke_up_at_nap">于 %s 醒来，差不多该小睡了吗？</string>
+    <string name="tile_open_app">打开应用</string>
+    <string name="tile_tap_to_resume">点击继续</string>
+    <string name="tile_feeding">喂食</string>
+    <string name="tile_side_tap_to_pause">%s · 点击暂停</string>
+    <string name="tile_since_tap_when_awake">自 %s 起 · 醒后点击</string>
+    <string name="tile_tap_when_asleep">入睡时点击</string>
+    <string name="tile_log_a_change">记录换尿布</string>
+    <string name="timer_paused">计时已暂停</string>
+    <string name="timer_running">计时进行中</string>
+    <string name="switched_to_left">已切换到左侧</string>
+    <string name="switched_to_right">已切换到右侧</string>
+    <string name="tummy_time_logged_5">已记录趴玩时间：5 分钟</string>
+    <string name="widget_added">已添加小组件</string>
+
+    <!-- Home-screen widget layouts -->
+    <string name="widget_summary_today">今天</string>
+    <string name="widget_summary_feeds">喂食</string>
+    <string name="widget_summary_diapers">尿布</string>
+    <string name="widget_quick_feed">喂食</string>
+    <string name="widget_quick_diaper">尿布</string>
+    <string name="widget_quick_tummy">趴玩</string>
+    <string name="widget_quick_tummy_desc">趴玩时间</string>
+    <string name="widget_timer_title">亲喂</string>
+    <string name="widget_switch_side">切换侧别</string>
+    <string name="widget_pause_play">暂停/继续</string>
+    <string name="saved_to_offline_queue">记录已保存到本地离线队列</string>
+
+    <!-- Toasts and status messages (view model) -->
+    <string name="error_load_history">无法加载历史记录</string>
+    <string name="error_load_trends">无法加载趋势数据</string>
+    <string name="error_load_entries">无法加载记录</string>
+    <plurals name="models_loading_days">
+        <item quantity="other">正在加载 %d 天的记录</item>
+    </plurals>
+    <string name="models_fitting">正在拟合%s模型</string>
+    <string name="models_now_estimated_by">%1$s：现已使用 %2$s 进行预测</string>
+    <string name="models_all_reset">所有规律均已恢复为默认估算</string>
+    <string name="models_reset">%s：已恢复为默认估算</string>
+    <string name="toast_bottle_logged_formula">已记录奶瓶：%d ml 配方奶</string>
+    <string name="toast_bottle_logged_breast_milk">已记录奶瓶：%d ml 母乳</string>
+    <string name="toast_pumping_logged">已记录吸奶：%d ml</string>
+    <string name="toast_pumping_updated">吸奶记录已更新</string>
+    <string name="toast_pumping_deleted">吸奶记录已删除</string>
+    <string name="toast_feeding_updated">喂食记录已更新</string>
+    <string name="toast_feeding_deleted">喂食记录已删除</string>
+    <string name="toast_diaper_updated">换尿布记录已更新</string>
+    <string name="toast_tummy_updated">趴玩记录已更新</string>
+    <string name="toast_tummy_deleted">趴玩记录已删除</string>
+    <string name="toast_diaper_deleted">换尿布记录已删除</string>
+    <string name="toast_undone">已撤销</string>
+    <string name="toast_left_side_set">左侧时长已设为 %1$02d:%2$02d</string>
+    <string name="toast_right_side_set">右侧时长已设为 %1$02d:%2$02d</string>
+    <string name="toast_feed_start_set">喂食开始时间已设为 %s</string>
+    <string name="toast_sleep_started">睡眠计时已开始</string>
+    <string name="toast_nap_saved">小睡已保存：%s</string>
+    <string name="toast_sleep_saved">睡眠已保存：%s</string>
+    <string name="toast_sleep_discarded">睡眠计时已放弃</string>
+    <string name="toast_nap_logged">已记录小睡：%s</string>
+    <string name="toast_sleep_logged">已记录睡眠：%s</string>
+    <string name="toast_sleep_updated">睡眠记录已更新</string>
+    <string name="toast_sleep_deleted">睡眠记录已删除</string>
+    <string name="toast_feed_ended">喂食已结束</string>
+    <string name="toast_feeding_saved">喂食记录已保存</string>
+    <string name="toast_diaper_saved_start_timer">尿布记录已保存！正在启动哺乳计时器…</string>
+    <string name="toast_diaper_saved">尿布记录已保存</string>
+    <string name="toast_bottle_logged">已记录奶瓶喂养</string>
+    <string name="toast_quick_pee">已记录小便</string>
+    <string name="toast_quick_wet">已记录小便</string>
+    <string name="toast_quick_poop">已记录大便</string>
+    <string name="toast_quick_dirty">已记录大便</string>
+    <string name="toast_quick_both">已记录大小便</string>
+    <string name="toast_connecting">正在连接 Baby Buddy…</string>
+    <string name="toast_connected">连接成功！</string>
+    <string name="toast_connection_failed">连接失败：%s</string>
+    <string name="toast_logged_out">已退出登录</string>
+    <string name="toast_demo_mode">已进入演示模式（使用示例数据）</string>
+    <string name="toast_card_added">已将“%s”添加到“今天”</string>
+    <string name="toast_card_removed">已从“今天”移除“%s”</string>
+    <string name="toast_card_removed_short">已移除 %s</string>
+    <string name="toast_tummy_logged">已记录趴玩时间：%d 分钟</string>
+    <string name="toast_temperature_logged">已记录体温：%.1f°</string>
+    <string name="toast_growth_logged">已记录生长发育：%s</string>
+    <string name="toast_growth_updated">%s已更新</string>
+    <string name="toast_growth_deleted">%s已删除</string>
+    <string name="toast_bath_logged">已记录洗澡</string>
+    <string name="toast_bath_updated">洗澡记录已更新</string>
+    <string name="toast_note_updated">记录已更新</string>
+    <string name="toast_bath_deleted">洗澡记录已删除</string>
+    <string name="toast_note_deleted">记录已删除</string>
+    <string name="toast_note_added">已添加记录</string>
+    <string name="toast_tagged_note_logged">已记录 %s</string>
+    <string name="toast_milk_stash_set">存奶量已设为 %d ml</string>
+    <string name="toast_requesting_widget">正在请求将小组件添加到主屏幕…</string>
+    <string name="toast_widget_added_hint">已添加小组件！也可以长按桌面空白处手动添加。</string>
+
+    <!-- Connection, sync and repository messages -->
+    <string name="connected_as">已连接为 %s</string>
+    <string name="error_blocked_by_cloudflare">HTTP %d：被 Cloudflare 拦截，请添加 Cloudflare Access 服务令牌。</string>
+    <string name="error_check_token">HTTP %d：请检查 API 密钥</string>
+    <string name="error_check_token_and_cloudflare">HTTP %d：请检查 API 密钥和 Cloudflare Access 服务令牌</string>
+    <string name="error_web_page_not_api">服务器返回了网页而非 API 响应。如果站点位于 Cloudflare Access 之后，请添加服务令牌。</string>
+    <string name="error_certificate_not_trusted">服务器证书不受信任。如果是自签名证书，请开启“允许自签名证书”。</string>
+    <string name="error_connect_for_history">请连接你的 Baby Buddy 服务器以查看历史记录</string>
+    <string name="error_connect_for_trends">请连接你的 Baby Buddy 服务器以查看趋势</string>
+    <string name="error_not_connected">未连接</string>
+    <string name="profile_my_baby">我的宝宝</string>
+    <string name="profile_baby">宝宝</string>
+    <string name="profile_newborn">新生儿</string>
+    <plurals name="sync_discarded">
+        <item quantity="other">已丢弃 %d 条尚未保存到服务器的记录</item>
+    </plurals>
+    <string name="sync_proxy_rejected">服务器前端代理拒绝了%s，将稍后重试</string>
+    <string name="sync_unreachable">无法连接到服务器，将继续重试</string>
+    <plurals name="sync_token_rejected">
+        <item quantity="other">服务器拒绝了 API 密钥。请在设置中重新连接以发送 %d 条未保存的记录</item>
+    </plurals>
+    <string name="sync_could_not_save">无法保存%1$s：%2$s</string>
+    <string name="sync_server_rejected">服务器拒绝了%1$s（HTTP %2$d）%3$s</string>
+    <string name="write_feeding">喂食</string>
+    <string name="write_diaper_change">更换尿布</string>
+    <string name="write_pumping">吸奶</string>
+    <string name="write_temperature">体温</string>
+    <string name="write_note">记录</string>
+    <string name="write_sleep">睡眠</string>
+    <string name="write_tummy_time">趴玩时间</string>
+    <string name="write_edit">编辑%s</string>
+    <string name="write_delete">删除%s</string>
+    <string name="age_days">%d天</string>
+    <string name="age_months_days">%1$d个月%2$d天</string>
+    <string name="card_growth_desc">体重、身高、头围</string>
+
+    <!-- Common words -->
+    <string name="undo">撤销</string>
+    <string name="dismiss">关闭</string>
+    <string name="back">返回</string>
+    <string name="started">已经开始</string>
+    <string name="today">今天</string>
+    <string name="yesterday">昨天</string>
+    <string name="tomorrow">明天</string>
+
+    <!-- Top bar, navigation, feed controls, pickers -->
+    <string name="status_offline">离线</string>
+    <string name="status_demo">演示</string>
+    <string name="status_unsent">%d 条待发送</string>
+    <string name="status_synced">已同步</string>
+    <string name="nav_today">今天</string>
+    <string name="nav_trends">趋势</string>
+    <string name="nav_log">记录</string>
+    <string name="nav_log_desc">快捷记录</string>
+    <string name="nav_history">历史</string>
+    <string name="nav_settings">设置</string>
+    <string name="nav_login">登录</string>
+    <string name="feed_tap_side_to_start">点击左或右侧开始</string>
+    <string name="feed_paused_tap_side">已暂停 · 点击左或右侧继续</string>
+    <string name="feed_feeding_on">正在%s喂养</string>
+    <string name="feed_since_previous">距离上次喂食 %1$s（%2$s）</string>
+    <string name="feed_start_note">增减的时间将计入最先开始的那一侧。</string>
+    <string name="edit_side">编辑%s</string>
+    <string name="end_feed">结束喂食</string>
+    <string name="last_side">上次哺乳侧</string>
+    <string name="type_instead">改用键盘输入</string>
+    <string name="use_wheel">使用滚轮选择</string>
+    <string name="earlier_today">今天早些时候</string>
+    <string name="feed_left_right_minutes">左 %1$d分 · 右 %2$d分</string>
+
+    <!-- Common words -->
+    <string name="notes">成长记录</string>
+    <string name="fell_asleep">入睡时间</string>
+    <string name="tap_again_to_discard">再次点击以放弃</string>
+
+    <!-- Sleep screen -->
+    <string name="sleep_duration_nap">%s · 小睡</string>
+    <string name="sleep_duration_night">%s · 夜间睡眠</string>
+    <string name="sleep_start_timer">开始睡眠计时</string>
+    <string name="sleep_asleep_since">自 %s 起入睡</string>
+    <string name="sleep_woke_up_save">醒了 · 保存</string>
+    <string name="sleep_discard_timer">放弃计时</string>
+    <string name="sleep_log_past">补记过去的睡眠</string>
+    <string name="sleep_slept">睡了 %s</string>
+    <string name="sleep_save">保存睡眠</string>
+
+    <!-- Common words -->
+    <string name="close">关闭</string>
+    <string name="open">打开</string>
+    <string name="note_optional">备注（可选）</string>
+
+    <!-- Log screen -->
+    <string name="log_nothing">这里没有可记录的项目，请在“设置 → 追踪项目”中重新开启。</string>
+    <string name="log_feed_paused">已暂停 · %s</string>
+    <string name="log_feed_running">进行中 · %s</string>
+    <string name="log_feed_subtitle">左 / 右侧计时器</string>
+    <string name="log_bottle_subtitle">母乳或配方奶</string>
+    <string name="log_diaper_subtitle">小便、大便、混合或干爽</string>
+    <string name="log_sleep_subtitle">计时或补记睡眠</string>
+    <string name="log_pumping_subtitle">吸奶量与时长</string>
+    <string name="log_bath_subtitle">时间与备注</string>
+    <string name="log_last_weight">上次体重：%s</string>
+
+    <!-- Diaper values (stored in English, shown translated) -->
+    <string name="diaper_amount_light">少量</string>
+    <string name="diaper_amount_medium">中等</string>
+    <string name="diaper_amount_heavy">大量</string>
+    <string name="diaper_consistency_loose_long">稀软 / 水样</string>
+    <string name="diaper_consistency_seedy_long">颗粒 / 奶瓣样</string>
+    <string name="diaper_consistency_paste_long">糊状 / 正常</string>
+    <string name="diaper_consistency_hard_long">偏硬 / 干燥</string>
+    <string name="diaper_consistency_loose">稀软</string>
+    <string name="diaper_consistency_seedy">颗粒样</string>
+    <string name="diaper_consistency_paste">糊状</string>
+    <string name="diaper_consistency_hard">偏硬</string>
+    <string name="diaper_consistency_soft">柔软</string>
+    <string name="diaper_color_mustard">芥末黄</string>
+    <string name="diaper_color_brown">黄褐/棕色</string>
+    <string name="diaper_color_greenish">偏绿色</string>
+    <string name="diaper_color_dark">深色</string>
+    <string name="diaper_cream_barrier_long">护臀膏 / 隔离霜</string>
+    <string name="diaper_cream_zinc_long">氧化锌软膏</string>
+    <string name="diaper_cream_powder_long">爽身粉</string>
+    <string name="diaper_cream_barrier">隔离霜</string>
+    <string name="diaper_cream_zinc">氧化锌</string>
+    <string name="diaper_cream_powder">爽身粉</string>
+
+    <!-- Common words -->
+    <string name="save">保存</string>
+    <string name="time">时间</string>
+    <string name="now_at">现在 · %s</string>
+    <string name="more_details">更多详情</string>
+    <string name="hide_details">收起详情</string>
+    <string name="show_details">展开详情</string>
+
+    <!-- Diaper form -->
+    <string name="diaper_change">更换尿布</string>
+    <string name="diaper_wet">小便</string>
+    <string name="diaper_dirty">大便</string>
+    <string name="diaper_both">大小便</string>
+    <string name="diaper_dry">干爽</string>
+    <string name="diaper_amount">量</string>
+    <string name="diaper_consistency_optional">性状（可选）</string>
+    <string name="diaper_color">颜色</string>
+    <string name="diaper_rash">红屁屁</string>
+    <string name="diaper_cream">护理</string>
+    <string name="diaper_save_start_feed">保存并开始喂食</string>
+
+    <!-- Common words -->
+    <string name="ok">确定</string>
+    <string name="cancel">取消</string>
+    <string name="reset">重置</string>
+    <string name="reset_all">全部重置</string>
+    <string name="in_duration">%s后</string>
+    <string name="duration_ago">%s前</string>
+    <plurals name="days_count">
+        <item quantity="other">%d 天</item>
+    </plurals>
+
+    <!-- Trends: rhythm models tab -->
+    <string name="models_intro">每项规律都会自动匹配最合适的模型：系统会分别尝试线性回归、梯度提升树、小型神经网络、最近邻和按时段统计的近期中位数等多种参数组合，并与应用默认估算一同在最新记录上评估预测准确度。保存模型后可用于提醒、“今天”页面与桌面小组件；当预测时间已过，“今天”页面会根据该模型以往延迟的规律重新推算。所有计算均在本地手机完成。</string>
+    <string name="models_train_on">训练范围</string>
+    <string name="models_custom_range">自定义…</string>
+    <string name="models_fit_again">重新拟合</string>
+    <string name="models_fit">拟合模型</string>
+    <string name="models_pick_history">选择用于学习的历史时间范围并点击“拟合模型”，通常只需几秒钟。</string>
+    <string name="models_fitted_on">拟合数据：%1$s – %2$s · 完成于 %3$s</string>
+    <string name="models_in_use_title">当前使用的预测</string>
+    <string name="models_default_estimate">默认估算</string>
+    <string name="models_saved_summary">%1$s（%2$s）· ±%3$s · 拟合于 %4$s</string>
+    <plurals name="models_examples">
+        <item quantity="other">%d 条样本</item>
+    </plurals>
+    <string name="models_not_enough">记录数量尚不足：当前 %1$d 条，需要 %2$d 条。请尝试更长的时间范围。</string>
+    <string name="models_best">最佳：%1$s（%2$s），典型误差 %3$s。</string>
+    <string name="models_default_off_better">默认估算（%1$s）的误差为 %2$s：最佳模型提升了 %3$d%%。</string>
+    <string name="models_default_off_same">默认估算（%1$s）的误差为 %2$s，因此默认估算已经足够好。</string>
+    <string name="models_tried">已测试模型（典型误差）</string>
+    <string name="models_in_use_now">当前正在使用：%1$s，±%2$s（拟合于 %3$s）。本次拟合的 %4$s：±%5$s。</string>
+    <string name="models_in_use">使用中</string>
+    <string name="models_save_version">保存此版本</string>
+    <string name="models_use">使用 %s</string>
+    <string name="models_reset_default">恢复默认</string>
+    <string name="models_what_matters">关键影响因素（%s）</string>
+    <string name="models_importance_note">打乱该输入特征后，模型预测误差增加的幅度。</string>
+    <string name="models_actual_vs_predicted">近期记录：实际与预测对比</string>
+    <string name="models_actual">实际</string>
+    <string name="models_predicted">预测</string>
+    <string name="models_next_feed_around">下次喂食大约在 %s</string>
+    <string name="models_next_change_around">下次换尿布大约在 %s</string>
+    <string name="models_wake_up_around">大约在 %s 醒来</string>
+    <string name="models_ready_to_sleep_around">大约在 %s 犯困入睡</string>
+
+    <!-- Common words -->
+    <string name="nap">小睡</string>
+    <string name="note">记录</string>
+    <string name="amount_ml">%d ml</string>
+    <string name="amount_minutes">%d 分钟</string>
+    <string name="previous_week">上一周</string>
+    <string name="next_week">下一周</string>
+    <string name="last_7_days">最近 7 天</string>
+    <plurals name="feeds_count">
+        <item quantity="other">%d 次喂食</item>
+    </plurals>
+    <plurals name="diapers_count">
+        <item quantity="other">%d 次换尿布</item>
+    </plurals>
+    <plurals name="baths_count">
+        <item quantity="other">%d 次洗澡</item>
+    </plurals>
+    <plurals name="measurements_count">
+        <item quantity="other">%d 条测量</item>
+    </plurals>
+    <plurals name="notes_count">
+        <item quantity="other">%d 条记录</item>
+    </plurals>
+
+    <!-- History list -->
+    <string name="history_amount">量：%s</string>
+    <string name="history_ml_formula">%d ml 配方奶</string>
+    <string name="history_ml_breast_milk">%d ml 母乳</string>
+    <string name="history_minutes_sides">%1$d 分钟 · %2$s</string>
+    <string name="history_ml_minutes">%1$d ml · %2$d 分钟</string>
+    <string name="history_sleep_until">%1$s · 至 %2$s</string>
+    <string name="history_min_nursing">亲喂 %d 分钟</string>
+    <string name="history_ml_bottle">瓶喂 %d ml</string>
+    <string name="history_asleep">共睡 %s</string>
+    <string name="history_empty_all">最近 7 天暂无记录。</string>
+    <string name="history_empty_growth">暂无生长发育测量记录。</string>
+    <string name="history_empty_filter">最近 7 天暂无%s记录。</string>
+
+    <!-- Common words -->
+    <string name="add">添加</string>
+
+    <!-- Today cards -->
+    <string name="cards_remove">移除卡片</string>
+    <string name="cards_tummy_progress">%1$d / %2$d 分钟</string>
+    <string name="cards_plus_minutes">+%d 分钟</string>
+    <string name="cards_no_readings">今日暂无体温读数</string>
+    <string name="cards_no_measurements">暂无测量记录</string>
+    <string name="cards_percentile">%s百分位</string>
+    <string name="cards_choose_sex">请在“设置 → 宝宝”中选择男宝或女宝以查看 WHO 百分位。</string>
+    <string name="cards_log_growth">记录生长数据</string>
+    <string name="cards_no_notes">暂无记录</string>
+    <string name="cards_add_note">新增一条记录</string>
+    <string name="cards_asleep_for">已入睡</string>
+    <string name="cards_since_awake_before">自 %1$s 起 · 此前清醒 %2$s</string>
+    <string name="cards_since">自 %s 起</string>
+    <string name="cards_no_sleep">尚未记录睡眠</string>
+    <string name="cards_nap_due_in">预计小睡 ~%1$s · 还有 %2$s</string>
+    <string name="cards_nap_due_over">预计小睡 ~%1$s · 已超时 %2$s</string>
+    <string name="cards_wake_today_stats">今天：%1$d 次 · 平均 %2$s · 最长 %3$s</string>
+
+    <!-- Common words -->
+    <string name="off">关闭</string>
+
+    <!-- Login and certificate -->
+    <string name="cert_changed_title">服务器证书已变更</string>
+    <string name="cert_trust_title">信任此证书吗？</string>
+    <string name="cert_changed_text">服务器返回的证书与之前信任的证书不一致。如果你近期刚续签了证书，这属于正常情况；否则可能有人正在拦截你的连接。</string>
+    <string name="cert_unknown_text">该服务器证书并非由受信任的机构签发。信任前请确认此 SHA-256 指纹与你服务器上的证书一致。</string>
+    <string name="cert_trust">信任</string>
+    <string name="login_server_url">服务器地址 (URL)</string>
+    <string name="login_api_token">API 密钥</string>
+    <string name="login_hide_token">隐藏密钥</string>
+    <string name="login_show_token">显示密钥</string>
+    <string name="login_token_hint">可在 Baby Buddy 网页端的“用户设置 → API 秘钥”中找到。</string>
+    <string name="login_self_signed">允许自签名证书</string>
+    <string name="login_self_signed_desc">首次连接时由你手动确认证书，之后仅信任该证书</string>
+    <string name="login_cloudflare">使用 Cloudflare Access</string>
+    <string name="login_cloudflare_desc">随请求发送服务令牌，使应用跳过 Cloudflare 登录页</string>
+    <string name="login_hide_secret">隐藏 Secret</string>
+    <string name="login_show_secret">显示 Secret</string>
+    <string name="login_cloudflare_hint">可在 Cloudflare Zero Trust → Access → Service Auth 中创建，并为应用添加对应的 Service Auth 策略。</string>
+    <string name="login_enter_url_token">请输入服务器地址和 API 密钥</string>
+    <string name="login_enter_cloudflare">请同时输入 Cloudflare Client ID 和 Secret</string>
+    <string name="login_reconnect">重新连接</string>
+    <string name="login_connect">连接</string>
+    <string name="login_try_demo">使用示例数据体验演示模式</string>
+    <string name="login_intro">连接到你的 Baby Buddy 服务器即可开始使用。</string>
+    <string name="login_no_server">还没有服务器？试试包含示例数据的演示模式 →</string>
+    <string name="login_what_is_open">什么是 Baby Buddy？ ▴</string>
+    <string name="login_what_is_closed">什么是 Baby Buddy？ ▾</string>
+    <string name="login_what_is_text">Baby Buddy 是一款免费、开源的网页应用，用于记录宝宝的喂食、睡眠、换尿布和生长发育。你可以将它部署在自己的服务器上（家庭服务器、NAS 或云服务器），让数据完全掌握在自己手中。</string>
+    <string name="login_what_is_companion">本应用是 Baby Buddy 的非官方手机客户端：它会连接你的 Baby Buddy 服务器并将数据同步至服务端，方便全家人共享同一份记录。</string>
+    <string name="login_set_up_server">搭建服务器：前往 GitHub 上的 Baby Buddy →</string>
+
+    <!-- Settings -->
+    <string name="settings_open_section">打开%s</string>
+    <string name="settings_no_browser">没有可用于打开 %s 的浏览器</string>
+    <string name="settings_connection">服务器连接</string>
+    <string name="settings_you">你</string>
+    <string name="settings_tracked">追踪项目</string>
+    <string name="settings_appearance">外观</string>
+    <string name="settings_notifications">通知</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_baby">宝宝</string>
+    <string name="settings_tracking">记录设置</string>
+    <string name="settings_lock_screen">锁屏</string>
+    <string name="settings_reminders">提醒</string>
+    <string name="settings_day_hours_summary">白天 %1$s–%2$s</string>
+    <string name="settings_connected_to">已连接 · %s</string>
+    <string name="settings_disconnect">断开连接</string>
+    <string name="settings_add_your_name">添加你的名字</string>
+    <string name="settings_your_name">你的名字</string>
+    <string name="settings_your_name_desc">会附带在你提交的每条记录中，方便家人看到是谁记录的</string>
+    <string name="settings_growth_charts">生长发育曲线</string>
+    <string name="settings_growth_charts_desc">WHO 为男宝和女宝分别发布了生长标准曲线，仅用于在本机计算生长百分位。</string>
+    <string name="settings_start_side">亲喂起始侧</string>
+    <string name="settings_start_side_desc">设置桌面计时小组件和快捷设置磁贴默认从哪一侧开始。在应用内你可以自行点击任意一侧。</string>
+    <string name="settings_tracking_everything">已开启全部追踪项目</string>
+    <string name="settings_hidden">已隐藏：%s</string>
+    <string name="settings_tracked_desc">关闭你不需要记录的项目。关闭后仅在本机的“今天”、快捷操作、“历史”、“趋势”和提醒中隐藏，不会删除服务器上的任何数据。</string>
+    <string name="settings_appearance_24h">%s · 24 小时制</string>
+    <string name="settings_appearance_12h">%s · 12 小时制</string>
+    <string name="settings_theme">主题</string>
+    <string name="settings_language">语言</string>
+    <string name="settings_language_phone">跟随系统</string>
+    <string name="settings_day_night">白天与夜间时段</string>
+    <string name="settings_day_night_desc">夜间时段将用于：按时段切换深色主题、趋势图表的夜间阴影、新睡眠记录默认标记为夜间睡眠，以及将夜间醒来识别为夜醒而非清醒窗口。</string>
+    <string name="settings_day_starts">白天开始于</string>
+    <string name="settings_night_starts">夜间开始于</string>
+    <string name="settings_trends_day_start">趋势图表每日起始时间</string>
+    <string name="settings_trends_day_start_desc">设定“趋势”中划分每一天的时间点，例如设为 18:00 可让整晚睡眠显示在同一行。</string>
+    <string name="hour_earlier">%s：提前 1 小时</string>
+    <string name="hour_later">%s：推迟 1 小时</string>
+    <string name="settings_24h">24 小时制</string>
+    <string name="settings_24h_on">时间显示为 19:06</string>
+    <string name="settings_24h_off">时间显示为 7:06 PM</string>
+    <string name="settings_models_tab">在“趋势”中显示“模型”标签页</string>
+    <string name="settings_models_tab_desc">在本机针对各项规律拟合模型，并预测下次喂食、换尿布、小睡和睡醒时间</string>
+    <string name="settings_summary_lock_screen">锁屏计时器</string>
+    <string name="settings_summary_next_up">下次预告</string>
+    <string name="settings_summary_feed">喂食提醒</string>
+    <string name="settings_summary_awake">清醒提醒</string>
+    <string name="settings_summary_sleep">睡眠提醒</string>
+    <string name="settings_summary_diaper">尿布提醒</string>
+    <string name="settings_lock_screen_timers">在锁屏显示计时器</string>
+    <string name="settings_lock_screen_timers_desc">计时进行中时，在锁屏通知显示左/右侧及结束按钮和睡眠计时器</string>
+    <string name="settings_next_up">在锁屏显示下次预告</string>
+    <string name="settings_next_up_desc">当没有计时器运行时，通过一条静默通知显示预计的下次喂食、换尿布和小睡时间（来自提醒设置或已保存的模型）</string>
+    <string name="settings_model_timed">将按“趋势 → 模型”中保存的模型预测时间触发；下方时间为兜底回退值</string>
+    <string name="settings_remind_after">提醒间隔</string>
+    <string name="settings_feed_reminder">喂食提醒</string>
+    <string name="settings_feed_reminder_on">距离上次喂食开始已过 %s 时提醒</string>
+    <string name="settings_feed_reminder_off">当到达下次喂食时间时发送通知</string>
+    <string name="settings_feed_reminder_note">自上次喂食开始后的间隔时间 (hh:mm)</string>
+    <string name="settings_awake_reminder">清醒提醒</string>
+    <string name="settings_awake_reminder_on">当宝宝已连续清醒 %s 时提醒</string>
+    <string name="settings_awake_reminder_off">当距离上次睡醒已有一段时间时发送通知</string>
+    <string name="settings_awake_reminder_note">自上次睡眠结束后的清醒时间 (hh:mm)</string>
+    <string name="settings_sleep_reminder">睡眠提醒</string>
+    <string name="settings_sleep_reminder_on">当本次睡眠计时已持续 %s 时提醒</string>
+    <string name="settings_sleep_reminder_off">当宝宝睡了较长时间时发送通知</string>
+    <string name="settings_sleep_reminder_note">自睡眠计时器开始后的睡眠时长 (hh:mm)</string>
+    <string name="settings_diaper_reminder">尿布提醒</string>
+    <string name="settings_diaper_reminder_on">距离上次换尿布已过 %s 时提醒</string>
+    <string name="settings_diaper_reminder_off">当到达下次换尿布时间时发送通知</string>
+    <string name="settings_diaper_reminder_note">自上次换尿布后的间隔时间 (hh:mm)</string>
+    <string name="settings_heads_up">提前预告</string>
+    <string name="settings_heads_up_on">在每项提醒到期前 %s 提前发送通知</string>
+    <string name="settings_heads_up_off">仅在到达提醒时间时通知</string>
+    <string name="settings_reminders_note">提醒触发前会先检查服务器，因此其他手机记录的喂食、换尿布或睡眠也会计入。</string>
+    <string name="about_summary">版本 %1$s · 构建于 %2$s</string>
+    <string name="about_version">版本</string>
+    <string name="about_build">构建信息</string>
+    <string name="about_git">Git 标签 / 提交</string>
+    <string name="about_build_date">构建日期</string>
+    <string name="about_app_id">应用 ID</string>
+    <string name="about_source">GitHub 上的源代码、问题反馈与版本发布 →</string>
+    <string name="about_server">Baby Buddy（本应用连接的服务端项目）→</string>
+    <string name="update_title">应用更新</string>
+    <string name="update_desc">检查 GitHub 上发布的最新版本</string>
+    <string name="update_check">检查更新</string>
+    <string name="update_check_again">重新检查</string>
+    <string name="update_checking">正在检查更新…</string>
+    <string name="update_up_to_date">当前已是最新版本。</string>
+    <string name="update_available">发现新版本 %1$s。</string>
+    <string name="update_install">下载并安装</string>
+    <string name="update_install_short">安装</string>
+    <string name="update_whats_new">查看此版本更新内容 →</string>
+    <string name="update_downloading">正在下载更新…</string>
+    <string name="update_downloading_percent">正在下载更新… %1$d%%</string>
+    <string name="update_needs_permission">要安装此更新，请先允许本应用安装未知应用，然后返回并点击“安装”。</string>
+    <string name="update_allow">允许</string>
+    <string name="update_confirm">请在弹出的窗口中确认安装更新。</string>
+    <string name="update_try_again">重试</string>
+    <string name="update_failed_check">无法检查更新：%1$s</string>
+    <string name="update_failed_download">无法下载更新：%1$s</string>
+    <string name="update_failed_install">更新未安装：%1$s</string>
+    <string name="update_corrupt">下载的文件与发布校验不匹配，请重试。</string>
+    <string name="update_other_signer">此更新包的签名密钥与已安装的应用不同（当前应用可能来自 F-Droid 等其他渠道），Android 无法直接覆盖安装。请从原安装渠道更新。</string>
+
+    <!-- Customize Today -->
+    <string name="customize_title">自定义“今天”</string>
+    <string name="customize_subtitle">数据卡片与桌面小组件</string>
+    <string name="customize_tab_cards">看板卡片</string>
+    <string name="customize_active">已启用 %d 个</string>
+    <string name="customize_tab_home">手机主屏幕</string>
+    <string name="customize_cards_hint">开启或关闭“今天”视图中显示的卡片。</string>
+    <string name="customize_summary_tiles">汇总磁贴</string>
+    <string name="customize_summary_tiles_desc">“今天”顶部的统计汇总网格。未追踪的项目会保持隐藏。</string>
+    <string name="customize_order">“今天”版块顺序</string>
+    <string name="customize_order_desc">上下调整各版块的排列顺序。正在运行的喂食或睡眠计时会固定显示在顶部。</string>
+    <string name="section_shortcuts">快捷操作</string>
+    <string name="section_last_entries">上次喂食与尿布</string>
+    <string name="section_next">下次喂食与睡眠</string>
+    <string name="customize_show">显示</string>
+    <string name="customize_added">已添加</string>
+    <string name="customize_home_title">📱 Android 主屏幕小组件</string>
+    <string name="customize_home_desc">将这些小组件直接添加到手机桌面，无需打开应用即可一键快捷记录并实时控制计时器。</string>
+    <string name="customize_quick_title">一键快捷记录小组件</string>
+    <string name="customize_quick_size">4 × 1 标准尺寸</string>
+    <string name="customize_quick_desc">提供喂食、尿布和趴玩时间快捷按钮。</string>
+    <string name="customize_preview_baby">宝宝 Leo • 3个月12天</string>
+    <string name="customize_preview_last_fed">上次喂食 45分钟前</string>
+    <string name="customize_timer_title">实时哺乳计时器小组件</string>
+    <string name="customize_timer_size">4 × 2 完整控制</string>
+    <string name="customize_timer_desc">实时秒表，支持左右侧计时分布及暂停/切换按钮。</string>
+    <string name="customize_preview_timer">🤱 实时哺乳计时器</string>
+    <string name="customize_preview_right_active">右侧哺乳中</string>
+    <string name="customize_summary_title">今日概览小组件</string>
+    <string name="customize_tip_title">💡 手动添加提示</string>
+    <string name="customize_tip_text">如果你的桌面不支持一键固定，请长按手机主屏幕空白处，点击“微件/小组件”，滚动找到“Baby Buddy”，然后将其拖放到桌面即可。</string>
+    <string name="customize_add_to_home">添加到 Android 主屏幕</string>
+    <string name="card_last_feed_long">显示上次喂食开始时间、距今时长及上次哺乳侧。</string>
+    <string name="card_last_diaper_long">显示上次换尿布的时间、距今时长及类型。</string>
+    <string name="card_wake_windows_long">显示宝宝已清醒多久、下次小睡预计时间及今日各段清醒窗口。</string>
+    <string name="card_tummy_time_long">记录趴玩时间并追踪每日目标进度。</string>
+    <string name="card_temperature_long">记录并查看体温测量读数。</string>
+    <string name="card_notes_long">与家人共享洗澡、日常护理等记录。</string>
+    <string name="card_growth_long">显示最新体重、身高与头围及 WHO 百分位。</string>
+
+    <!-- History calendar -->
+    <string name="retry">重试</string>
+    <string name="history_show_list">显示列表</string>
+    <string name="history_show_calendar">显示日历</string>
+    <string name="history_legend_nursing">亲喂</string>
+
+    <!-- Common words -->
+    <string name="date">日期</string>
+    <string name="duration">持续时间</string>
+    <string name="delete">删除</string>
+    <string name="tap_again_to_delete">再次点击以删除</string>
+
+    <!-- Entry dialogs -->
+    <string name="dialog_growth_last">上次：%1$s（%2$s）</string>
+    <string name="dialog_edit_named">编辑%s</string>
+    <string name="dialog_logged_by">记录人：%s</string>
+    <string name="dialog_edit_bath">编辑洗澡记录</string>
+    <string name="dialog_edit_note">编辑记录</string>
+    <string name="dialog_side_title">%s</string>
+    <string name="dialog_side_note">设置这一侧已喂养的时长，计时器将从此时间继续计时。</string>
+    <string name="dialog_milk_stash_note">当前共储存了多少吸出的母乳？吸奶记录会增加存奶量，母乳瓶喂会从中扣除。此数据在所有手机间共享。</string>
+    <string name="dialog_stored_milk">当前存奶量</string>
+    <string name="dialog_note_placeholder">例如：维生素 D、洗澡、傍晚闹觉</string>
+    <string name="dialog_tags">标签</string>
+    <string name="dialog_night_sleep">夜间睡眠</string>
+    <string name="dialog_edit_sleep">编辑睡眠</string>
+    <string name="dialog_minutes">分钟</string>
+    <string name="dialog_quick_actions">快捷操作</string>
+    <string name="dialog_quick_actions_note">选择显示在“今天”顶部的快捷按钮及其顺序。</string>
+    <string name="dialog_move_up">上移 %s</string>
+    <string name="dialog_move_down">下移 %s</string>
+    <string name="dialog_edit_feeding">编辑喂食记录</string>
+    <string name="dialog_edit_diaper">编辑尿布记录</string>
+    <string name="dialog_skin_care">皮肤护理</string>
+    <string name="dialog_edit_tummy">编辑趴玩时间</string>
+    <string name="dialog_edit_pumping">编辑吸奶记录</string>
+    <string name="dialog_breast_milk">母乳</string>
+    <string name="dialog_formula">配方奶</string>
+    <string name="dialog_change_label">修改%s</string>
+
+    <!-- Shared formats -->
+    <string name="duration_hours">%d小时</string>
+    <string name="duration_hours_minutes_short">%1$d小时%2$d分</string>
+
+    <!-- Trends charts -->
+    <string name="trends_charts">图表</string>
+    <string name="trends_models">模型</string>
+    <string name="trends_no_data">该时段内暂无数据。</string>
+    <string name="trends_server_settings">服务器设置</string>
+    <string name="trends_feeding_rhythm">喂食规律</string>
+    <string name="trends_no_feeds">该时段内暂无喂食记录。</string>
+    <string name="trends_longest_gap">最长间隔</string>
+    <string name="trends_longest_week">本周最长间隔均值：%s</string>
+    <string name="trends_longest_month">本月最长间隔均值：%s</string>
+    <string name="trends_up_week">，较本周初增加 %s</string>
+    <string name="trends_up_month">，较本月初增加 %s</string>
+    <string name="trends_down_week">，较本周初减少 %s</string>
+    <string name="trends_down_month">，较本月初减少 %s</string>
+    <string name="trends_sleep_rhythm">睡眠规律</string>
+    <string name="trends_sleep_week">睡眠：本周日均 %s</string>
+    <string name="trends_sleep_month">睡眠：本月日均 %s</string>
+    <string name="trends_sleep_longest">，最长连续睡眠 %s</string>
+    <string name="trends_diaper_rhythm">换尿布规律</string>
+    <string name="trends_metric_feeds">喂食次数</string>
+    <string name="trends_metric_wet">小便尿布</string>
+    <string name="trends_metric_dirty">大便尿布</string>
+    <string name="trends_metric_naps">小睡次数</string>
+    <string name="trends_unit_per_day">次/天</string>
+    <string name="trends_unit_min_day">分钟/天</string>
+    <string name="trends_unit_min_avg">分钟均值</string>
+    <string name="trends_unit_ml_day">ml/天</string>
+    <string name="trends_unit_h_day">小时/天</string>
+    <string name="trends_daily_numbers">每日统计</string>
+    <string name="trends_left_right">左侧与右侧</string>
+    <string name="trends_left_pct">左侧 %d%%</string>
+    <string name="trends_right_pct">右侧 %d%%</string>
+    <string name="trends_pick_sex">WHO 为男宝和女宝分别制定了生长曲线，请选择宝宝性别以便对比。</string>
+    <string name="trends_need_birth_date">请在服务器上添加宝宝的出生日期以与 WHO 曲线对比。</string>
+    <string name="trends_growth_none">暂无%s测量记录。可在“记录”页面（生长发育）中添加。</string>
+    <string name="trends_growth_latest_no_percentile">最新：%1$s（%2$s）。此处 WHO 曲线适用于出生至 2 岁。</string>
+    <string name="trends_growth_previous">"（%2$s %1$s）"</string>
+    <string name="trends_growth_latest">最新：%1$s（%2$s），%3$s百分位%4$s。点击数据点可编辑。</string>
+    <string name="trends_who_median">中线：WHO 中位数（%s百分位）</string>
+    <string name="trends_birth">出生</string>
+    <string name="trends_months_short">%d月</string>
+
+    <!-- Common words -->
+    <string name="none_yet">暂无</string>
+    <string name="just_now">刚刚</string>
+    <string name="ago_minutes">%d分钟前</string>
+    <string name="ago_hours_minutes">%1$d小时%2$d分前</string>
+    <string name="ago_days_hours">%1$d天%2$d小时前</string>
+    <plurals name="days_ago">
+        <item quantity="other">%d 天前</item>
+    </plurals>
+    <plurals name="naps_count">
+        <item quantity="other">%d 次小睡</item>
+    </plurals>
+    <plurals name="sessions_count">
+        <item quantity="other">%d 次</item>
+    </plurals>
+
+    <!-- Today screen -->
+    <string name="today_formula">配方奶</string>
+    <string name="today_breast_milk">母乳</string>
+    <string name="today_solid_food">辅食</string>
+    <string name="today_handoff_wet">小便</string>
+    <string name="today_handoff_dirty">大便</string>
+    <string name="today_handoff_both">小便 + 大便</string>
+    <string name="today_handoff_dry">干爽</string>
+    <string name="today_handoff_diaper">尿布 · %s</string>
+    <string name="today_handoff_nap">小睡 · %s</string>
+    <string name="today_handoff_sleep">睡眠 · %s</string>
+    <string name="today_handoff_title">你离开期间</string>
+    <string name="today_handoff_more">历史记录中还有 +%d 条</string>
+    <string name="today_last_bottle_formula">奶瓶 · %d ml 配方奶</string>
+    <string name="today_last_bottle_breast_milk">奶瓶 · %d ml 母乳</string>
+    <string name="today_last_breastfeed">亲喂 · %d 分钟</string>
+    <string name="today_last_breast">亲喂 · %s</string>
+    <string name="today_side_minutes">%1$s %2$d分</string>
+    <string name="today_add_quick_actions">添加快捷操作</string>
+    <string name="today_edit_quick_actions">编辑快捷操作</string>
+    <string name="today_nursing_and_bottle">%1$d 分钟 · %2$d ml</string>
+    <string name="today_sleeping_now">正在睡觉</string>
+    <string name="today_asleep">睡眠中</string>
+    <string name="today_none_ended">今天暂无已结束的睡眠</string>
+    <string name="today_wake_avg">平均 %1$s · 今日 %2$d 次</string>
+    <string name="today_set">设置</string>
+    <string name="today_tap_to_enter">点击输入存奶量</string>
+    <string name="today_tap_to_correct">点击修正</string>
+    <string name="today_tap_to_log_bath">点击记录洗澡</string>
+    <string name="today_in">%s后</string>
+    <string name="today_due_ago">已过 %s</string>
+    <string name="today_logged_today">今日已记录</string>
+    <string name="today_last_pump">上次吸奶</string>
+    <string name="today_none_today">今日暂无</string>
+    <string name="today_time_between_feeds">喂食间隔</string>
+    <string name="today_same_as_last_week">与上周基本持平</string>
+    <string name="today_longer_than_last_week">比上周长 %s</string>
+    <string name="today_shorter_than_last_week">比上周短 %s</string>
+
+    <!-- Today side chips -->
+    <string name="side_left_short">左</string>
+    <string name="side_right_short">右</string>
+    <string name="side_chip_last">上次</string>
+
+    <!-- Trends charts (row label) -->
+    <string name="trends_today_chart">今天</string>
+</resources>
